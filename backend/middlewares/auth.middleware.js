@@ -14,7 +14,8 @@ const authMiddleware = (req, res, next) => {
 
   try {
     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    req.user = decoded;
+    // Le payload JWT contient les informations utilisateur dans un objet 'user'
+    req.user = decoded.user;
     next();
   } catch (error) {
     return res.status(401).json({
