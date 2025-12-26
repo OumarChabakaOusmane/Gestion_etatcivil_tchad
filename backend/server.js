@@ -5,6 +5,8 @@ require("dotenv").config();
 // Import des routes
 const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
+const naissanceRoutes = require("./routes/naissance.routes");
+const mariageRoutes = require("./routes/mariage.routes");
 const { db } = require("./config/firebase");
 
 const app = express();
@@ -27,6 +29,12 @@ app.use("/api/auth", authRoutes);
 
 // Routes utilisateurs (protégées)
 app.use("/api/users", userRoutes);
+
+// Routes des actes de naissance (protégées)
+app.use("/api/naissances", naissanceRoutes);
+
+// Routes des actes de mariage (protégées)
+app.use("/api/mariages", mariageRoutes);
 
 // Route de test de la base de données
 app.get("/api/test-db", async (req, res) => {
