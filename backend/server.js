@@ -4,6 +4,7 @@ require("dotenv").config();
 
 // Import des routes
 const authRoutes = require("./routes/auth.routes");
+const userRoutes = require("./routes/user.routes");
 const { db } = require("./config/firebase");
 
 const app = express();
@@ -23,6 +24,9 @@ app.get("/", (req, res) => {
 
 // Routes d'authentification
 app.use("/api/auth", authRoutes);
+
+// Routes utilisateurs (protégées)
+app.use("/api/users", userRoutes);
 
 // Route de test de la base de données
 app.get("/api/test-db", async (req, res) => {
