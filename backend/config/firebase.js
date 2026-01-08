@@ -1,32 +1,38 @@
 const admin = require("firebase-admin");
 const { initializeApp } = require("firebase/app");
 const { getFirestore, collection, getDocs, addDoc, query, where } = require("firebase/firestore");
-const serviceAccount = require("../serviceAccountKey.json");
+let serviceAccount;
+try {
+  serviceAccount = require("../serviceAccountKey.json");
+  console.log("✅ serviceAccountKey.json chargé avec succès");
+} catch (error) {
+  console.warn("⚠️ ALERTE : Impossible de charger serviceAccountKey.json.");
+  console.warn("   Raison :", error.message);
+  console.warn("   Stack :", error.stack);
+
+  // Utilisation de variables d'environnement comme fallback possible ou objet vide temporaire
+  serviceAccount = {
+    project_id: process.env.FIREBASE_PROJECT_ID || "demo-project",
+    private_key: process.env.FIREBASE_PRIVATE_KEY ? process.env.FIREBASE_PRIVATE_KEY.replace(/\\n/g, '\n') : "fake-key",
+    client_email: process.env.FIREBASE_CLIENT_EMAIL || "demo@example.com"
+  };
+}
 
 // Initialisation de l'admin SDK
-admin.initializeApp({
-  credential: admin.credential.cert(serviceAccount),
-});
+try {
+  if (!admin.apps.length) {
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  }
+  console.log("🔥 Firebase Admin connecté");
+} catch (error) {
+  console.error("❌ Erreur init Firebase Admin:", error.message);
+}
 
-// Initialisation du client SDK
-const firebaseConfig = {
-  // Votre configuration Firebase va ici
-  // (les mêmes informations que dans votre serviceAccountKey.json)
-  projectId: serviceAccount.project_id,
-  // ... autres configurations nécessaires
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+const db = admin.firestore();
 
 module.exports = {
   admin,
-  db,
-  firestore: {
-    collection,
-    getDocs,
-    addDoc,
-    query,
-    where
-  }
+  db
 };

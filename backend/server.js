@@ -7,18 +7,21 @@ const authRoutes = require("./routes/auth.routes");
 const userRoutes = require("./routes/user.routes");
 const naissanceRoutes = require("./routes/naissance.routes");
 const mariageRoutes = require("./routes/mariage.routes");
+const decesRoutes = require("./routes/deces.routes");
+const demandeRoutes = require("./routes/demande.routes");
 const { db } = require("./config/firebase");
 
 const app = express();
 
 // Configuration CORS
 app.use(cors({
-  origin: 'http://localhost:3000', // Remplacez par l'URL de votre frontend
+  origin: 'http://localhost:5173', // URL du frontend Vite
   credentials: true
 }));
 
-// Middleware pour parser le JSON
-app.use(express.json());
+// Middleware pour parser le JSON (Limite augmentée pour les photos de profil Base64)
+app.use(express.json({ limit: '50mb' }));
+app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.get("/", (req, res) => {
   res.json({ message: "API SIGEC-TCHAD opérationnelle 🚀" });
@@ -35,6 +38,12 @@ app.use("/api/naissances", naissanceRoutes);
 
 // Routes des actes de mariage (protégées)
 app.use("/api/mariages", mariageRoutes);
+
+// Routes des actes de décès (protégées)
+app.use("/api/deces", decesRoutes);
+
+// Routes des demandes (protégées)
+app.use("/api/demandes", demandeRoutes);
 
 // Route de test de la base de données
 app.get("/api/test-db", async (req, res) => {

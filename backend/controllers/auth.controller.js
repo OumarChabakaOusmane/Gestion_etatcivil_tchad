@@ -1,6 +1,7 @@
 const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
+const crypto = require('crypto');
 const User = require('../models/user.model');
 require('dotenv').config();
 
@@ -48,20 +49,17 @@ const register = async (req, res) => {
 
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement :', error);
-    
-    // Gestion des erreurs spécifiques
-    if (error.message.includes('existe déjà')) {
-      return res.status(400).json({
-        success: false,
-        message: error.message
-      });
-    }
+    try {
+      // LOG ERROR TO FILE
+      const fs = require('fs');
+      const path = require('path');
+      fs.appendFileSync(path.join(__dirname, '../error_log.txt'), `${new Date().toISOString()} - ${error.stack}\n`);
+    } catch (e) { console.error('Log failed', e); }
 
-    // Erreur serveur générique
     return res.status(500).json({
       success: false,
       message: 'Une erreur est survenue lors de l\'enregistrement',
-      error: process.env.NODE_ENV === 'development' ? error.message : undefined
+      error: error.message // FORCE SHOW ERROR
     });
   }
 };
@@ -145,7 +143,101 @@ const login = async (req, res) => {
   }
 };
 
+
+/**
+ * @route   POST /api/auth/forgot-password
+ * @desc    Envoie un lien de réinitialisation de mot de passe
+ * @access  Public
+ */
+const forgotPassword = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: 'Aucun utilisateur trouvé avec cet email'
+      });
+    }
+
+    // Générer un token de réinitialisation
+    const resetToken = crypto.randomBytes(20).toString('hex');
+
+    // Hasher le token et définir l'expiration (1 heure)
+    const resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(resetToken)
+      .digest('hex');
+
+    const resetPasswordExpire = Date.now() + 60 * 60 * 1000; // 1 heure
+
+    // Sauvegarder le token dans l'utilisateur
+    await User.update(user.id, {
+      resetPasswordToken,
+      resetPasswordExpire
+    });
+
+    // Créer l'URL de réinitialisation (pour l'instant, lien frontend local)
+    // Dans un cas réel, utiliser process.env.FRONTEND_URL ou similaire
+    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+
+    // SIMULATION D'ENVOI D'EMAIL (pour le développement)
+    console.log('=================================================');
+    console.log('🔗 LIEN DE RÉINITIALISATION (SIMULATION D\'EMAIL)');
+    console.log(`POUR: ${email}`);
+    console.log(`LIEN: ${resetUrl}`);
+    console.log('=================================================');
+
+    res.status(200).json({
+      success: true,
+      message: 'Un email de réinitialisation a été envoyé (Regardez la console serveur pour le lien)'
+    });
+
+  } catch (error) {
+    console.error('Erreur forgotPassword:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de l\'envoi de l\'email'
+    });
+  }
+};
+
+/**
+ * @route   GET /api/auth/fix-admin
+ * @desc    Force le rôle admin pour un email donné (OUTIL DE DÉPANNAGE)
+ * @access  Public
+ */
+const fixAdminRole = async (req, res) => {
+  const { email } = req.query;
+
+  if (!email) {
+    return res.status(400).json({ success: false, message: 'Email requis en paramètre query (?email=...)' });
+  }
+
+  try {
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+    }
+
+    await User.update(user.id, { role: 'admin' });
+
+    return res.json({
+      success: true,
+      message: `Rôle ADMIN attribué avec succès à ${email}`,
+      user: { ...user, role: 'admin' }
+    });
+
+  } catch (error) {
+    console.error('Erreur fixAdminRole:', error);
+    return res.status(500).json({ success: false, error: error.message });
+  }
+};
+
 module.exports = {
   register,
-  login
+  login,
+  forgotPassword,
+  fixAdminRole
 };

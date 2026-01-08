@@ -1,20 +1,16 @@
 const { db } = require('../config/firebase');
 const bcrypt = require('bcryptjs');
-const { collection, addDoc, getDocs, query, where, getFirestore } = require('firebase/firestore');
 
 class User {
-  static collection = collection(db, 'users');
+  static collectionName = 'users';
 
   static async create(userData) {
     try {
       // Vérifier si l'utilisateur existe déjà
-      const q = query(
-        this.collection,
-        where('email', '==', userData.email)
-      );
-      const querySnapshot = await getDocs(q);
-      
-      if (!querySnapshot.empty) {
+      const userRef = db.collection(this.collectionName);
+      const snapshot = await userRef.where('email', '==', userData.email).get();
+
+      if (!snapshot.empty) {
         throw new Error('Un utilisateur avec cet email existe déjà');
       }
 
@@ -22,8 +18,8 @@ class User {
       const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(userData.password, salt);
 
-      // Créer l'utilisateur dans Firestore
-      const userRef = await addDoc(this.collection, {
+      // Créer l'utilisateur
+      const newUser = {
         nom: userData.nom,
         prenom: userData.prenom,
         email: userData.email,
@@ -32,9 +28,11 @@ class User {
         telephone: userData.telephone || '',
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
-      });
+      };
 
-      return { id: userRef.id, ...userData, password: undefined };
+      const docRef = await userRef.add(newUser);
+
+      return { id: docRef.id, ...newUser, password: undefined };
     } catch (error) {
       throw error;
     }
@@ -42,18 +40,57 @@ class User {
 
   static async findByEmail(email) {
     try {
-const q = query(
-        this.collection,
-        where('email', '==', email)
-      );
-      const querySnapshot = await getDocs(q);
-      
-      if (querySnapshot.empty) {
+      const snapshot = await db.collection(this.collectionName)
+        .where('email', '==', email)
+        .limit(1)
+        .get();
+
+      if (snapshot.empty) {
         return null;
       }
 
-      const userDoc = querySnapshot.docs[0];
-      return { id: userDoc.id, ...userDoc.data() };
+      const doc = snapshot.docs[0];
+      return { id: doc.id, ...doc.data() };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async update(userId, data) {
+    try {
+      await db.collection(this.collectionName).doc(userId).update({
+        ...data,
+        updatedAt: new Date().toISOString()
+      });
+      return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async findAll() {
+    try {
+      const snapshot = await db.collection(this.collectionName).get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), password: undefined }));
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async findById(id) {
+    try {
+      const doc = await db.collection(this.collectionName).doc(id).get();
+      if (!doc.exists) return null;
+      return { id: doc.id, ...doc.data(), password: undefined };
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async delete(id) {
+    try {
+      await db.collection(this.collectionName).doc(id).delete();
+      return true;
     } catch (error) {
       throw error;
     }
