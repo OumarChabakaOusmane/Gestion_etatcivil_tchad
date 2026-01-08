@@ -3,6 +3,7 @@ import { useLocation } from 'react-router-dom';
 import demandeService from '../../services/demandeService';
 import { useLanguage } from '../../context/LanguageContext';
 import html2pdf from 'html2pdf.js';
+import exportHelper from '../../utils/exportHelper';
 
 export default function AdminDemandes() {
     const location = useLocation();
@@ -12,6 +13,8 @@ export default function AdminDemandes() {
     const [filterType, setFilterType] = useState('tous');
     const [filterStatut, setFilterStatut] = useState('tous');
     const [searchTerm, setSearchTerm] = useState('');
+    const [startDate, setStartDate] = useState('');
+    const [endDate, setEndDate] = useState('');
     const { t } = useLanguage();
 
     const [showRejetModal, setShowRejetModal] = useState(false);
@@ -66,8 +69,26 @@ export default function AdminDemandes() {
                 ((d.id || d._id) && (d.id || d._id).toLowerCase().includes(term))
             );
         }
+
+        if (startDate) {
+            const start = new Date(startDate);
+            result = result.filter(d => {
+                const date = d.createdAt?._seconds ? new Date(d.createdAt._seconds * 1000) : new Date(d.createdAt);
+                return date >= start;
+            });
+        }
+
+        if (endDate) {
+            const end = new Date(endDate);
+            end.setHours(23, 59, 59, 999);
+            result = result.filter(d => {
+                const date = d.createdAt?._seconds ? new Date(d.createdAt._seconds * 1000) : new Date(d.createdAt);
+                return date <= end;
+            });
+        }
+
         setFilteredDemandes(result);
-    }, [demandes, filterType, filterStatut, searchTerm]);
+    }, [demandes, filterType, filterStatut, searchTerm, startDate, endDate]);
 
     const loadData = async () => {
         try {
@@ -173,7 +194,13 @@ export default function AdminDemandes() {
             jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
         };
 
-        html2pdf().set(opt).from(element).save();
+    };
+
+    const handleExport = () => {
+        const formattedData = exportHelper.formatDemandesForExport(filteredDemandes);
+        const success = exportHelper.exportToExcel(formattedData, 'Demandes_SIGEC', 'Demandes');
+        if (success) showToast('Export réussi !', 'success');
+        else showToast('Erreur lors de l\'export', 'error');
     };
 
     return (
@@ -205,9 +232,35 @@ export default function AdminDemandes() {
                         </button>
                     ))}
                 </div>
-                <div className="position-relative" style={{ width: '250px' }}>
-                    <input type="text" placeholder="Rechercher..." className="form-control form-control-sm border-0 bg-light rounded-pill ps-4" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
-                    <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted small"></i>
+                <div className="d-flex align-items-center gap-3">
+                    <button onClick={handleExport} className="btn btn-sm btn-outline-success rounded-pill px-3 d-flex align-items-center gap-2 fw-bold">
+                        <i className="bi bi-file-earmark-excel-fill"></i>
+                        Exporter (.xlsx)
+                    </button>
+                    <div className="position-relative" style={{ width: '250px' }}>
+                        <input type="text" placeholder="Rechercher..." className="form-control form-control-sm border-0 bg-light rounded-pill ps-4" value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} />
+                        <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-2 text-muted small"></i>
+                    </div>
+                </div>
+            </div>
+
+            <div className="bg-white p-3 rounded-4 shadow-sm mb-4 border d-flex flex-wrap gap-4 align-items-center animate__animated animate__fadeIn">
+                <div className="d-flex align-items-center gap-2">
+                    <label className="small fw-bold text-muted">Du :</label>
+                    <input type="date" className="form-control form-control-sm border-0 bg-light rounded-pill px-3" value={startDate} onChange={(e) => setStartDate(e.target.value)} />
+                </div>
+                <div className="d-flex align-items-center gap-2">
+                    <label className="small fw-bold text-muted">Au :</label>
+                    <input type="date" className="form-control form-control-sm border-0 bg-light rounded-pill px-3" value={endDate} onChange={(e) => setEndDate(e.target.value)} />
+                </div>
+                {(startDate || endDate) && (
+                    <button className="btn btn-sm btn-link text-danger p-0 fw-bold text-decoration-none" onClick={() => { setStartDate(''); setEndDate(''); }}>
+                        Effacer les dates
+                    </button>
+                )}
+                <div className="ms-auto stats-pill bg-light px-3 py-1 rounded-pill small fw-bold text-primary border">
+                    <i className="bi bi-funnel-fill me-1"></i>
+                    {filteredDemandes.length} résultat(s)
                 </div>
             </div>
 

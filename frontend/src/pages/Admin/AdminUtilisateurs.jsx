@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import userService from '../../services/userService';
 import authService from '../../services/authService';
+import exportHelper from '../../utils/exportHelper';
 
 const AdminUtilisateurs = () => {
     const [users, setUsers] = useState([]);
@@ -98,15 +99,24 @@ const AdminUtilisateurs = () => {
                         value={searchTerm}
                         onChange={(e) => setSearchTerm(e.target.value)}
                     />
-                    <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                    <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-4 text-muted"></i>
                 </div>
-                <button
-                    className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-2"
-                    onClick={() => alert('Fonctionnalité de création manuelle bientôt disponible.')}
-                >
-                    <i className="bi bi-person-plus-fill"></i>
-                    Ajouter un utilisateur
-                </button>
+                <div className="d-flex gap-2">
+                    <button
+                        onClick={handleExport}
+                        className="btn btn-outline-success rounded-pill px-4 fw-bold d-flex align-items-center gap-2"
+                    >
+                        <i className="bi bi-file-earmark-excel-fill"></i>
+                        Exporter (.xlsx)
+                    </button>
+                    <button
+                        className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-2"
+                        onClick={() => alert('Fonctionnalité de création manuelle bientôt disponible.')}
+                    >
+                        <i className="bi bi-person-plus-fill"></i>
+                        Ajouter un utilisateur
+                    </button>
+                </div>
             </div>
 
             <div className="card border-0 shadow-sm rounded-4 overflow-hidden border">
