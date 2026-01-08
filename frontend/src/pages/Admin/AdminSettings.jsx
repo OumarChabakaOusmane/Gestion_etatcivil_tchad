@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import authService from '../../services/authService';
+import imageCompression from 'browser-image-compression';
 
 const AdminSettings = () => {
     const [user, setUser] = useState(null);
@@ -48,25 +49,41 @@ const AdminSettings = () => {
         fileInputRef.current.click();
     };
 
-    const handlePhotoChange = (e) => {
+    const handlePhotoChange = async (e) => {
         const file = e.target.files[0];
         if (file) {
-            const reader = new FileReader();
-            reader.onloadend = async () => {
-                const base64Photo = reader.result;
-                setPhotoPreview(base64Photo);
+            try {
+                setLoading(true);
+                const options = {
+                    maxSizeMB: 0.1,
+                    maxWidthOrHeight: 400,
+                    useWebWorker: true
+                };
 
-                try {
-                    await authService.updateProfile({ photo: base64Photo });
-                    window.dispatchEvent(new Event('storage'));
-                    window.dispatchEvent(new Event('userUpdated'));
-                    setMessage({ type: 'success', text: 'Photo mise à jour !' });
-                    setTimeout(() => setMessage({ type: '', text: '' }), 3000);
-                } catch (error) {
-                    setMessage({ type: 'danger', text: 'Erreur sauvegarde photo.' });
-                }
-            };
-            reader.readAsDataURL(file);
+                const compressedFile = await imageCompression(file, options);
+
+                const reader = new FileReader();
+                reader.onloadend = async () => {
+                    const base64Photo = reader.result;
+                    setPhotoPreview(base64Photo);
+
+                    try {
+                        await authService.updateProfile({ photo: base64Photo });
+                        window.dispatchEvent(new Event('storage'));
+                        window.dispatchEvent(new Event('userUpdated'));
+                        setMessage({ type: 'success', text: 'Photo mise à jour (et compressée) !' });
+                        setTimeout(() => setMessage({ type: '', text: '' }), 3000);
+                    } catch (error) {
+                        setMessage({ type: 'danger', text: 'Erreur sauvegarde photo.' });
+                    }
+                };
+                reader.readAsDataURL(compressedFile);
+            } catch (error) {
+                console.error('Compression error:', error);
+                setMessage({ type: 'danger', text: 'Erreur lors de la compression.' });
+            } finally {
+                setLoading(false);
+            }
         }
     };
 

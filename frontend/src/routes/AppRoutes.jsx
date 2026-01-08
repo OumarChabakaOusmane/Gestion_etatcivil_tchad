@@ -11,6 +11,7 @@ import AdminLayout from "../components/AdminLayout";
 import Home from "../pages/Public/Home";
 import Services from "../pages/Public/Services";
 import Contact from "../pages/Public/Contact";
+import NotFound from "../pages/Public/NotFound";
 
 // Pages citoyens
 import Dashboard from "../pages/Citizen/Dashboard";
@@ -186,6 +187,9 @@ export default function AppRoutes() {
             </ProtectedRoute>
           }
         />
+
+        {/* Catch-all 404 */}
+        <Route path="*" element={<NotFound />} />
       </Routes>
     </BrowserRouter>
   );
