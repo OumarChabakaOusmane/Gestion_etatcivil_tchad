@@ -9,6 +9,7 @@ const naissanceRoutes = require("./routes/naissance.routes");
 const mariageRoutes = require("./routes/mariage.routes");
 const decesRoutes = require("./routes/deces.routes");
 const demandeRoutes = require("./routes/demande.routes");
+const notificationRoutes = require("./routes/notification.routes");
 const { db } = require("./config/firebase");
 
 const app = express();
@@ -44,6 +45,9 @@ app.use("/api/deces", decesRoutes);
 
 // Routes des demandes (protégées)
 app.use("/api/demandes", demandeRoutes);
+
+// Routes des notifications (protégées)
+app.use("/api/notifications", notificationRoutes);
 
 // Route de test de la base de données
 app.get("/api/test-db", async (req, res) => {

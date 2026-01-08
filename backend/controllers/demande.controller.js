@@ -3,6 +3,7 @@ const Naissance = require('../models/Naissance');
 const Mariage = require('../models/Mariage');
 const Deces = require('../models/Deces');
 const User = require('../models/user.model');
+const Notification = require('../models/notification.model');
 const emailService = require('../services/emailService');
 
 /**
@@ -45,6 +46,22 @@ const createDemande = async (req, res) => {
         };
 
         const nouvelleDemande = await Demande.create(demandeData);
+
+        // NOTIFICATION AUX ADMINS (Async)
+        try {
+            const admins = await User.findByRole('admin');
+            for (const admin of admins) {
+                await Notification.create({
+                    userId: admin.id || admin._id,
+                    title: 'Nouvelle demande',
+                    message: `Une nouvelle demande de ${type} a été soumise par ${req.user.prenom} ${req.user.nom}.`,
+                    type: 'info',
+                    link: `/admin/demandes`
+                });
+            }
+        } catch (notifErr) {
+            console.error('Erreur notification admin:', notifErr);
+        }
 
         res.status(201).json({
             success: true,
@@ -261,6 +278,21 @@ const updateDemandeStatut = async (req, res) => {
             statut,
             { acteId, motifRejet }
         );
+
+        // NOTIFICATION IN-APP AU CITOYEN (Async)
+        try {
+            await Notification.create({
+                userId: demande.userId,
+                title: statut === 'acceptee' ? 'Demande Acceptée' : 'Demande Rejetée',
+                message: statut === 'acceptee'
+                    ? `Votre demande de ${demande.type} a été validée officiellement.`
+                    : `Votre demande de ${demande.type} a été rejetée. Motif: ${motifRejet || 'Non spécifié'}`,
+                type: statut === 'acceptee' ? 'success' : 'danger',
+                link: '/mes-demandes'
+            });
+        } catch (notifErr) {
+            console.error('Erreur notification citoyen:', notifErr);
+        }
 
         // ENVOI DE LA NOTIFICATION PAR EMAIL (Async non bloquant)
         try {

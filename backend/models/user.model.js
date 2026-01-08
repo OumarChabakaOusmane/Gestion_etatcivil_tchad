@@ -77,6 +77,15 @@ class User {
     }
   }
 
+  static async findByRole(role) {
+    try {
+      const snapshot = await db.collection(this.collectionName).where('role', '==', role).get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), password: undefined }));
+    } catch (error) {
+      throw error;
+    }
+  }
+
   static async findById(id) {
     try {
       const doc = await db.collection(this.collectionName).doc(id).get();

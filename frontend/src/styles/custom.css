@@ -916,3 +916,12 @@ html {
 .transition-all {
   transition: all 0.2s ease-in-out;
 }
+/* DARK MODE ADMIN */
+body.dark-mode { background-color: #0f172a !important; color: #f8fafc !important; }
+body.dark-mode header { background-color: #1e293b !important; border-bottom: 1px solid #334155 !important; color: white !important; }
+body.dark-mode .card, body.dark-mode .stat-card, body.dark-mode .stat-card-modern { background-color: #1e293b !important; border: 1px solid #334155 !important; color: white !important; }
+body.dark-mode .text-dark, body.dark-mode h5, body.dark-mode h6, body.dark-mode th { color: #f1f5f9 !important; }
+body.dark-mode .text-muted, body.dark-mode .stat-label { color: #94a3b8 !important; }
+body.dark-mode .table { color: #f1f5f9 !important; }
+body.dark-mode .form-control { background-color: #0f172a !important; border-color: #334155 !important; color: white !important; }
+body.dark-mode .modal-content { background-color: #1e293b !important; color: white !important; }

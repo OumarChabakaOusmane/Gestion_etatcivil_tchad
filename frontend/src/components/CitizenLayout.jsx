@@ -3,6 +3,8 @@ import { useNavigate, Link } from 'react-router-dom';
 import Sidebar from './Sidebar';
 import authService from '../services/authService';
 import { useLanguage } from '../context/LanguageContext';
+import NotificationBell from './NotificationBell';
+import PageTransition from './PageTransition';
 
 const CitizenLayout = ({ children }) => {
     const navigate = useNavigate();
@@ -57,6 +59,10 @@ const CitizenLayout = ({ children }) => {
                         </button>
                     </div>
 
+                    <div className="mx-2 rounded-circle bg-white bg-opacity-10 p-1 d-flex align-items-center justify-content-center" style={{ width: '38px', height: '38px' }}>
+                        <NotificationBell isWhite={true} />
+                    </div>
+
                     <span className="opacity-75 d-none d-md-block">{t('welcome')}, <span className="fw-bold text-white opacity-100">{user?.prenom || 'Citoyen'}</span></span>
 
                     <div className="position-relative">
@@ -89,16 +95,18 @@ const CitizenLayout = ({ children }) => {
                         )}
                     </div>
                 </div>
-            </header>
+            </header >
 
             {/* Main Content Area with Sidebar */}
-            <div className="d-flex flex-grow-1 overflow-hidden">
+            < div className="d-flex flex-grow-1 overflow-hidden" >
                 <Sidebar />
                 <main className="flex-grow-1 bg-light p-4 overflow-auto" style={{ backgroundColor: '#f5f7fa' }}>
-                    {children}
+                    <PageTransition>
+                        {children}
+                    </PageTransition>
                 </main>
-            </div>
-        </div>
+            </div >
+        </div >
     );
 };
 

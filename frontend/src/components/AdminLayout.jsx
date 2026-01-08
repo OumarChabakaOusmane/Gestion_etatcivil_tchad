@@ -2,11 +2,25 @@ import React from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/authService';
 import useCurrentUser from '../hooks/useCurrentUser';
+import NotificationBell from './NotificationBell';
+import PageTransition from './PageTransition';
+import { useState, useEffect } from 'react';
 
 const AdminLayout = ({ children }) => {
     const navigate = useNavigate();
     const location = useLocation();
     const currentUser = useCurrentUser();
+    const [darkMode, setDarkMode] = useState(localStorage.getItem('adminTheme') === 'dark');
+
+    useEffect(() => {
+        if (darkMode) {
+            document.body.classList.add('dark-mode');
+            localStorage.setItem('adminTheme', 'dark');
+        } else {
+            document.body.classList.remove('dark-mode');
+            localStorage.setItem('adminTheme', 'light');
+        }
+    }, [darkMode]);
 
     const handleLogout = () => {
         authService.logout();
@@ -83,6 +97,15 @@ const AdminLayout = ({ children }) => {
                         <h5 className="fw-bold m-0 text-dark">Espace Administration</h5>
                     </div>
                     <div className="d-flex align-items-center gap-4">
+                        <button
+                            className={`btn btn-sm rounded-circle d-flex align-items-center justify-content-center p-0 transition-all ${darkMode ? 'bg-warning text-dark' : 'bg-light text-muted'}`}
+                            style={{ width: '38px', height: '38px' }}
+                            onClick={() => setDarkMode(!darkMode)}
+                            title={darkMode ? 'Passer au mode clair' : 'Passer au mode sombre'}
+                        >
+                            <i className={`bi bi-${darkMode ? 'sun-fill' : 'moon-stars-fill'} fs-5`}></i>
+                        </button>
+                        <NotificationBell />
                         <div className="text-end d-none d-md-block">
                             <div className="fw-bold text-dark small">Bonjour, {currentUser?.prenom || 'Administrateur'}</div>
                             <div className="text-muted" style={{ fontSize: '0.7rem' }}>N'Djaména, Tchad</div>
@@ -104,7 +127,9 @@ const AdminLayout = ({ children }) => {
                 </header>
 
                 <div className="p-0">
-                    {children}
+                    <PageTransition>
+                        {children}
+                    </PageTransition>
                 </div>
             </main>
         </div>
