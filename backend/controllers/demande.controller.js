@@ -110,12 +110,21 @@ const getMyDemandes = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Erreur lors de la récupération des demandes:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Une erreur est survenue lors de la récupération des demandes',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+        if (error.code === 14) {
+            console.warn('⚠️ Attention: Firestore inaccessible (Problème DNS/Réseau). Impossible de récupérer les demandes.');
+            res.status(503).json({
+                success: false,
+                message: 'Service temporairement indisponible (Connexion Base de Données)',
+                error: 'Firestore unavailable'
+            });
+        } else {
+            console.error('Erreur lors de la récupération des demandes:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Une erreur est survenue lors de la récupération des demandes',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
+        }
     }
 };
 
@@ -152,12 +161,21 @@ const getAllDemandes = async (req, res) => {
         });
 
     } catch (error) {
-        console.error('Erreur lors de la récupération des demandes:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Une erreur est survenue lors de la récupération des demandes',
-            error: process.env.NODE_ENV === 'development' ? error.message : undefined
-        });
+        if (error.code === 14) {
+            console.warn('⚠️ Attention: Firestore inaccessible (Problème DNS/Réseau). Impossible de récupérer les demandes.');
+            res.status(503).json({
+                success: false,
+                message: 'Service temporairement indisponible (Connexion Base de Données)',
+                error: 'Firestore unavailable'
+            });
+        } else {
+            console.error('Erreur lors de la récupération des demandes:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Une erreur est survenue lors de la récupération des demandes',
+                error: process.env.NODE_ENV === 'development' ? error.message : undefined
+            });
+        }
     }
 };
 
@@ -266,7 +284,7 @@ const updateDemandeStatut = async (req, res) => {
                 console.error('❌ Erreur critique lors de la création de l\'acte:', error);
                 return res.status(500).json({
                     success: false,
-                    message: 'Erreur lors de la génération de l\'acte officiel. Veuillez vérifier les logs serveur.',
+                    message: "Erreur lors de la génération de l'acte officiel. Veuillez réessayer ou contacter le support.",
                     error: process.env.NODE_ENV === 'development' ? error.message : undefined
                 });
             }

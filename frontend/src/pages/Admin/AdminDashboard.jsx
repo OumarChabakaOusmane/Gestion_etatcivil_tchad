@@ -176,11 +176,11 @@ export default function AdminDashboard() {
                                         <h5 className="fw-bold text-dark mb-4">Statistiques des Demandes</h5>
                                         <div className="row align-items-center">
                                             <div className="col-md-6">
-                                                <div style={{ height: '250px', width: '100%', minWidth: 0 }}>
-                                                    <ResponsiveContainer width="100%" height="100%">
-                                                        <PieChart key={`pie-chart-${stats.total}`}>
+                                                <div style={{ height: '250px', minHeight: '250px', width: '100%', minWidth: 0, position: 'relative' }}>
+                                                    <ResponsiveContainer width="100%" height="100%" debounce={300}>
+                                                        <PieChart>
                                                             <Pie
-                                                                data={stats.countsByType.filter(c => c.value > 0).length > 0 ? stats.countsByType : [{ name: 'Vide', value: 1, color: '#eee' }]}
+                                                                data={stats.countsByType.some(c => c.value > 0) ? stats.countsByType : [{ name: 'Vide', value: 1, color: '#eee' }]}
                                                                 innerRadius={60}
                                                                 outerRadius={85}
                                                                 stroke="none"
@@ -191,7 +191,7 @@ export default function AdminDashboard() {
                                                                     <Cell key={`cell-${index}`} fill={entry.color} />
                                                                 ))}
                                                             </Pie>
-                                                            <Tooltip />
+                                                            <Tooltip wrapperStyle={{ zIndex: 1000 }} />
                                                         </PieChart>
                                                     </ResponsiveContainer>
                                                 </div>

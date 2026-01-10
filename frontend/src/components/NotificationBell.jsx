@@ -8,8 +8,8 @@ const NotificationBell = ({ isWhite = false }) => {
 
     useEffect(() => {
         loadNotifications();
-        // Polling toutes les 10 secondes pour les nouvelles notifications
-        const interval = setInterval(loadNotifications, 10000);
+        // Polling toutes les 60 secondes pour les nouvelles notifications
+        const interval = setInterval(loadNotifications, 60000);
         return () => clearInterval(interval);
     }, []);
 

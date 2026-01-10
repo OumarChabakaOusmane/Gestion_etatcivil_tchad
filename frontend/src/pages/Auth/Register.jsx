@@ -144,6 +144,7 @@ export default function Register() {
                               placeholder="Nom"
                               value={formData.nom}
                               onChange={handleChange}
+                              autoComplete="off"
                               required
                             />
                             <label htmlFor="nom">{t('labelLastName')} *</label>
@@ -160,6 +161,7 @@ export default function Register() {
                               placeholder="Prénom"
                               value={formData.prenom}
                               onChange={handleChange}
+                              autoComplete="off"
                               required
                             />
                             <label htmlFor="prenom">{t('labelFirstName')} *</label>
@@ -176,6 +178,7 @@ export default function Register() {
                               placeholder="Email"
                               value={formData.email}
                               onChange={handleChange}
+                              autoComplete="off"
                               required
                             />
                             <label htmlFor="email">{t('labelEmailAuth')} *</label>
@@ -192,6 +195,7 @@ export default function Register() {
                               placeholder="Téléphone"
                               value={formData.telephone}
                               onChange={handleChange}
+                              autoComplete="off"
                               required
                             />
                             <label htmlFor="telephone">{t('phoneLabel')} *</label>
@@ -208,6 +212,7 @@ export default function Register() {
                               placeholder="Mot de passe"
                               value={formData.password}
                               onChange={handleChange}
+                              autoComplete="new-password"
                               required
                             />
                             <label htmlFor="password">{t('labelPasswordAuth')} *</label>
@@ -224,6 +229,7 @@ export default function Register() {
                               placeholder="Confirmer"
                               value={formData.confirmPassword}
                               onChange={handleChange}
+                              autoComplete="new-password"
                               required
                             />
                             <label htmlFor="confirmPassword">{language === 'ar' ? 'تأكيد' : 'Confirmer'} *</label>

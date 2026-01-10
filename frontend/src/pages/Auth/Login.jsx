@@ -31,22 +31,19 @@ export default function Login() {
       const response = await authService.login(formData.email, formData.password);
       console.log("Réponse de connexion:", response);
 
-      const user = response.data?.user || response.data; // Au cas où la structure diffère légèrement
+      const user = response.data?.user || response.data;
 
       console.log("Utilisateur connecté:", user);
       console.log("Rôle détecté:", user.role);
 
-      // Petit délai pour assurer que le localStorage est bien écrit
-      setTimeout(() => {
-        // Redirection selon le rôle
-        if (user.role === 'admin') {
-          console.log("Redirection vers Admin Dashboard");
-          navigate('/admin/dashboard');
-        } else {
-          console.log("Redirection vers Citizen Dashboard");
-          navigate('/dashboard');
-        }
-      }, 100);
+      // Forcer un rechargement complet pour garantir l'initialisation du state
+      if (user.role === 'admin') {
+        console.log("Redirection vers Admin Dashboard");
+        window.location.href = '/admin/dashboard';
+      } else {
+        console.log("Redirection vers Citizen Dashboard");
+        window.location.href = '/dashboard';
+      }
 
     } catch (err) {
       console.error("Erreur de login:", err);
@@ -138,6 +135,7 @@ export default function Login() {
                           placeholder="Email"
                           value={formData.email}
                           onChange={handleChange}
+                          autoComplete="off"
                           required
                           style={{ height: '55px' }}
                         />
@@ -153,6 +151,7 @@ export default function Login() {
                           placeholder="Mot de passe"
                           value={formData.password}
                           onChange={handleChange}
+                          autoComplete="off"
                           required
                           style={{ height: '55px' }}
                         />

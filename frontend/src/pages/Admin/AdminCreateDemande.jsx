@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import demandeService from "../../services/demandeService";
 
-export default function DemandeNaissance() {
+export default function AdminCreateDemande() {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
         // Enfant
@@ -106,9 +106,18 @@ export default function DemandeNaissance() {
 
         try {
             await demandeService.createDemande('naissance', formData);
-            alert('Demande de naissance soumise avec succès !');
-            // Forcer un rechargement complet pour éviter les erreurs DOM
-            window.location.href = '/mes-demandes';
+            if (confirm('Demande enregistrée avec succès ! Voulez-vous consuler les demandes maintenant ?')) {
+                navigate('/admin/demandes');
+            } else {
+                // Reset form for next entry
+                setStep(1);
+                setFormData({
+                    prenomEnfant: "", nomEnfant: "", sexeEnfant: "M", dateNaissanceEnfant: "", heureNaissanceEnfant: "", lieuNaissanceEnfant: "",
+                    prenomPere: "", nomPere: "", dateNaissancePere: "", lieuNaissancePere: "", nationalitePere: "TCHADIENNE", professionPere: "", domicilePere: "",
+                    prenomMere: "", nomMere: "", dateNaissanceMere: "", lieuNaissanceMere: "", nationaliteMere: "TCHADIENNE", professionMere: "", domicileMere: ""
+                });
+                setLoading(false);
+            }
         } catch (err) {
             console.error(err);
             setError(err.response?.data?.message || "Erreur lors de la soumission de la demande");
@@ -234,9 +243,9 @@ export default function DemandeNaissance() {
             case 4:
                 return (
                     <div className="form-step-content">
-                        <h4 className="fw-bold mb-4 text-primary"><i className="bi bi-clipboard-check me-2"></i>Validation finale</h4>
-                        <div className="alert alert-info border-0 shadow-sm rounded-4 p-4">
-                            <h5 className="fw-bold mb-3 text-dark">Résumé de la déclaration</h5>
+                        <h4 className="fw-bold mb-4 text-primary"><i className="bi bi-clipboard-check me-2"></i>Validation Agence / Guichet</h4>
+                        <div className="alert alert-warning border-0 shadow-sm rounded-4 p-4">
+                            <h5 className="fw-bold mb-3 text-dark">Résumé de la déclaration (Mode GUICHET)</h5>
                             <div className="row g-2">
                                 <div className="col-6 text-muted">Enfant:</div>
                                 <div className="col-6 fw-bold">{formData.prenomEnfant} {formData.nomEnfant}</div>
@@ -250,7 +259,7 @@ export default function DemandeNaissance() {
                             </div>
                         </div>
                         <p className="text-muted small italic">
-                            <i className="bi bi-info-circle me-1"></i> En soumettant ce formulaire, vous certifiez sur l'honneur l'exactitude des informations fournies.
+                            <i className="bi bi-info-circle me-1"></i> Vous saisissez cet acte en tant qu'administrateur/agent pour un citoyen présent.
                         </p>
                     </div>
                 );
@@ -260,15 +269,15 @@ export default function DemandeNaissance() {
     };
 
     return (
-        <div className="fade-in">
+        <div className="fade-in p-4">
             <div className="dashboard-header-simple py-2 mb-4">
                 <div className="d-flex align-items-center">
-                    <button onClick={() => navigate('/demander-acte')} className="btn btn-link text-decoration-none text-muted p-0 me-3 hover-translate transition-all">
+                    <button onClick={() => navigate('/admin/dashboard')} className="btn btn-link text-decoration-none text-muted p-0 me-3 hover-translate transition-all">
                         <i className="bi bi-arrow-left fs-4"></i>
                     </button>
                     <div>
-                        <h2 className="fw-bold mb-0">Demande d'acte de naissance</h2>
-                        <p className="text-muted small mb-0">Déclaration de Naissance - République du Tchad</p>
+                        <h2 className="fw-bold mb-0 text-primary">Mode Guichet : Nouvelle Naissance</h2>
+                        <p className="text-muted small mb-0">Saisie manuelle d'acte de naissance pour citoyen hors-ligne</p>
                     </div>
                 </div>
             </div>
@@ -276,7 +285,7 @@ export default function DemandeNaissance() {
             <div className="row justify-content-center">
                 <div className="col-lg-10">
 
-                    <div className="glass-card p-4 p-md-5 border-0 shadow-lg rounded-4 overflow-hidden position-relative">
+                    <div className="card p-4 p-md-5 border-0 shadow-lg rounded-4 overflow-hidden position-relative">
                         {/* Stepper Header */}
                         <div className="stepper-container">
                             {steps.map((s) => (
@@ -314,9 +323,9 @@ export default function DemandeNaissance() {
                                 ) : (
                                     <button type="submit" className="btn btn-success btn-lg rounded-pill px-5 shadow-sm" disabled={loading}>
                                         {loading ? (
-                                            <><span className="spinner-border spinner-border-sm me-2"></span>Envoi...</>
+                                            <><span className="spinner-border spinner-border-sm me-2"></span>Enregistrement...</>
                                         ) : (
-                                            <><i className="bi bi-send-check me-2"></i>Soumettre la demande</>
+                                            <><i className="bi bi-save-fill me-2"></i>Enregistrer la Demande</>
                                         )}
                                     </button>
                                 )}

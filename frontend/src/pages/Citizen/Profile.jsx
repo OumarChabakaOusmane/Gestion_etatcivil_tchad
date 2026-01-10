@@ -285,10 +285,13 @@ const Profile = () => {
                                 <div className="row mb-3">
                                     <div className="col-4 text-muted fw-bold">Enregistrer le :</div>
                                     <div className="col-8 fw-bold" style={{ color: '#0056b3' }}>
-                                        {user?.createdAt ? new Date(user.createdAt).toLocaleString('en-US', {
-                                            month: 'short', day: 'numeric', year: 'numeric',
-                                            hour: 'numeric', minute: '2-digit', second: '2-digit', hour12: true
-                                        }) : 'Jan 22, 2024, 1:59:49 PM'}
+                                        {user?.createdAt ? new Date(user.createdAt).toLocaleString('fr-FR', {
+                                            day: 'numeric', month: 'long', year: 'numeric',
+                                            hour: '2-digit', minute: '2-digit', second: '2-digit'
+                                        }) : new Date().toLocaleString('fr-FR', {
+                                            day: 'numeric', month: 'long', year: 'numeric',
+                                            hour: '2-digit', minute: '2-digit', second: '2-digit'
+                                        })}
                                     </div>
                                 </div>
                             </div>

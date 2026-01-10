@@ -18,6 +18,7 @@ try {
   };
 }
 
+
 // Initialisation de l'admin SDK
 try {
   if (!admin.apps.length) {
@@ -31,6 +32,7 @@ try {
 }
 
 const db = admin.firestore();
+db.settings({ ignoreUndefinedProperties: true });
 
 module.exports = {
   admin,

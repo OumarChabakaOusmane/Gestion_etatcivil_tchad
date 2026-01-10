@@ -30,15 +30,16 @@ class Notification {
     static async findByUserId(userId) {
         const snapshot = await db.collection('notifications')
             .where('userId', '==', userId)
-            .orderBy('createdAt', 'desc')
-            .limit(50)
+            .limit(100)
             .get();
 
         const notifications = [];
         snapshot.forEach(doc => {
             notifications.push({ id: doc.id, ...doc.data() });
         });
-        return notifications;
+
+        // Tri manuel pour éviter l'erreur d'index manquant dans Firestore
+        return notifications.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt)).slice(0, 50);
     }
 
     /**

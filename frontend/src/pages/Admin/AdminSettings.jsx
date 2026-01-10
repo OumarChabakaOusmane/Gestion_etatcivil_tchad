@@ -141,13 +141,13 @@ const AdminSettings = () => {
                 <div className="card-body p-0">
                     <div className="row g-0">
                         <div className="col-lg-4 bg-light p-4 text-center border-end">
-                            <div className="position-relative d-block mb-4 mx-auto" style={{ maxWidth: '200px' }}>
+                            <div className="position-relative d-block mb-4 mx-auto" style={{ maxWidth: '360px' }}>
                                 {photoPreview ? (
                                     <img src={photoPreview} alt="Profile" className="shadow-sm w-100"
-                                        style={{ aspectRatio: '1/1', objectFit: 'cover', border: '5px solid white', borderRadius: '20px' }} />
+                                        style={{ aspectRatio: '1/1', objectFit: 'cover', border: '5px solid white', borderRadius: '30px' }} />
                                 ) : (
                                     <div className="bg-white text-primary shadow-sm d-flex align-items-center justify-content-center w-100"
-                                        style={{ aspectRatio: '1/1', fontSize: '4rem', border: '5px solid white', borderRadius: '20px' }}>
+                                        style={{ aspectRatio: '1/1', fontSize: '8rem', border: '5px solid white', borderRadius: '30px' }}>
                                         <i className="bi bi-person-fill"></i>
                                     </div>
                                 )}

@@ -11,11 +11,21 @@ const getNotifications = async (req, res) => {
             data: notifications
         });
     } catch (error) {
-        console.error('Erreur getNotifications:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Erreur lors de la récupération des notifications'
-        });
+        if (error.code === 14) {
+            console.warn('⚠️ Attention: Firestore inaccessible (Problème DNS/Réseau). Impossible de récupérer les notifications.');
+            res.status(503).json({
+                success: false,
+                message: 'Service temporairement indisponible (Connexion Base de Données)',
+                error: 'Firestore unavailable'
+            });
+        } else {
+            console.error('Erreur getNotifications:', error);
+            res.status(500).json({
+                success: false,
+                message: 'Erreur lors de la récupération des notifications',
+                error: error.message
+            });
+        }
     }
 };
 

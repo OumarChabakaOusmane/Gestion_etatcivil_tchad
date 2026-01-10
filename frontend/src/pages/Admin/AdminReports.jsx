@@ -136,7 +136,7 @@ export default function AdminReports() {
                     <div className="card border-0 rounded-4 shadow-sm p-4 h-100 border">
                         <h5 className="fw-bold text-dark mb-4">Volume d'Activité</h5>
                         <div style={{ height: 350, width: '100%', position: 'relative', minWidth: 0 }}>
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" debounce={300}>
                                 <AreaChart data={stats.trendData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
                                     <defs>
                                         <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
@@ -158,7 +158,7 @@ export default function AdminReports() {
                     <div className="card border-0 rounded-4 shadow-sm p-4 h-100 border">
                         <h5 className="fw-bold text-dark mb-4">Répartition des Actes</h5>
                         <div style={{ height: 350, width: '100%', position: 'relative', minWidth: 0 }}>
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" debounce={300}>
                                 <PieChart>
                                     <Pie data={stats.typePieData} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={8} dataKey="value" stroke="none">
                                         {stats.typePieData.map((entry, index) => (
@@ -176,7 +176,7 @@ export default function AdminReports() {
                     <div className="card border-0 rounded-4 shadow-sm p-4 border">
                         <h5 className="fw-bold text-dark mb-4">Comparaison par Catégorie</h5>
                         <div style={{ height: 300, width: '100%', position: 'relative', minWidth: 0 }}>
-                            <ResponsiveContainer width="100%" height="100%">
+                            <ResponsiveContainer width="100%" height="100%" debounce={300}>
                                 <BarChart data={stats.distribution}>
                                     <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#999', fontSize: 12 }} />
                                     <YAxis axisLine={false} tickLine={false} tick={{ fill: '#999', fontSize: 12 }} />

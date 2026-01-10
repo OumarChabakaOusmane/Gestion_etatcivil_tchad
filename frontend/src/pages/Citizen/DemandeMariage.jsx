@@ -101,11 +101,10 @@ export default function DemandeMariage() {
         try {
             await demandeService.createDemande('mariage', formData);
             alert('Demande de mariage soumise avec succès !');
-            navigate('/mes-demandes');
+            window.location.href = '/mes-demandes';
         } catch (err) {
             console.error(err);
             setError(err.response?.data?.message || "Erreur lors de la soumission de la demande");
-        } finally {
             setLoading(false);
         }
     };

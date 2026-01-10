@@ -61,6 +61,12 @@ const AdminLayout = ({ children }) => {
                         <span className="fw-semibold">Gérer les Demandes</span>
                     </Link>
 
+                    <Link to="/admin/guichet/naissance"
+                        className={`nav-link d-flex align-items-center gap-3 p-3 rounded-4 transition-all ${isActive('/admin/guichet') ? 'active-admin-custom shadow-sm' : 'text-white-50 hover-admin-custom'}`}>
+                        <i className={`bi bi-pencil-square fs-5 ${isActive('/admin/guichet') ? 'text-white' : ''}`}></i>
+                        <span className="fw-semibold">Saisie Acte (Guichet)</span>
+                    </Link>
+
                     <Link to="/admin/rapports"
                         className={`nav-link d-flex align-items-center gap-3 p-3 rounded-4 transition-all ${isActive('/admin/rapports') ? 'active-admin-custom shadow-sm' : 'text-white-50 hover-admin-custom'}`}>
                         <i className={`bi bi-bar-chart-fill fs-5 ${isActive('/admin/rapports') ? 'text-white' : ''}`}></i>

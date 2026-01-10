@@ -142,65 +142,200 @@ export default function AdminDemandes() {
     };
 
     const handleDownloadPDF = (demande) => {
-        const themeColor = d => d.type === 'naissance' ? '#0d6efd' : d.type === 'mariage' ? '#198754' : '#dc3545';
-        const element = document.createElement('div');
+        const themeColor = d => d.type === 'naissance' ? '#004aad' : d.type === 'mariage' ? '#198754' : '#d21034';
+        const typeLabelFr = d => d.type === 'naissance' ? 'NAISSANCE' : d.type === 'mariage' ? 'MARIAGE' : 'DÉCÈS';
+        const typeLabelAr = d => d.type === 'naissance' ? 'الولادة' : d.type === 'mariage' ? 'الزواج' : 'الوفاة';
 
-        const content = d => {
-            if (d.type === 'naissance') return `
-                <p>L'enfant de sexe ${d.donnees.sexeEnfant === 'M' ? 'Masculin' : 'Féminin'} nommé :</p>
-                <h3 style="text-align:center; margin: 20px 0;">${d.donnees.prenomEnfant.toUpperCase()} ${d.donnees.nomEnfant.toUpperCase()}</h3>
-                <p>Est né le : ${new Date(d.donnees.dateNaissanceEnfant).toLocaleDateString('fr-FR')}</p>
-                <p>À : ${d.donnees.lieuNaissanceEnfant}</p>
-                <p>De : ${d.donnees.prenomPere} ${d.donnees.nomPere}</p>
-                <p>Et de : ${d.donnees.prenomMere} ${d.donnees.nomMere}</p>
+        const element = document.createElement('div');
+        element.style.width = '800px';
+
+        const verifyUrl = `${window.location.origin}/verifier-acte/${demande.id || demande._id}`;
+        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyUrl)}`;
+
+        const renderContent = d => {
+            const row = (labelFr, labelAr, value) => `
+                <div style="display: flex; border-bottom: 1px solid #f0f0f0; padding: 6px 0; font-size: 13px; align-items: center;">
+                    <div style="width: 30%; text-align: left;">
+                        <span style="font-weight: bold; color: #333; font-size: 12px; text-transform: uppercase;">${labelFr}</span>
+                    </div>
+                    <div style="width: 40%; text-align: center; font-weight: bold; color: #000; font-size: 14px;">
+                        ${value || '-'}
+                    </div>
+                    <div style="width: 30%; text-align: right;">
+                        <span style="font-weight: bold; color: #333; font-size: 14px;">${labelAr}</span>
+                    </div>
+                </div>
             `;
-            if (d.type === 'mariage') return `
-                <p>Entre : <strong>${d.donnees.prenomEpoux.toUpperCase()} ${d.donnees.nomEpoux}</strong></p>
-                <p>Et : <strong>${d.donnees.prenomEpouse.toUpperCase()} ${d.donnees.nomEpouse}</strong></p>
-                <p>Célébré le : ${new Date(d.donnees.dateMariage).toLocaleDateString('fr-FR')}</p>
-                <p>Lieu : ${d.donnees.lieuMariage}</p>
+
+            const sectionTitle = (fr, ar) => `
+                <div style="margin: 15px 0 5px 0; border-bottom: 2px solid ${themeColor(d)}; padding-bottom: 3px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: bold; color: ${themeColor(d)}; font-size: 13px;">${fr.toUpperCase()}</span>
+                    <span style="font-weight: bold; color: ${themeColor(d)}; font-size: 16px;">${ar}</span>
+                </div>
             `;
-            if (d.type === 'deces') return `
-                <p>Le décès de : <strong>${d.donnees.prenomDefunt.toUpperCase()} ${d.donnees.nomDefunt}</strong></p>
-                <p>Survenu le : ${new Date(d.donnees.dateDeces).toLocaleDateString('fr-FR')}</p>
-                <p>À : ${d.donnees.lieuDeces}</p>
-            `;
+
+            if (d.type === 'naissance') {
+                return `
+                    ${sectionTitle("Informations de l'Enfant", "معلومات الطفل")}
+                    ${row("NOM COMPLET", "الاسم الكامل", `${d.donnees.nomEnfant.toUpperCase()} ${d.donnees.prenomEnfant.toUpperCase()}`)}
+                    ${row("SEXE", "الجنس", d.donnees.sexeEnfant === 'M' ? 'Masculin / ذكر' : 'Féminin / أنثى')}
+                    ${row("DATE DE NAISSANCE", "تاريخ الميلاد", new Date(d.donnees.dateNaissanceEnfant).toLocaleDateString('fr-FR'))}
+                    ${row("LIEU DE NAISSANCE", "مكان الميلاد", d.donnees.lieuNaissanceEnfant)}
+                    
+                    ${sectionTitle("Informations du Père", "معلومات الأب")}
+                    ${row("NOM & PRÉNOM", "اللقب والاسم", `${d.donnees.nomPere} ${d.donnees.prenomPere}`)}
+                    ${row("NÉ LE", "ولد في", d.donnees.dateNaissancePere ? new Date(d.donnees.dateNaissancePere).toLocaleDateString('fr-FR') : '-')}
+                    ${row("À", "في", d.donnees.lieuNaissancePere)}
+                    ${row("NATIONALITÉ", "الجنسية", d.donnees.nationalitePere)}
+                    ${row("PROFESSION", "المهنة", d.donnees.professionPere)}
+                    ${row("DOMICILE", "السكن", d.donnees.domicilePere)}
+                    
+                    ${sectionTitle("Informations de la Mère", "معلومات الأم")}
+                    ${row("NOM & PRÉNOM", "اللقب والاسم", `${d.donnees.nomMere} ${d.donnees.prenomMere}`)}
+                    ${row("NÉE LE", "ولدت في", d.donnees.dateNaissanceMere ? new Date(d.donnees.dateNaissanceMere).toLocaleDateString('fr-FR') : '-')}
+                    ${row("À", "في", d.donnees.lieuNaissanceMere)}
+                    ${row("NATIONALITÉ", "الجنسية", d.donnees.nationaliteMere)}
+                    ${row("PROFESSION", "المهنة", d.donnees.professionMere)}
+                    ${row("DOMICILE", "السكن", d.donnees.domicileMere)}
+                `;
+            }
+            if (d.type === 'mariage') {
+                return `
+                    ${sectionTitle("Informations de l'Époux", "معلومات الزوج")}
+                    ${row("NOM COMPLET", "الاسم الكامل", `${d.donnees.nomEpoux.toUpperCase()} ${d.donnees.prenomEpoux.toUpperCase()}`)}
+                    ${row("DATE & LIEU DE NAISSANCE", "تاريخ ومكان الميلاد", `${d.donnees.dateNaissanceEpoux ? new Date(d.donnees.dateNaissanceEpoux).toLocaleDateString('fr-FR') : '-'} à ${d.donnees.lieuNaissanceEpoux || '-'}`)}
+                    ${row("NATIONALITÉ", "الجنسية", d.donnees.nationaliteEpoux)}
+                    ${row("PROFESSION", "المهنة", d.donnees.professionEpoux)}
+                    ${row("DOMICILE", "السكن", d.donnees.domicileEpoux)}
+                    
+                    ${sectionTitle("Informations de l'Épouse", "معلومات الزوجة")}
+                    ${row("NOM COMPLET", "الاسم الكامل", `${d.donnees.nomEpouse.toUpperCase()} ${d.donnees.prenomEpouse.toUpperCase()}`)}
+                    ${row("DATE & LIEU DE NAISSANCE", "تاريخ ومكان الميلاد", `${d.donnees.dateNaissanceEpouse ? new Date(d.donnees.dateNaissanceEpouse).toLocaleDateString('fr-FR') : '-'} à ${d.donnees.lieuNaissanceEpouse || '-'}`)}
+                    ${row("NATIONALITÉ", "الجنسية", d.donnees.nationaliteEpouse)}
+                    ${row("PROFESSION", "المهنة", d.donnees.professionEpouse)}
+                    ${row("DOMICILE", "السكن", d.donnees.domicileEpouse)}
+                    
+                    ${sectionTitle("Détails du Mariage", "تفاصيل الزواج")}
+                    ${row("DATE DU MARIAGE", "تاريخ الزواج", new Date(d.donnees.dateMariage).toLocaleDateString('fr-FR'))}
+                    ${row("LIEU", "المكان", d.donnees.lieuMariage)}
+                    ${row("RÉGIME MATRIMONIAL", "النظام الزوجي", d.donnees.regimeMatrimonial)}
+                `;
+            }
+            if (d.type === 'deces') {
+                return `
+                    ${sectionTitle("Informations sur le Défunt", "معلومات عن المتوفى")}
+                    ${row("NOM COMPLET", "الاسم الكامل", `${d.donnees.nomDefunt.toUpperCase()} ${d.donnees.prenomDefunt.toUpperCase()}`)}
+                    ${row("DATE & LIEU DE NAISSANCE", "تاريخ ومكان الميلاد", `${d.donnees.dateNaissanceDefunt ? new Date(d.donnees.dateNaissanceDefunt).toLocaleDateString('fr-FR') : '-'} à ${d.donnees.lieuNaissanceDefunt || '-'}`)}
+                    ${row("NATIONALITÉ", "الجنسية", d.donnees.nationaliteDefunt)}
+                    ${row("DATE DU DÉCÈS", "تاريخ الوفاة", new Date(d.donnees.dateDeces).toLocaleDateString('fr-FR'))}
+                    ${row("LIEU DU DÉCÈS", "مكان الوفاة", d.donnees.lieuDeces)}
+                    ${row("CAUSE DU DÉCÈS", "سبب الوفاة", d.donnees.causeDeces)}
+                    
+                    ${sectionTitle("Informations sur le Déclarant", "معلومات عن المبلغ")}
+                    ${row("NOM & PRÉNOM", "اللقب والاسم", `${d.donnees.nomDeclarant} ${d.donnees.prenomDeclarant}`)}
+                    ${row("LIEN DE PARENTÉ", "صلة القرابة", d.donnees.lienParente)}
+                    ${row("DOMICILE", "السكن", d.donnees.domicileDeclarant)}
+                `;
+            }
             return '';
         };
 
         element.innerHTML = `
-            <div style="padding: 40px; border: 10px double ${themeColor(demande)}; font-family: sans-serif;">
-                <div style="text-align:center;">
-                    <h2>RÉPUBLIQUE DU TCHAD</h2>
-                    <p>Unité - Travail - Progrès</p>
-                    <hr/>
-                    <h1>EXTRAIT D'ACTE DE ${demande.type.toUpperCase()}</h1>
+            <div style="padding: 20px; border: 1px solid #ddd; font-family: 'Times New Roman', Times, serif; color: #1a1a1a; min-height: 850px; position: relative; background: white; box-sizing: border-box;">
+                <!-- Header Bilingue Symétrique -->
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #004aad; padding-bottom: 10px;">
+                    <div style="text-align: left; width: 25%;">
+                        <img src="/drapeau-tchad.jpg" style="width: 120px; object-fit: contain;" alt="Drapeau"/>
+                    </div>
+                    <div style="text-align: center; width: 50%;">
+                        <strong style="font-size: 16px; color: #004aad; display: block; margin-bottom: 2px;">RÉPUBLIQUE DU TCHAD</strong>
+                        <span style="font-size: 11px; font-style: italic; display: block; margin-bottom: 8px;">Unité - Travail - Progrès</span>
+                        
+                        <strong style="font-size: 18px; color: #004aad; display: block; margin-bottom: 2px;">جمهورية تشاد</strong>
+                        <span style="font-size: 12px; display: block;">وحدة - عمل - تقدم</span>
+                    </div>
+                    <div style="text-align: right; width: 25%;">
+                        <img src="/logomairie.png" style="width: 110px; object-fit: contain;" alt="Logo Mairie"/>
+                    </div>
                 </div>
-                <div style="margin-top: 30px; line-height: 1.6;">
-                    ${content(demande)}
+
+                <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
+                    <div style="width: 40%; text-align: left;">
+                        <h1 style="color: ${themeColor(demande)}; font-size: 20px; margin: 0; text-transform: uppercase;">
+                            ACTE DE ${typeLabelFr(demande)}
+                        </h1>
+                    </div>
+                    <div style="width: 20%; text-align: center;">
+                        <span style="font-size: 12px; color: #666; font-weight: bold;">
+                            N° ${(demande.id || demande._id).toUpperCase()}
+                        </span>
+                    </div>
+                    <div style="width: 40%; text-align: right;">
+                        <h2 style="color: ${themeColor(demande)}; font-size: 20px; margin: 0;">
+                            شهادة ${typeLabelAr(demande)}
+                        </h2>
+                    </div>
                 </div>
-                <div style="margin-top: 50px; text-align: right;">
-                    <p>Fait à N'Djamena, le ${new Date().toLocaleDateString('fr-FR')}</p>
-                    <p><strong>L'Officier d'État Civil</strong></p>
+
+                <div style="margin: 0 10px;">
+                    ${renderContent(demande)}
+                </div>
+
+                <!-- Signature et QR Code -->
+                <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
+                    <div style="text-align: center; width: 150px;">
+                        <img src="${qrCodeUrl}" style="width: 80px; height: 80px; border: 1px solid #eee;" alt="QR Code"/>
+                        <p style="font-size: 9px; color: #666; margin-top: 3px;">VÉRIFICATION OFFICIELLE</p>
+                    </div>
+                    
+                    <div style="text-align: center; width: 300px; border-top: 1px solid #333; padding-top: 5px;">
+                        <p style="margin: 0; font-weight: bold; font-size: 13px;">Fait à N'Djamena, le ${new Date().toLocaleDateString('fr-FR')}</p>
+                        <p style="margin: 5px 0 40px 0; font-weight: bold; font-size: 13px;">L'Officier de l'État Civil / ضابط الحالة المدنية</p>
+                        <p style="margin: 0; font-style: italic; border-top: 1px dashed #ccc; display: inline-block; padding-top: 3px; font-size: 12px;">Signature et Cachet</p>
+                    </div>
+                </div>
+
+                <!-- Footer Discret -->
+                <div style="position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 10px; color: #999;">
+                    SGEC-TCHAD : Système de Gestion de l'État Civil
                 </div>
             </div>
         `;
 
         const opt = {
-            margin: 1,
-            filename: `ACTE_${demande.type.toUpperCase()}_${demande.id.slice(-6)}.pdf`,
-            image: { type: 'jpeg', quality: 0.98 },
-            html2canvas: { scale: 2 },
-            jsPDF: { unit: 'in', format: 'letter', orientation: 'portrait' }
+            margin: 0,
+            filename: `ACTE_${typeLabelFr(demande)}_${(demande.id || demande._id).slice(-6)}.pdf`,
+            image: { type: 'jpeg', quality: 1.0 },
+            html2canvas: { scale: 3, useCORS: true, letterRendering: true },
+            jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
+            pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
 
+        try {
+            html2pdf().set(opt).from(element).save();
+            showToast('Génération du PDF lancée...', 'success');
+        } catch (err) {
+            console.error('PDF Error:', err);
+            showToast('Erreur lors de la génération PDF', 'danger');
+        }
     };
+
 
     const handleExport = () => {
         const formattedData = exportHelper.formatDemandesForExport(filteredDemandes);
         const success = exportHelper.exportToExcel(formattedData, 'Demandes_SIGEC', 'Demandes');
         if (success) showToast('Export réussi !', 'success');
         else showToast('Erreur lors de l\'export', 'error');
+    };
+
+    // Helper pour formater les dates YYYY-MM-DD en DD/MM/YYYY
+    const formatDateString = (dateStr) => {
+        if (!dateStr) return "Non renseignée";
+        try {
+            return new Date(dateStr).toLocaleDateString('fr-FR');
+        } catch (e) {
+            return dateStr;
+        }
     };
 
     return (
@@ -373,24 +508,153 @@ export default function AdminDemandes() {
                                         </div>
                                     </div>
                                     <div className="col-md-6">
-                                        <div className="p-3 bg-white border rounded-4 h-100 shadow-sm text-center d-flex flex-column justify-content-center">
-                                            <i className="bi bi-person-badge-fill text-primary display-4 mb-2"></i>
-                                            <h5 className="fw-bold mb-0">{selectedDemande.donnees.nomEnfant || selectedDemande.donnees.nomEpoux || selectedDemande.donnees.nomDefunt || "Citoyen"}</h5>
-                                            <p className="text-muted small">Demandeur Principal</p>
+                                        <div className="p-4 bg-white border rounded-4 h-100 shadow-sm position-relative overflow-hidden">
+                                            <div className="position-absolute top-0 end-0 p-3 opacity-10">
+                                                <i className="bi bi-person-circle display-1 text-primary"></i>
+                                            </div>
+                                            <h6 className="text-primary fw-bold text-uppercase small mb-3">Demandeur (Compte Citoyen)</h6>
+
+                                            <div className="mb-2">
+                                                <span className="text-muted small d-block">Nom complet</span>
+                                                <span className="fw-bold fs-5 text-dark">
+                                                    {selectedDemande.userId?.prenom ? `${selectedDemande.userId.prenom} ${selectedDemande.userId.nom}` : "Admin (Guichet)"}
+                                                </span>
+                                            </div>
+
+                                            <div className="mb-2">
+                                                <span className="text-muted small d-block">Email de notification</span>
+                                                {selectedDemande.userId?.email ? (
+                                                    <div className="d-flex align-items-center gap-2 text-success fw-bold">
+                                                        <i className="bi bi-check-circle-fill"></i>
+                                                        {selectedDemande.userId.email}
+                                                    </div>
+                                                ) : (
+                                                    <div className="d-flex align-items-center gap-2 text-warning fw-bold">
+                                                        <i className="bi bi-exclamation-triangle-fill"></i>
+                                                        Non renseigné
+                                                    </div>
+                                                )}
+                                            </div>
+
+                                            <div className="mt-3 pt-3 border-top">
+                                                <span className="badge bg-primary bg-opacity-10 text-primary border border-primary px-3 py-2 rounded-pill">
+                                                    <i className="bi bi-bell-fill me-2"></i>
+                                                    Prêt à recevoir les notifications
+                                                </span>
+                                            </div>
                                         </div>
                                     </div>
                                     <div className="col-12">
-                                        <h6 className="text-primary fw-bold text-uppercase small mb-3">Données du formulaire</h6>
-                                        <div className="bg-light p-4 rounded-4 shadow-inner">
-                                            <div className="row g-3">
-                                                {Object.entries(selectedDemande.donnees).map(([k, v]) => (
-                                                    <div key={k} className="col-md-6 border-bottom py-2 d-flex justify-content-between">
-                                                        <span className="text-muted text-capitalize">{k.replace(/([A-Z])/g, ' $1')}</span>
-                                                        <span className="fw-bold text-dark">{String(v)}</span>
+                                        <h6 className="text-primary fw-bold text-uppercase small mb-3">Détails de l'acte</h6>
+
+                                        {selectedDemande.type === 'naissance' && (
+                                            <>
+                                                <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
+                                                    <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-person-fill me-2"></i>L'Enfant</h6>
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomEnfant}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomEnfant}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Sexe</span>: <span className="fw-bold">{selectedDemande.donnees.sexeEnfant}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date de Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissanceEnfant)}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Heure</span>: <span className="fw-bold">{selectedDemande.donnees.heureNaissanceEnfant || "Non renseignée"}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu</span>: <span className="fw-bold">{selectedDemande.donnees.lieuNaissanceEnfant}</span></div>
                                                     </div>
-                                                ))}
-                                            </div>
-                                        </div>
+                                                </div>
+                                                <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
+                                                    <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-gender-male me-2"></i>Le Père</h6>
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomPere}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomPere}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissancePere)}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu Naissance</span>: <span className="fw-bold">{selectedDemande.donnees.lieuNaissancePere}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nationalité</span>: <span className="fw-bold">{selectedDemande.donnees.nationalitePere}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Profession</span>: <span className="fw-bold">{selectedDemande.donnees.professionPere}</span></div>
+                                                        <div className="col-12 border-bottom py-2"><span className="text-muted">Domicile</span>: <span className="fw-bold">{selectedDemande.donnees.domicilePere}</span></div>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-light p-4 rounded-4 shadow-inner">
+                                                    <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-gender-female me-2"></i>La Mère</h6>
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomMere}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomMere}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissanceMere)}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu Naissance</span>: <span className="fw-bold">{selectedDemande.donnees.lieuNaissanceMere}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nationalité</span>: <span className="fw-bold">{selectedDemande.donnees.nationaliteMere}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Profession</span>: <span className="fw-bold">{selectedDemande.donnees.professionMere}</span></div>
+                                                        <div className="col-12 border-bottom py-2"><span className="text-muted">Domicile</span>: <span className="fw-bold">{selectedDemande.donnees.domicileMere}</span></div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {selectedDemande.type === 'mariage' && (
+                                            <>
+                                                <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
+                                                    <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-calendar-heart me-2"></i>Détails du Mariage</h6>
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateMariage)}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu</span>: <span className="fw-bold">{selectedDemande.donnees.lieuMariage}</span></div>
+                                                        <div className="col-12 border-bottom py-2"><span className="text-muted">Régime Matrimonial</span>: <span className="fw-bold text-capitalize">{selectedDemande.donnees.regimeMatrimonial?.replace('_', ' ')}</span></div>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
+                                                    <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-gender-male me-2"></i>L'Époux</h6>
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomEpoux}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomEpoux}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissanceEpoux)}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu Naissance</span>: <span className="fw-bold">{selectedDemande.donnees.lieuNaissanceEpoux}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nationalité</span>: <span className="fw-bold">{selectedDemande.donnees.nationaliteEpoux}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Profession</span>: <span className="fw-bold">{selectedDemande.donnees.professionEpoux}</span></div>
+                                                        <div className="col-12 border-bottom py-2"><span className="text-muted">Domicile</span>: <span className="fw-bold">{selectedDemande.donnees.domicileEpoux}</span></div>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-light p-4 rounded-4 shadow-inner">
+                                                    <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-gender-female me-2"></i>L'Épouse</h6>
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomEpouse}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomEpouse}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissanceEpouse)}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu Naissance</span>: <span className="fw-bold">{selectedDemande.donnees.lieuNaissanceEpouse}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nationalité</span>: <span className="fw-bold">{selectedDemande.donnees.nationaliteEpouse}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Profession</span>: <span className="fw-bold">{selectedDemande.donnees.professionEpouse}</span></div>
+                                                        <div className="col-12 border-bottom py-2"><span className="text-muted">Domicile</span>: <span className="fw-bold">{selectedDemande.donnees.domicileEpouse}</span></div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
+
+                                        {selectedDemande.type === 'deces' && (
+                                            <>
+                                                <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
+                                                    <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-person-x-fill me-2"></i>Le Défunt</h6>
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomDefunt}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomDefunt}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissanceDefunt)}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu Naissance</span>: <span className="fw-bold">{selectedDemande.donnees.lieuNaissanceDefunt}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nationalité</span>: <span className="fw-bold">{selectedDemande.donnees.nationaliteDefunt}</span></div>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
+                                                    <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-info-circle-fill me-2"></i>Détails du Décès</h6>
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateDeces)}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu</span>: <span className="fw-bold">{selectedDemande.donnees.lieuDeces}</span></div>
+                                                        <div className="col-12 border-bottom py-2"><span className="text-muted">Cause</span>: <span className="fw-bold">{selectedDemande.donnees.causeDeces}</span></div>
+                                                    </div>
+                                                </div>
+                                                <div className="bg-light p-4 rounded-4 shadow-inner">
+                                                    <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-person-fill me-2"></i>Le Déclarant</h6>
+                                                    <div className="row g-3">
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomDeclarant}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomDeclarant}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lien parenté</span>: <span className="fw-bold">{selectedDemande.donnees.lienParente}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Domicile</span>: <span className="fw-bold">{selectedDemande.donnees.domicileDeclarant}</span></div>
+                                                    </div>
+                                                </div>
+                                            </>
+                                        )}
                                     </div>
                                 </div>
                             </div>

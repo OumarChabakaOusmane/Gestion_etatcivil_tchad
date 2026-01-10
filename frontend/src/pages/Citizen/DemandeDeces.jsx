@@ -87,11 +87,10 @@ export default function DemandeDeces() {
         try {
             await demandeService.createDemande('deces', formData);
             alert('Déclaration de décès soumise avec succès !');
-            navigate('/mes-demandes');
+            window.location.href = '/mes-demandes';
         } catch (err) {
             console.error(err);
             setError(err.response?.data?.message || "Erreur lors de la soumission de la demande");
-        } finally {
             setLoading(false);
         }
     };

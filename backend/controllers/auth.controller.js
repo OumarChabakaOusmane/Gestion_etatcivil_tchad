@@ -105,6 +105,8 @@ const login = async (req, res) => {
       user: {
         id: user.id,
         email: user.email,
+        nom: user.nom,
+        prenom: user.prenom,
         role: user.role || 'user' // Rôle par défaut si non défini
       }
     };

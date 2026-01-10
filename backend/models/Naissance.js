@@ -14,11 +14,11 @@ class Naissance {
         // Enfant
         nomEnfant: data.nomEnfant,
         prenomEnfant: data.prenomEnfant,
-        sexe: data.sexe,
-        dateNaissance: data.dateNaissance,
-        heureNaissance: data.heureNaissance,
-        lieuNaissance: data.lieuNaissance,
-        
+        sexe: data.sexe || data.sexeEnfant,
+        dateNaissance: data.dateNaissance || data.dateNaissanceEnfant,
+        heureNaissance: data.heureNaissance || data.heureNaissanceEnfant,
+        lieuNaissance: data.lieuNaissance || data.lieuNaissanceEnfant,
+
         // Père
         pere: {
           nom: data.nomPere,
@@ -27,7 +27,7 @@ class Naissance {
           nationalite: data.nationalitePere,
           profession: data.professionPere
         },
-        
+
         // Mère
         mere: {
           nom: data.nomMere,
@@ -36,12 +36,12 @@ class Naissance {
           nationalite: data.nationaliteMere,
           profession: data.professionMere
         },
-        
+
         // Adresse
         adresse: {
-          domicileParents: data.domicileParents
+          domicileParents: data.domicileParents || data.domicilePere || data.domicileMere
         },
-        
+
         // Admin
         admin: {
           numeroActe: data.numeroActe,
@@ -68,11 +68,11 @@ class Naissance {
   static async findById(id) {
     try {
       const doc = await db.collection('naissances').doc(id).get();
-      
+
       if (!doc.exists) {
         return null;
       }
-      
+
       return { id: doc.id, ...doc.data() };
     } catch (error) {
       console.error('Erreur lors de la recherche de l\'acte de naissance:', error);
@@ -92,12 +92,12 @@ class Naissance {
       let query = db.collection('naissances')
         .orderBy('admin.createdAt', 'desc')
         .limit(limit);
-      
+
       if (startAfter) {
         const startAfterDoc = await db.collection('naissances').doc(startAfter).get();
         query = query.startAfter(startAfterDoc);
       }
-      
+
       const snapshot = await query.get();
       return snapshot.docs.map(doc => ({
         id: doc.id,
@@ -121,7 +121,7 @@ class Naissance {
         ...data,
         'admin.updatedAt': Timestamp.now()
       };
-      
+
       await db.collection('naissances').doc(id).update(updateData);
       return this.findById(id);
     } catch (error) {

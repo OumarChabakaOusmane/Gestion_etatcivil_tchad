@@ -12,8 +12,11 @@ class EmailService {
             port: process.env.EMAIL_PORT || 587,
             secure: process.env.EMAIL_PORT == 465,
             auth: {
-                user: process.env.EMAIL_USER || 'ethereal.user@ethereal.email',
-                pass: process.env.EMAIL_PASS || 'ethereal.password'
+                user: process.env.EMAIL_USER || 'pk2hr6g5cgqzh5uv@ethereal.email',
+                pass: process.env.EMAIL_PASS || 'gMs8P499BYzzKBFVrP'
+            },
+            tls: {
+                rejectUnauthorized: false
             }
         });
     }

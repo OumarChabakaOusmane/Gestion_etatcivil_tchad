@@ -27,6 +27,7 @@ import Aide from "../pages/Citizen/Aide";
 
 // Pages admin
 import AdminDashboard from "../pages/Admin/AdminDashboard";
+import AdminCreateDemande from '../pages/Admin/AdminCreateDemande';
 import AdminDemandes from "../pages/Admin/AdminDemandes";
 import AdminReports from "../pages/Admin/AdminReports";
 import AdminUtilisateurs from "../pages/Admin/AdminUtilisateurs";
@@ -153,6 +154,16 @@ export default function AppRoutes() {
             <ProtectedRoute adminOnly={true}>
               <AdminLayout>
                 <AdminDemandes />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/guichet/naissance"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <AdminLayout>
+                <AdminCreateDemande />
               </AdminLayout>
             </ProtectedRoute>
           }

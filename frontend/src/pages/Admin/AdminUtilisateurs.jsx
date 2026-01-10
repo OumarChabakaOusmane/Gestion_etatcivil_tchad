@@ -70,6 +70,11 @@ const AdminUtilisateurs = () => {
         }
     };
 
+    const handleExport = () => {
+        const dataToExport = exportHelper.formatUsersForExport(users);
+        exportHelper.exportToExcel(dataToExport, 'Annuaire_Utilisateurs', 'Utilisateurs');
+    };
+
     const filteredUsers = users.filter(u =>
         u.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         u.prenom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
