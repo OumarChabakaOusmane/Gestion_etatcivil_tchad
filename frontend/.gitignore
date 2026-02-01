@@ -7,10 +7,24 @@ yarn-error.log*
 pnpm-debug.log*
 lerna-debug.log*
 
+# Dependencies
 node_modules
 dist
 dist-ssr
+build
+
+# Environment Variables (CRITICAL - Ne pas commit)
+.env
+.env.local
+.env.development
+.env.production
+.env.test
 *.local
+
+# Firebase Configuration
+serviceAccountKey.json
+firebase-debug.log
+.firebase/
 
 # Editor directories and files
 .vscode/*
@@ -22,3 +36,17 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+
+# OS Files
+Thumbs.db
+.DS_Store
+
+# Test Coverage
+coverage
+.nyc_output
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache

@@ -1,3 +1,54 @@
-# Firebase secrets
-serviceAccountKey.json
+# Environment Variables (CRITICAL - Ne pas commit)
 .env
+.env.local
+.env.development
+.env.production
+.env.test
+
+# Firebase Configuration (CRITICAL - Ne pas commit)
+serviceAccountKey.json
+firebase-debug.log
+.firebase/
+
+# Dependencies
+node_modules
+package-lock.json
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+debug_*.log
+
+# Test Coverage
+coverage
+.nyc_output
+test-results/
+
+# Build
+dist
+build
+
+# OS Files
+.DS_Store
+Thumbs.db
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
