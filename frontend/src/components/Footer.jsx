@@ -71,10 +71,10 @@ export default function Footer() {
 
                 <div className="row align-items-center">
                     <div className="col-md-6 text-center text-md-start">
-                        <p className="text-muted mb-0">&copy; {t('footerRights')}</p>
+                        <p className="text-white-50 mb-0">&copy; {t('footerRights')}</p>
                     </div>
                     <div className="col-md-6 text-center text-md-end mt-3 mt-md-0">
-                        <p className="text-muted mb-0">
+                        <p className="text-white-50 mb-0">
                             {t('footerBuiltWith')}
                         </p>
                     </div>

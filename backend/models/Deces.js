@@ -14,6 +14,7 @@ class Deces {
                 // Défunt
                 defunt: {
                     nom: data.nomDefunt,
+                    prenom: data.prenomDefunt,
                     dateNaissance: data.dateNaissanceDefunt,
                     lieuNaissance: data.lieuNaissanceDefunt,
                     nationalite: data.nationaliteDefunt || null,
@@ -25,7 +26,9 @@ class Deces {
                 // Déclarant
                 declarant: {
                     nom: data.nomDeclarant,
-                    lienParente: data.lienParente
+                    prenom: data.prenomDeclarant,
+                    lienParente: data.lienParente,
+                    domicile: data.domicileDeclarant
                 },
 
                 // Admin

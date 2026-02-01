@@ -52,7 +52,7 @@ export default function AdminDemandes() {
             setFilterStatut(filterParam);
         }
         loadData();
-        const interval = setInterval(loadData, 2000);
+        const interval = setInterval(loadData, 30000); // Reload every 30s instead of 2s for better performance
         return () => clearInterval(interval);
     }, [location.search]);
 
@@ -154,23 +154,23 @@ export default function AdminDemandes() {
 
         const renderContent = d => {
             const row = (labelFr, labelAr, value) => `
-                <div style="display: flex; border-bottom: 1px solid #f0f0f0; padding: 6px 0; font-size: 13px; align-items: center;">
-                    <div style="width: 30%; text-align: left;">
-                        <span style="font-weight: bold; color: #333; font-size: 12px; text-transform: uppercase;">${labelFr}</span>
+                <div style="display: flex; border-bottom: 1px solid #f0f0f0; padding: 5px 0; font-size: 11px; align-items: center;">
+                    <div style="width: 30%; text-align: left; padding-left: 5px;">
+                        <span style="font-weight: bold; color: #333; font-size: 10px; text-transform: uppercase;">${labelFr}</span>
                     </div>
-                    <div style="width: 40%; text-align: center; font-weight: bold; color: #000; font-size: 14px;">
+                    <div style="width: 45%; text-align: center; font-weight: bold; color: #000; font-size: 12px;">
                         ${value || '-'}
                     </div>
-                    <div style="width: 30%; text-align: right;">
-                        <span style="font-weight: bold; color: #333; font-size: 14px;">${labelAr}</span>
+                    <div style="width: 25%; text-align: right; padding-right: 8px;">
+                        <span style="font-weight: bold; color: #333; font-size: 13px;">${labelAr}</span>
                     </div>
                 </div>
             `;
 
             const sectionTitle = (fr, ar) => `
-                <div style="margin: 15px 0 5px 0; border-bottom: 2px solid ${themeColor(d)}; padding-bottom: 3px; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: bold; color: ${themeColor(d)}; font-size: 13px;">${fr.toUpperCase()}</span>
-                    <span style="font-weight: bold; color: ${themeColor(d)}; font-size: 16px;">${ar}</span>
+                <div style="margin: 12px 0 6px 0; border-bottom: 2px solid ${themeColor(d)}; padding-bottom: 3px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: bold; color: ${themeColor(d)}; font-size: 11px;">${fr.toUpperCase()}</span>
+                    <span style="font-weight: bold; color: ${themeColor(d)}; font-size: 15px;">${ar}</span>
                 </div>
             `;
 
@@ -215,10 +215,10 @@ export default function AdminDemandes() {
                     ${row("PROFESSION", "المهنة", d.donnees.professionEpouse)}
                     ${row("DOMICILE", "السكن", d.donnees.domicileEpouse)}
                     
-                    ${sectionTitle("Détails du Mariage", "تفاصيل الزواج")}
+                    ${sectionTitle("Détails de l'Union", "تفاصيل الزواج")}
                     ${row("DATE DU MARIAGE", "تاريخ الزواج", new Date(d.donnees.dateMariage).toLocaleDateString('fr-FR'))}
-                    ${row("LIEU", "المكان", d.donnees.lieuMariage)}
-                    ${row("RÉGIME MATRIMONIAL", "النظام الزوجي", d.donnees.regimeMatrimonial)}
+                    ${row("LIEU DU MARIAGE", "مكان الزواج", d.donnees.lieuMariage)}
+                    ${row("RÉGIME MATRIMONIAL", "النظام الزوجي", d.donnees.regimeMatrimonial ? d.donnees.regimeMatrimonial.replace('_', ' ').toUpperCase() : '-')}
                 `;
             }
             if (d.type === 'deces') {
@@ -229,7 +229,7 @@ export default function AdminDemandes() {
                     ${row("NATIONALITÉ", "الجنسية", d.donnees.nationaliteDefunt)}
                     ${row("DATE DU DÉCÈS", "تاريخ الوفاة", new Date(d.donnees.dateDeces).toLocaleDateString('fr-FR'))}
                     ${row("LIEU DU DÉCÈS", "مكان الوفاة", d.donnees.lieuDeces)}
-                    ${row("CAUSE DU DÉCÈS", "سبب الوفاة", d.donnees.causeDeces)}
+                    ${row("CAUSE DU DÉCÈS", "سبب الوفاة", d.donnees.causeDeces || 'Non spécifiée')}
                     
                     ${sectionTitle("Informations sur le Déclarant", "معلومات عن المبلغ")}
                     ${row("NOM & PRÉNOM", "اللقب والاسم", `${d.donnees.nomDeclarant} ${d.donnees.prenomDeclarant}`)}
@@ -241,63 +241,80 @@ export default function AdminDemandes() {
         };
 
         element.innerHTML = `
-            <div style="padding: 20px; border: 1px solid #ddd; font-family: 'Times New Roman', Times, serif; color: #1a1a1a; min-height: 850px; position: relative; background: white; box-sizing: border-box;">
-                <!-- Header Bilingue Symétrique -->
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; border-bottom: 2px solid #004aad; padding-bottom: 10px;">
-                    <div style="text-align: left; width: 25%;">
-                        <img src="/drapeau-tchad.jpg" style="width: 120px; object-fit: contain;" alt="Drapeau"/>
+            <div style="width: 800px; height: 1123px; background: white; position: relative; box-sizing: border-box;">
+                <div style="position: absolute; top: 0; left: 0; right: 0; bottom: 0; border: 3px solid #004aad; margin: 15px; padding: 15px; font-family: 'Times New Roman', Times, serif; color: #1a1a1a; display: flex; flex-direction: column; box-sizing: border-box;">
+                
+                    <!-- Watermark -->
+                    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) rotate(-45deg); opacity: 0.04; z-index: 0; width: 500px; text-align: center; pointer-events: none;">
+                        <img src="/logomairie.png" style="width: 100%;" alt=""/>
+                        <h1 style="font-size: 60px; margin: 0; color: #000;">OFFICIEL</h1>
                     </div>
-                    <div style="text-align: center; width: 50%;">
-                        <strong style="font-size: 16px; color: #004aad; display: block; margin-bottom: 2px;">RÉPUBLIQUE DU TCHAD</strong>
-                        <span style="font-size: 11px; font-style: italic; display: block; margin-bottom: 8px;">Unité - Travail - Progrès</span>
+
+                    <!-- Header Bilingue Symétrique -->
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; border-bottom: 3px double #004aad; padding-bottom: 12px; position: relative; z-index: 1;">
+                        <div style="text-align: left; width: 25%;">
+                            <img src="/drapeau-tchad.jpg" style="width: 85px; object-fit: contain; border-radius: 4px;" alt="Drapeau"/>
+                        </div>
+                        <div style="text-align: center; width: 50%;">
+                            <strong style="font-size: 14px; color: #004aad; display: block; margin-bottom: 2px; letter-spacing: 0.5px;">RÉPUBLIQUE DU TCHAD</strong>
+                            <span style="font-size: 9px; font-style: italic; display: block; margin-bottom: 5px;">Unité - Travail - Progrès</span>
+                            
+                            <strong style="font-size: 16px; color: #004aad; display: block; margin-bottom: 2px;">جمهورية تشاد</strong>
+                            <span style="font-size: 11px; display: block;">وحدة - عمل - تقدم</span>
+                        </div>
+                        <div style="text-align: right; width: 25%;">
+                            <img src="/logomairie.png" style="width: 80px; object-fit: contain;" alt="Logo Mairie"/>
+                        </div>
+                    </div>
+
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin: 12px 0; border-bottom: 1px solid #eee; padding-bottom: 12px; position: relative; z-index: 1;">
+                        <div style="width: 40%; text-align: left;">
+                            <h1 style="color: ${themeColor(demande)}; font-size: 18px; margin: 0; text-transform: uppercase; font-weight: 900; letter-spacing: 0.5px;">
+                                ACTE DE ${typeLabelFr(demande)}
+                            </h1>
+                        </div>
+                        <div style="width: 20%; text-align: center;">
+                            <div style="border: 1px solid #ddd; padding: 4px; background: #fdfdfd; border-radius: 3px;">
+                                <span style="font-size: 9px; color: #666; display: block; text-transform: uppercase;">N° Registre</span>
+                                <span style="font-size: 11px; color: #000; font-weight: bold;">
+                                    ${(demande.id || demande._id).toUpperCase()}
+                                </span>
+                            </div>
+                        </div>
+                        <div style="width: 40%; text-align: right;">
+                            <h2 style="color: ${themeColor(demande)}; font-size: 20px; margin: 0; font-weight: bold;">
+                                شهادة ${typeLabelAr(demande)}
+                            </h2>
+                        </div>
+                    </div>
+
+                    <div style="margin: 0 10px; position: relative; z-index: 1; flex: 1; overflow: hidden;">
+                        ${renderContent(demande)}
+                    </div>
+
+                    <!-- Signature et QR Code -->
+                    <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px; position: relative; z-index: 1;">
+                        <div style="text-align: center; width: 130px;">
+                            <div style="padding: 4px; border: 1px solid #eee; background: white; display: inline-block;">
+                                <img src="${qrCodeUrl}" style="width: 75px; height: 75px;" alt="QR Code"/>
+                            </div>
+                            <p style="font-size: 7px; color: #999; margin-top: 4px; font-weight: bold; letter-spacing: 0.3px;">AUTHENTIFICATION SIGEC</p>
+                        </div>
                         
-                        <strong style="font-size: 18px; color: #004aad; display: block; margin-bottom: 2px;">جمهورية تشاد</strong>
-                        <span style="font-size: 12px; display: block;">وحدة - عمل - تقدم</span>
+                        <div style="text-align: center; width: 300px; border-top: 2px solid #1a1a1a; padding-top: 8px;">
+                            <p style="margin: 0; font-weight: bold; font-size: 12px;">Fait à N'Djamena, le ${new Date().toLocaleDateString('fr-FR')}</p>
+                            <p style="margin: 6px 0 30px 0; font-weight: bold; font-size: 12px;">L'Officier de l'État Civil / ضابط الحالة المدنية</p>
+                            <div style="display: flex; justify-content: center; align-items: center; gap: 18px; opacity: 0.6;">
+                                <span style="font-size: 10px; font-style: italic;">[Signature]</span>
+                                <div style="width: 55px; height: 55px; border: 2px dashed #ccc; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; color: #ccc;">Sceau</div>
+                            </div>
+                        </div>
                     </div>
-                    <div style="text-align: right; width: 25%;">
-                        <img src="/logomairie.png" style="width: 110px; object-fit: contain;" alt="Logo Mairie"/>
-                    </div>
-                </div>
 
-                <div style="display: flex; justify-content: space-between; align-items: center; margin: 10px 0; border-bottom: 1px dashed #ccc; padding-bottom: 10px;">
-                    <div style="width: 40%; text-align: left;">
-                        <h1 style="color: ${themeColor(demande)}; font-size: 20px; margin: 0; text-transform: uppercase;">
-                            ACTE DE ${typeLabelFr(demande)}
-                        </h1>
+                    <!-- Footer Discret -->
+                    <div style="margin-top: 15px; text-align: center; font-size: 8px; color: #aaa; border-top: 1px solid #f9f9f9; padding-top: 7px; position: relative; z-index: 1;">
+                        RÉPUBLIQUE DU TCHAD • SYSTÈME DE GESTION DE L'ÉTAT CIVIL (SIGEC) • DOCUMENT OFFICIEL INFALSIFIABLE
                     </div>
-                    <div style="width: 20%; text-align: center;">
-                        <span style="font-size: 12px; color: #666; font-weight: bold;">
-                            N° ${(demande.id || demande._id).toUpperCase()}
-                        </span>
-                    </div>
-                    <div style="width: 40%; text-align: right;">
-                        <h2 style="color: ${themeColor(demande)}; font-size: 20px; margin: 0;">
-                            شهادة ${typeLabelAr(demande)}
-                        </h2>
-                    </div>
-                </div>
-
-                <div style="margin: 0 10px;">
-                    ${renderContent(demande)}
-                </div>
-
-                <!-- Signature et QR Code -->
-                <div style="margin-top: 20px; display: flex; justify-content: space-between; align-items: flex-end; padding: 0 10px;">
-                    <div style="text-align: center; width: 150px;">
-                        <img src="${qrCodeUrl}" style="width: 80px; height: 80px; border: 1px solid #eee;" alt="QR Code"/>
-                        <p style="font-size: 9px; color: #666; margin-top: 3px;">VÉRIFICATION OFFICIELLE</p>
-                    </div>
-                    
-                    <div style="text-align: center; width: 300px; border-top: 1px solid #333; padding-top: 5px;">
-                        <p style="margin: 0; font-weight: bold; font-size: 13px;">Fait à N'Djamena, le ${new Date().toLocaleDateString('fr-FR')}</p>
-                        <p style="margin: 5px 0 40px 0; font-weight: bold; font-size: 13px;">L'Officier de l'État Civil / ضابط الحالة المدنية</p>
-                        <p style="margin: 0; font-style: italic; border-top: 1px dashed #ccc; display: inline-block; padding-top: 3px; font-size: 12px;">Signature et Cachet</p>
-                    </div>
-                </div>
-
-                <!-- Footer Discret -->
-                <div style="position: absolute; bottom: 10px; left: 0; right: 0; text-align: center; font-size: 10px; color: #999;">
-                    SGEC-TCHAD : Système de Gestion de l'État Civil
                 </div>
             </div>
         `;
@@ -305,8 +322,8 @@ export default function AdminDemandes() {
         const opt = {
             margin: 0,
             filename: `ACTE_${typeLabelFr(demande)}_${(demande.id || demande._id).slice(-6)}.pdf`,
-            image: { type: 'jpeg', quality: 1.0 },
-            html2canvas: { scale: 3, useCORS: true, letterRendering: true },
+            image: { type: 'jpeg', quality: 0.98 },
+            html2canvas: { scale: 2.5, useCORS: true, letterRendering: true },
             jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' },
             pagebreak: { mode: ['avoid-all', 'css', 'legacy'] }
         };
@@ -403,7 +420,7 @@ export default function AdminDemandes() {
                 <div className="table-responsive">
                     <table className="table table-hover align-middle mb-0 border-0">
                         <thead className="bg-light">
-                            <tr className="small text-muted fw-bold text-uppercase border-bottom">
+                            <tr className="fw-bold text-uppercase border-bottom text-secondary" style={{ fontSize: '0.9rem', letterSpacing: '0.5px' }}>
                                 <th className="ps-4 py-4">RÉF</th>
                                 <th className="py-4">TYPE</th>
                                 <th className="py-4">CITOYEN</th>
@@ -417,20 +434,20 @@ export default function AdminDemandes() {
                                 <tr><td colSpan="6" className="text-center py-5"><div className="spinner-border text-primary"></div></td></tr>
                             ) : filteredDemandes.map(d => (
                                 <tr key={d.id || d._id} className="border-bottom">
-                                    <td className="ps-4 py-4 fw-bold text-dark font-monospace" style={{ fontSize: '0.9rem' }}>
+                                    <td className="ps-4 py-4 fw-bold text-dark font-monospace" style={{ fontSize: '1rem' }}>
                                         #{(d.id || d._id).slice(-8).toUpperCase()}
                                     </td>
                                     <td className="py-4">
-                                        <span className={`badge px-3 py-2 bg-opacity-10 text-capitalize fw-bold rounded-3 ${d.type === 'naissance' ? 'bg-primary text-primary' : d.type === 'mariage' ? 'bg-success text-success' : 'bg-danger text-danger'}`}>
+                                        <span className={`badge px-3 py-2 bg-opacity-10 text-capitalize fw-bold rounded-3 ${d.type === 'naissance' ? 'bg-primary text-primary' : d.type === 'mariage' ? 'bg-success text-success' : 'bg-danger text-danger'}`} style={{ fontSize: '0.85rem' }}>
                                             {d.type === 'deces' ? 'Décès' : d.type}
                                         </span>
                                     </td>
-                                    <td className="py-4 fw-bold">
+                                    <td className="py-4 fw-bold text-dark" style={{ fontSize: '1rem' }}>
                                         {d.userId?.prenom || "-"} {d.userId?.nom || ""}
                                     </td>
-                                    <td className="py-4 text-muted fw-semibold">{formatDate(d.dateDemande)}</td>
+                                    <td className="py-4 fw-bold text-dark" style={{ fontSize: '0.95rem' }}>{formatDate(d.dateDemande)}</td>
                                     <td className="py-4">
-                                        <span className={`badge rounded-pill px-3 py-2 ${d.statut === 'en_attente' ? 'bg-warning text-dark' : d.statut === 'acceptee' ? 'bg-success text-white' : 'bg-danger text-white'}`}>
+                                        <span className={`badge rounded-pill px-3 py-2 fw-bold ${d.statut === 'en_attente' ? 'bg-warning text-dark' : d.statut === 'acceptee' ? 'bg-success text-white' : 'bg-danger text-white'}`} style={{ fontSize: '0.85rem' }}>
                                             {d.statut === 'en_attente' ? 'En attente' : d.statut === 'acceptee' ? 'Acceptée' : 'Rejetée'}
                                         </span>
                                     </td>

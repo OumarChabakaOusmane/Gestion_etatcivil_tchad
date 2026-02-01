@@ -14,8 +14,8 @@ class User {
         throw new Error('Un utilisateur avec cet email existe déjà');
       }
 
-      // Hasher le mot de passe
-      const salt = await bcrypt.genSalt(10);
+      // Hasher le mot de passe (cost factor 8 for better performance)
+      const salt = await bcrypt.genSalt(8);
       const hashedPassword = await bcrypt.hash(userData.password, salt);
 
       // Créer l'utilisateur
@@ -26,6 +26,11 @@ class User {
         password: hashedPassword,
         role: userData.role || 'user',
         telephone: userData.telephone || '',
+        photo: userData.photo || '',
+        isVerified: false, // Default to false
+        otpCode: userData.otpCode || null,
+        otpExpires: userData.otpExpires || null,
+        expoPushToken: userData.expoPushToken || null, // [NEW] Token pour les notifications
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };
@@ -100,6 +105,32 @@ class User {
     try {
       await db.collection(this.collectionName).doc(id).delete();
       return true;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async findByResetToken(token) {
+    try {
+      const snapshot = await db.collection(this.collectionName)
+        .where('resetPasswordToken', '==', token)
+        .limit(1)
+        .get();
+
+      if (snapshot.empty) {
+        return null;
+      }
+
+      const doc = snapshot.docs[0];
+      const userData = doc.data();
+
+      // Vérifier l'expiration ici pour éviter de créer un index composite Firestore
+      if (userData.resetPasswordExpire && userData.resetPasswordExpire < Date.now()) {
+        console.log('Token expiré pour :', userData.email);
+        return null;
+      }
+
+      return { id: doc.id, ...userData };
     } catch (error) {
       throw error;
     }

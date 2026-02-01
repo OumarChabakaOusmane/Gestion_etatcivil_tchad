@@ -8,8 +8,17 @@ const {
   updatePassword,
   getAllUsers,
   updateUserRole,
-  deleteUser
+  deleteUser,
+  updatePushToken,
+  createUser
 } = require('../controllers/user.controller');
+
+/**
+ * @route   POST /api/users
+ * @desc    Créer un nouvel utilisateur (Admin, Agent, User)
+ * @access  Privé (Admin)
+ */
+router.post('/', authMiddleware, roleMiddleware('admin'), createUser);
 
 /**
  * @route   GET /api/users/me
@@ -31,6 +40,13 @@ router.put('/me', authMiddleware, updateProfile);
  * @access  Privé
  */
 router.put('/change-password', authMiddleware, updatePassword);
+
+/**
+ * @route   PUT /api/users/push-token
+ * @desc    Met à jour le token de notification Expo
+ * @access  Privé
+ */
+router.put('/push-token', authMiddleware, updatePushToken);
 
 /**
  * @route   GET /api/users

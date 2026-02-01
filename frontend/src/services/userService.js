@@ -44,6 +44,20 @@ const userService = {
         } catch (error) {
             throw error.response?.data || error;
         }
+    },
+
+    /**
+     * Crée un nouvel utilisateur (Admin/Agent/User)
+     * @param {Object} userData - Les données de l'utilisateur
+     * @returns {Promise} Réponse de l'API
+     */
+    async createUser(userData) {
+        try {
+            const response = await api.post('/users', userData);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
     }
 };
 

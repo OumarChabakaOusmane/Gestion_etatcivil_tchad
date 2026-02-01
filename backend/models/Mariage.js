@@ -12,30 +12,35 @@ class Mariage {
       const now = Timestamp.now();
       const mariageData = {
         // Époux
+        // Époux
         epoux: {
           nom: data.nomEpoux,
+          prenom: data.prenomEpoux,
           dateNaissance: data.dateNaissanceEpoux,
           lieuNaissance: data.lieuNaissanceEpoux,
           nationalite: data.nationaliteEpoux,
-          profession: data.professionEpoux
+          profession: data.professionEpoux,
+          domicile: data.domicileEpoux
         },
-        
+
         // Épouse
         epouse: {
           nom: data.nomEpouse,
+          prenom: data.prenomEpouse,
           dateNaissance: data.dateNaissanceEpouse,
           lieuNaissance: data.lieuNaissanceEpouse,
           nationalite: data.nationaliteEpouse,
-          profession: data.professionEpouse
+          profession: data.professionEpouse,
+          domicile: data.domicileEpouse
         },
-        
+
         // Mariage
         mariage: {
           date: data.dateMariage,
           lieu: data.lieuMariage,
           regimeMatrimonial: data.regimeMatrimonial
         },
-        
+
         // Admin
         admin: {
           numeroActe: data.numeroActe,
@@ -62,11 +67,11 @@ class Mariage {
   static async findById(id) {
     try {
       const doc = await db.collection('mariages').doc(id).get();
-      
+
       if (!doc.exists) {
         return null;
       }
-      
+
       return { id: doc.id, ...doc.data() };
     } catch (error) {
       console.error('Erreur lors de la recherche de l\'acte de mariage:', error);
@@ -86,12 +91,12 @@ class Mariage {
       let query = db.collection('mariages')
         .orderBy('admin.createdAt', 'desc')
         .limit(limit);
-      
+
       if (startAfter) {
         const startAfterDoc = await db.collection('mariages').doc(startAfter).get();
         query = query.startAfter(startAfterDoc);
       }
-      
+
       const snapshot = await query.get();
       return snapshot.docs.map(doc => ({
         id: doc.id,
@@ -115,7 +120,7 @@ class Mariage {
         ...data,
         'admin.updatedAt': Timestamp.now()
       };
-      
+
       await db.collection('mariages').doc(id).update(updateData);
       return this.findById(id);
     } catch (error) {

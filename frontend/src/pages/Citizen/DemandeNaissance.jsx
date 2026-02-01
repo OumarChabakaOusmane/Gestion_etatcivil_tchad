@@ -260,71 +260,126 @@ export default function DemandeNaissance() {
     };
 
     return (
-        <div className="fade-in">
-            <div className="dashboard-header-simple py-2 mb-4">
-                <div className="d-flex align-items-center">
-                    <button onClick={() => navigate('/demander-acte')} className="btn btn-link text-decoration-none text-muted p-0 me-3 hover-translate transition-all">
-                        <i className="bi bi-arrow-left fs-4"></i>
-                    </button>
-                    <div>
-                        <h2 className="fw-bold mb-0">Demande d'acte de naissance</h2>
-                        <p className="text-muted small mb-0">Déclaration de Naissance - République du Tchad</p>
-                    </div>
+        <div className="fade-in px-lg-4 pb-5">
+            {/* Header Section */}
+            <div className="d-flex align-items-center mb-5 mt-3">
+                <button
+                    onClick={() => navigate('/dashboard')}
+                    className="btn btn-outline-secondary rounded-circle p-2 me-4 shadow-sm d-flex align-items-center justify-content-center"
+                    style={{ width: '45px', height: '45px' }}
+                >
+                    <i className="bi bi-arrow-left fs-5"></i>
+                </button>
+                <div>
+                    <h1 className="fw-bold text-dark mb-1" style={{ fontSize: '2.2rem', letterSpacing: '-0.5px' }}>Demande d'acte de naissance</h1>
+                    <p className="text-muted mb-0">Déclaration officielle - République du Tchad</p>
                 </div>
             </div>
 
             <div className="row justify-content-center">
-                <div className="col-lg-10">
-
-                    <div className="glass-card p-4 p-md-5 border-0 shadow-lg rounded-4 overflow-hidden position-relative">
-                        {/* Stepper Header */}
-                        <div className="stepper-container">
+                <div className="col-lg-12">
+                    {/* Premium Stepper */}
+                    <div className="card border-0 shadow-sm rounded-4 mb-5 p-4 bg-white">
+                        <div className="stepper-horizontal d-flex justify-content-between position-relative">
+                            <div className="stepper-progress-bar" style={{
+                                position: 'absolute', top: '22px', left: '10%', right: '10%', height: '2px', background: '#e9ecef', zIndex: 0
+                            }}>
+                                <div className="progress-fill" style={{
+                                    width: `${((step - 1) / (steps.length - 1)) * 100}%`, height: '100%', background: '#001a41', transition: 'width 0.4s ease'
+                                }}></div>
+                            </div>
                             {steps.map((s) => (
-                                <div key={s.id} className={`stepper-item ${step === s.id ? 'active' : ''} ${step > s.id ? 'completed' : ''}`}>
-                                    <div className="stepper-dot shadow-sm">
+                                <div key={s.id} className={`stepper-point d-flex flex-column align-items-center position-relative`} style={{ zIndex: 1, width: '25%' }}>
+                                    <div className={`stepper-circle d-flex align-items-center justify-content-center rounded-circle shadow-sm mb-3 transition-all ${step >= s.id ? 'active' : ''}`}
+                                        style={{
+                                            width: '45px',
+                                            height: '45px',
+                                            background: step > s.id ? '#059669' : (step === s.id ? '#001a41' : '#fff'),
+                                            color: (step >= s.id) ? '#fff' : '#adb5bd',
+                                            border: step >= s.id ? 'none' : '2px solid #dee2e6',
+                                            fontSize: '1.2rem',
+                                            fontWeight: '700'
+                                        }}>
                                         {step > s.id ? <i className="bi bi-check-lg"></i> : s.id}
                                     </div>
-                                    <span className="stepper-label d-none d-md-block">{s.label}</span>
+                                    <span className={`small fw-bold text-uppercase d-none d-md-block ${step >= s.id ? 'text-primary-dark' : 'text-muted'}`} style={{ fontSize: '0.7rem', letterSpacing: '0.8px' }}>
+                                        {s.label}
+                                    </span>
                                 </div>
                             ))}
                         </div>
+                    </div>
 
-                        {error && (
-                            <div className="alert alert-danger rounded-4 border-0 shadow-sm mb-4">
-                                <i className="bi bi-exclamation-triangle me-2"></i>{error}
-                            </div>
-                        )}
+                    {/* Form Card */}
+                    <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                        <div className="card-body p-4 p-md-5">
+                            {error && (
+                                <div className="alert alert-danger rounded-3 border-0 shadow-sm mb-4 d-flex align-items-center gap-3">
+                                    <i className="bi bi-exclamation-octagon-fill fs-4"></i>
+                                    <span className="fw-bold">{error}</span>
+                                </div>
+                            )}
 
-                        <form onSubmit={handleSubmit}>
-                            {renderStepContent()}
+                            <form onSubmit={handleSubmit} className="animate__animated animate__fadeIn">
+                                <div className="form-content-area" style={{ minHeight: '350px' }}>
+                                    {renderStepContent()}
+                                </div>
 
-                            <div className="d-flex justify-content-between mt-5 pt-4 border-top">
-                                {step > 1 ? (
-                                    <button type="button" className="btn btn-light btn-lg rounded-pill px-4 shadow-none" onClick={prevStep}>
-                                        <i className="bi bi-arrow-left me-2"></i>Précédent
-                                    </button>
-                                ) : (
-                                    <div></div>
-                                )}
+                                {/* Navigation Buttons */}
+                                <div className="d-flex justify-content-between mt-5 pt-4 border-top">
+                                    {step > 1 ? (
+                                        <button type="button" className="btn btn-light rounded-pill px-4 py-2 fw-bold d-flex align-items-center gap-2" onClick={prevStep}>
+                                            <i className="bi bi-arrow-left"></i> Précédent
+                                        </button>
+                                    ) : (
+                                        <div></div>
+                                    )}
 
-                                {step < 4 ? (
-                                    <button type="button" className="btn btn-primary-custom btn-lg rounded-pill px-5 shadow-sm" onClick={nextStep}>
-                                        Suivant<i className="bi bi-arrow-right ms-2"></i>
-                                    </button>
-                                ) : (
-                                    <button type="submit" className="btn btn-success btn-lg rounded-pill px-5 shadow-sm" disabled={loading}>
-                                        {loading ? (
-                                            <><span className="spinner-border spinner-border-sm me-2"></span>Envoi...</>
-                                        ) : (
-                                            <><i className="bi bi-send-check me-2"></i>Soumettre la demande</>
-                                        )}
-                                    </button>
-                                )}
-                            </div>
-                        </form>
+                                    {step < 4 ? (
+                                        <button type="button" className="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm d-flex align-items-center gap-2"
+                                            onClick={nextStep} style={{ background: '#001a41' }}>
+                                            Continuer <i className="bi bi-arrow-right"></i>
+                                        </button>
+                                    ) : (
+                                        <button type="submit" className="btn btn-success rounded-pill px-5 py-2 fw-bold shadow-sm d-flex align-items-center gap-2" disabled={loading} style={{ background: '#059669' }}>
+                                            {loading ? (
+                                                <><span className="spinner-border spinner-border-sm"></span> Traitement...</>
+                                            ) : (
+                                                <><i className="bi bi-send-fill"></i> Soumettre la demande</>
+                                            )}
+                                        </button>
+                                    )}
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .stepper-circle.active {
+                    transform: scale(1.1);
+                    box-shadow: 0 0 0 5px rgba(0, 26, 65, 0.1) !important;
+                }
+                .text-primary-dark {
+                    color: #001a41;
+                }
+                .form-control:focus, .form-select:focus {
+                    background-color: #fff !important;
+                    box-shadow: 0 0 0 4px rgba(0, 26, 65, 0.05) !important;
+                    border: 1px solid rgba(0, 26, 65, 0.1) !important;
+                }
+                .form-label {
+                    margin-bottom: 0.5rem;
+                    color: #495057;
+                }
+                .input-group-text {
+                    background-color: #f8f9fa;
+                    border: 0;
+                    color: #adb5bd;
+                }
+            `}} />
         </div>
     );
-}
+};

@@ -1,11 +1,14 @@
 import React from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { useLanguage } from '../context/LanguageContext';
+import authService from '../services/authService';
+import '../styles/layout/Sidebar.css';
 
 const Sidebar = () => {
     const location = useLocation();
     const navigate = useNavigate();
-    const { t, language } = useLanguage();
+    const { t } = useLanguage();
+    const user = authService.getCurrentUser();
 
     const menuItems = [
         { path: '/dashboard', icon: 'bi-grid-fill', label: t('menuDashboard') },
@@ -14,26 +17,48 @@ const Sidebar = () => {
         { path: '/aide', icon: 'bi-question-circle-fill', label: t('menuAide') },
     ];
 
+    const handleLogout = () => {
+        authService.logout();
+        navigate('/login');
+    };
+
     const isActive = (path) => location.pathname === path;
 
     return (
-        <aside className="d-flex flex-column py-4" style={{ width: '260px', backgroundColor: '#0a429b', minHeight: '100%' }}>
-            <nav className="nav flex-column gap-2 px-3">
+        <aside className="sidebar-wrapper">
+            <nav className="sidebar-nav">
                 {menuItems.map((item, index) => (
                     <Link
                         key={index}
                         to={item.path}
-                        className={`d-flex align-items-center gap-3 px-3 py-3 rounded-3 text-decoration-none transition-all ${isActive(item.path)
-                            ? 'bg-white text-primary shadow-sm fw-bold'
-                            : 'text-white hover-bg-white-10'
-                            }`}
-                        style={{ fontSize: '0.95rem' }}
+                        className={`sidebar-link ${isActive(item.path) ? 'active' : ''}`}
                     >
-                        <i className={`bi ${item.icon} fs-5`}></i>
+                        <i className={`bi ${item.icon} sidebar-icon`}></i>
                         <span>{item.label}</span>
                     </Link>
                 ))}
             </nav>
+
+            <div className="sidebar-footer">
+                <div className="user-snippet shadow-sm">
+                    {user?.photo ? (
+                        <img src={user.photo} alt="Profile" className="user-avatar-mini" />
+                    ) : (
+                        <div className="user-avatar-mini bg-primary d-flex align-items-center justify-content-center text-white">
+                            <i className="bi bi-person-fill"></i>
+                        </div>
+                    )}
+                    <div className="user-info-mini">
+                        <span className="user-name-mini">{user?.prenom} {user?.nom}</span>
+                        <span className="user-role-mini text-uppercase" style={{ fontSize: '0.65rem', letterSpacing: '0.5px' }}>
+                            {user?.role === 'admin' ? 'Administrateur' : 'Citoyen'}
+                        </span>
+                    </div>
+                    <button className="logout-trigger" onClick={handleLogout} title="Déconnexion">
+                        <i className="bi bi-box-arrow-right fs-5"></i>
+                    </button>
+                </div>
+            </div>
         </aside>
     );
 };

@@ -1,5 +1,67 @@
 const User = require('../models/user.model');
-const bcrypt = require('bcryptjs');
+const bcrypt = require('bcryptjs'); // Needed for createUser if hashing locally, but User.create handles it.
+const logAction = require('../utils/auditLogger');
+
+/**
+ * @desc    Create a new user (Admin only)
+ * @route   POST /api/users
+ * @access  Private (Admin)
+ */
+const createUser = async (req, res) => {
+    try {
+        const { nom, prenom, email, password, telephone, role } = req.body;
+
+        // Validation basique
+        if (!nom || !prenom || !email || !password || !role) {
+            return res.status(400).json({
+                success: false,
+                message: 'Veuillez remplir tous les champs obligatoires'
+            });
+        }
+
+        if (!['user', 'admin', 'agent'].includes(role)) {
+            return res.status(400).json({
+                success: false,
+                message: 'Rôle invalide'
+            });
+        }
+
+        // Vérifier si l'utilisateur existe déjà
+        const existingUser = await User.findByEmail(email);
+        if (existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'Un utilisateur avec cet email existe déjà'
+            });
+        }
+
+        // Création de l'utilisateur
+        // Note: User.create s'occupe du hachage du mot de passe
+        const newUser = await User.create({
+            nom,
+            prenom,
+            email,
+            password,
+            telephone,
+            role
+        });
+
+        // [AUDIT LOG]
+        logAction(req, 'USER_CREATED', { email: newUser.email, role: newUser.role });
+
+        res.status(201).json({
+            success: true,
+            data: newUser,
+            message: 'Utilisateur créé avec succès'
+        });
+    } catch (error) {
+        console.error('Erreur createUser:', error);
+        res.status(500).json({
+            success: false,
+            message: error.message || 'Erreur lors de la création de l\'utilisateur'
+        });
+    }
+};
 
 /**
  * @desc    Get current user profile
@@ -90,8 +152,8 @@ const updatePassword = async (req, res) => {
             });
         }
 
-        // Hasher le nouveau mot de passe
-        const salt = await bcrypt.genSalt(10);
+        // Hasher le nouveau mot de passe (cost factor 8 for better performance)
+        const salt = await bcrypt.genSalt(8);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
         // Mettre à jour
@@ -132,7 +194,7 @@ const updateUserRole = async (req, res) => {
         const { id } = req.params;
         const { role } = req.body;
 
-        if (!role || !['user', 'admin'].includes(role)) {
+        if (!role || !['user', 'admin', 'agent'].includes(role)) {
             return res.status(400).json({
                 success: false,
                 message: 'Rôle invalide'
@@ -140,6 +202,9 @@ const updateUserRole = async (req, res) => {
         }
 
         await User.update(id, { role });
+
+        // [AUDIT LOG]
+        logAction(req, 'ROLE_UPDATED', { targetUserId: id, newRole: role });
 
         res.status(200).json({
             success: true,
@@ -164,6 +229,9 @@ const deleteUser = async (req, res) => {
             });
         }
         await User.delete(id);
+
+        // [AUDIT LOG]
+        logAction(req, 'USER_DELETED', { targetUserId: id });
         res.status(200).json({
             success: true,
             message: 'Utilisateur supprimé avec succès'
@@ -177,11 +245,37 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const updatePushToken = async (req, res) => {
+    try {
+        const { token } = req.body;
+        if (!token) {
+            return res.status(400).json({
+                success: false,
+                message: 'Token requis'
+            });
+        }
+        await User.update(req.user.id, { expoPushToken: token });
+        console.log(`🔔 Token Push mis à jour pour ${req.user.email}`);
+        res.status(200).json({
+            success: true,
+            message: 'Token Push mis à jour'
+        });
+    } catch (error) {
+        console.error('Erreur updatePushToken:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Erreur lors de la mise à jour du token'
+        });
+    }
+};
+
 module.exports = {
     getProfile,
     updateProfile,
     updatePassword,
     getAllUsers,
     updateUserRole,
-    deleteUser
+    deleteUser,
+    updatePushToken,
+    createUser
 };

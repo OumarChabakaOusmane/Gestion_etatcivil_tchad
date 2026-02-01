@@ -1,0 +1,35 @@
+{
+  "expo": {
+    "name": "SIGEC Tchad",
+    "slug": "sigec-tchad",
+    "sdkVersion": "54.0.0",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#001a41"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#001a41"
+      },
+      "package": "com.oumar.sigectchad"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "apiUrl": "http://200.100.10.19:5000/api",
+      "eas": {
+        "projectId": "d02b3136-a1c2-4396-bdde-629e12dfc92d"
+      }
+    }
+  }
+}

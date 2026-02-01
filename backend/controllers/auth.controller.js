@@ -3,6 +3,10 @@ const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
 const User = require('../models/user.model');
+const emailService = require('../services/emailService');
+const smsService = require('../services/smsService');
+
+const logAction = require('../utils/auditLogger');
 require('dotenv').config();
 
 /**
@@ -20,9 +24,13 @@ const register = async (req, res) => {
     });
   }
 
-  const { nom, prenom, email, password, role, telephone } = req.body;
+  const { nom, prenom, email, password, role, telephone, photo } = req.body;
 
   try {
+    // Generate 6-digit OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
     // Création de l'utilisateur via le modèle User
     const user = await User.create({
       nom,
@@ -30,37 +38,168 @@ const register = async (req, res) => {
       email,
       password,
       role,
-      telephone
+      telephone,
+      photo,
+      otpCode,
+      otpExpires
     });
 
-    // Réponse de succès (on ne renvoie pas le mot de passe)
+    // ENVOI OTP PAR EMAIL ET SMS (Async non-bloquant)
+    try {
+      emailService.sendOTPEmail(email, `${prenom} ${nom}`, otpCode);
+      if (telephone) {
+        smsService.sendOtpSms(telephone, otpCode);
+      }
+    } catch (mailSmsErr) {
+      console.error('Échec envoi OTP (Email/SMS):', mailSmsErr);
+    }
+
+    // Réponse de succès (on demande la vérification)
     return res.status(201).json({
       success: true,
-      message: 'Utilisateur enregistré avec succès',
-      data: {
-        id: user.id,
-        nom: user.nom,
-        prenom: user.prenom,
-        email: user.email,
-        role: user.role,
-        telephone: user.telephone
-      }
+      message: 'Compte créé. Veuillez vérifier votre email pour le code OTP.',
+      requireVerification: true,
+      email: user.email
     });
 
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement :', error);
     try {
-      // LOG ERROR TO FILE
+      // LOG ERROR TO FILE (Async)
       const fs = require('fs');
       const path = require('path');
-      fs.appendFileSync(path.join(__dirname, '../error_log.txt'), `${new Date().toISOString()} - ${error.stack}\n`);
+      fs.appendFile(path.join(__dirname, '../error_log.txt'), `${new Date().toISOString()} - ${error.stack}\n`, (err) => {
+        if (err) console.error('Log failed', err);
+      });
     } catch (e) { console.error('Log failed', e); }
 
     return res.status(500).json({
       success: false,
       message: 'Une erreur est survenue lors de l\'enregistrement',
-      error: error.message // FORCE SHOW ERROR
+      error: error.message
     });
+  }
+};
+
+/**
+ * @route   POST /api/auth/verify-otp
+ * @desc    Vérifie le code OTP et active le compte
+ * @access  Public
+ */
+const verifyOtp = async (req, res) => {
+  const { email, otp } = req.body;
+
+  try {
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+    }
+
+    // Si le compte est déjà vérifié, connecter directement l'utilisateur
+    if (user.isVerified) {
+      const payload = {
+        user: {
+          id: user.id,
+          email: user.email,
+          nom: user.nom,
+          prenom: user.prenom,
+          role: user.role
+        }
+      };
+
+      const token = jwt.sign(
+        payload,
+        process.env.JWT_SECRET,
+        { expiresIn: '24h' }
+      );
+
+      return res.json({
+        success: true,
+        message: 'Compte déjà vérifié. Connexion automatique.',
+        token,
+        user: { ...user, password: undefined, otpCode: undefined, otpExpires: undefined, photo: user.photo || '' }
+      });
+    }
+
+    if (user.otpCode !== otp) {
+      return res.status(400).json({ success: false, message: 'Code OTP invalide' });
+    }
+
+    if (user.otpExpires < Date.now()) {
+      return res.status(400).json({ success: false, message: 'Code OTP expiré' });
+    }
+
+    // Valider le compte et effacer l'OTP
+    await User.update(user.id, {
+      isVerified: true,
+      otpCode: null,
+      otpExpires: null
+    });
+
+    // Générer le token JWT pour connecter directement l'utilisateur
+    const payload = {
+      user: {
+        id: user.id,
+        email: user.email,
+        nom: user.nom,
+        prenom: user.prenom,
+        role: user.role
+      }
+    };
+
+    const token = jwt.sign(
+      payload,
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    return res.json({
+      success: true,
+      message: 'Compte vérifié avec succès',
+      token,
+      user: { ...user, isVerified: true, otpCode: undefined, otpExpires: undefined, photo: user.photo || '' }
+    });
+
+  } catch (error) {
+    console.error('Erreur verifyOtp:', error);
+    return res.status(500).json({ success: false, message: 'Erreur serveur' });
+  }
+};
+
+/**
+ * @route   POST /api/auth/resend-otp
+ * @desc    Renvoie un nouveau code OTP
+ * @access  Public
+ */
+const resendOtp = async (req, res) => {
+  const { email } = req.body;
+
+  try {
+    const user = await User.findByEmail(email);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+    }
+
+    if (user.isVerified) {
+      return res.status(400).json({ success: false, message: 'Ce compte est déjà vérifié' });
+    }
+
+    // Generate new OTP
+    const otpCode = Math.floor(100000 + Math.random() * 900000).toString();
+    const otpExpires = Date.now() + 10 * 60 * 1000; // 10 minutes
+
+    await User.update(user.id, { otpCode, otpExpires });
+
+    // SIMULATION EMAIL
+    console.log('=================================================');
+    console.log(`🔄 RENVOI OTP POUR ${email} : ${otpCode}`);
+    console.log('=================================================');
+
+    return res.json({ success: true, message: 'Nouveau code OTP envoyé' });
+
+  } catch (error) {
+    console.error('Erreur resendOtp:', error);
+    return res.status(500).json({ success: false, message: 'Erreur serveur' });
   }
 };
 
@@ -100,6 +239,16 @@ const login = async (req, res) => {
       });
     }
 
+    // Vérifier si le compte est vérifié (OTP)
+    if (user.isVerified === false) {
+      return res.status(403).json({
+        success: false,
+        message: 'Veuillez vérifier votre compte (Email non validé)',
+        requireVerification: true,
+        email: user.email
+      });
+    }
+
     // Créer le payload du token
     const payload = {
       user: {
@@ -118,6 +267,11 @@ const login = async (req, res) => {
       { expiresIn: '24h' } // Le token expire après 24 heures
     );
 
+    // [AUDIT LOG] Enregistrer la connexion réussie
+    // On attache manuellement le user à req car on n'est pas encore passé par les middlewares
+    req.user = user;
+    logAction(req, 'LOGIN_SUCCESS', 'Connexion au système');
+
     // Réponse de succès
     return res.json({
       success: true,
@@ -130,6 +284,7 @@ const login = async (req, res) => {
           prenom: user.prenom,
           email: user.email,
           telephone: user.telephone,
+          photo: user.photo || '',
           role: user.role || 'user'
         }
       }
@@ -184,16 +339,16 @@ const forgotPassword = async (req, res) => {
     // Dans un cas réel, utiliser process.env.FRONTEND_URL ou similaire
     const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
 
-    // SIMULATION D'ENVOI D'EMAIL (pour le développement)
-    console.log('=================================================');
-    console.log('🔗 LIEN DE RÉINITIALISATION (SIMULATION D\'EMAIL)');
-    console.log(`POUR: ${email}`);
-    console.log(`LIEN: ${resetUrl}`);
-    console.log('=================================================');
+    // ENVOI EMAIL DE RÉINITIALISATION
+    try {
+      await emailService.sendPasswordResetEmail(email, `${user.prenom} ${user.nom}`, resetUrl);
+    } catch (mailErr) {
+      console.error('Échec envoi email réinitialisation:', mailErr);
+    }
 
     res.status(200).json({
       success: true,
-      message: 'Un email de réinitialisation a été envoyé (Regardez la console serveur pour le lien)'
+      message: 'Un email de réinitialisation a été envoyé à votre adresse.'
     });
 
   } catch (error) {
@@ -206,40 +361,58 @@ const forgotPassword = async (req, res) => {
 };
 
 /**
- * @route   GET /api/auth/fix-admin
- * @desc    Force le rôle admin pour un email donné (OUTIL DE DÉPANNAGE)
+ * @route   POST /api/auth/reset-password/:resetToken
+ * @desc    Réinitialise le mot de passe
  * @access  Public
  */
-const fixAdminRole = async (req, res) => {
-  const { email } = req.query;
-
-  if (!email) {
-    return res.status(400).json({ success: false, message: 'Email requis en paramètre query (?email=...)' });
-  }
-
+const resetPassword = async (req, res) => {
   try {
-    const user = await User.findByEmail(email);
+    const resetPasswordToken = crypto
+      .createHash('sha256')
+      .update(req.params.resetToken)
+      .digest('hex');
+
+    const user = await User.findByResetToken(resetPasswordToken);
+
     if (!user) {
-      return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+      return res.status(400).json({
+        success: false,
+        message: 'Jeton invalide ou expiré'
+      });
     }
 
-    await User.update(user.id, { role: 'admin' });
+    // Hash new password (cost factor 8 for better performance)
+    const salt = await bcrypt.genSalt(8);
+    const hashedPassword = await bcrypt.hash(req.body.password, salt);
 
-    return res.json({
+    // Update user
+    await User.update(user.id, {
+      password: hashedPassword,
+      resetPasswordToken: null,
+      resetPasswordExpire: null
+    });
+
+    res.status(200).json({
       success: true,
-      message: `Rôle ADMIN attribué avec succès à ${email}`,
-      user: { ...user, role: 'admin' }
+      message: 'Mot de passe mis à jour avec succès'
     });
 
   } catch (error) {
-    console.error('Erreur fixAdminRole:', error);
-    return res.status(500).json({ success: false, error: error.message });
+    console.error('Erreur resetPassword:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Erreur lors de la réinitialisation du mot de passe'
+    });
   }
 };
+
+
 
 module.exports = {
   register,
   login,
   forgotPassword,
-  fixAdminRole
+  verifyOtp,
+  resendOtp,
+  resetPassword
 };

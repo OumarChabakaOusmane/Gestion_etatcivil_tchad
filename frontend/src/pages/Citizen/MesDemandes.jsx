@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import demandeService from "../../services/demandeService";
 import TrackingTimeline from "../../components/TrackingTimeline";
+import SkeletonLoader from "../../components/SkeletonLoader";
 
 export default function MesDemandes() {
     const [demandes, setDemandes] = useState([]);
@@ -93,37 +94,42 @@ export default function MesDemandes() {
         switch (statut) {
             case 'en_attente':
                 return (
-                    <span className="badge rounded-pill px-3 py-2" style={{ backgroundColor: 'rgba(255, 207, 0, 0.1)', color: '#b45309', border: '1px solid rgba(255, 207, 0, 0.2)' }}>
-                        <i className="bi bi-clock-history me-1"></i> En attente
+                    <span className="badge rounded-pill px-3 py-2 fw-bold" style={{ backgroundColor: 'rgba(255, 203, 0, 0.1)', color: '#9a7a00', border: '1px solid rgba(255, 203, 0, 0.2)', fontSize: '0.75rem' }}>
+                        <i className="bi bi-hourglass-split me-1"></i> EN ATTENTE
                     </span>
                 );
             case 'acceptee':
                 return (
-                    <span className="badge rounded-pill px-3 py-2" style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', color: '#059669', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                        <i className="bi bi-check-circle me-1"></i> Acceptée
+                    <span className="badge rounded-pill px-3 py-2 fw-bold" style={{ backgroundColor: 'rgba(5, 150, 105, 0.1)', color: '#059669', border: '1px solid rgba(5, 150, 105, 0.2)', fontSize: '0.75rem' }}>
+                        <i className="bi bi-check2-circle me-1"></i> ACCEPTÉE
                     </span>
                 );
             case 'rejetee':
                 return (
-                    <span className="badge rounded-pill px-3 py-2" style={{ backgroundColor: 'rgba(210, 16, 52, 0.1)', color: 'var(--tchad-red)', border: '1px solid rgba(210, 16, 52, 0.2)' }}>
-                        <i className="bi bi-x-circle me-1"></i> Rejetée
+                    <span className="badge rounded-pill px-3 py-2 fw-bold" style={{ backgroundColor: 'rgba(220, 38, 38, 0.1)', color: '#dc2626', border: '1px solid rgba(220, 38, 38, 0.2)', fontSize: '0.75rem' }}>
+                        <i className="bi bi-x-octagon me-1"></i> REJETÉE
                     </span>
                 );
             default:
-                return <span className="badge bg-secondary rounded-pill">{statut}</span>;
+                return <span className="badge bg-secondary rounded-pill px-3 py-2">{statut.toUpperCase()}</span>;
+        }
+    };
+
+    const getTypeIcon = (type) => {
+        switch (type) {
+            case 'naissance': return <div className="icon-circle bg-primary-soft text-primary"><i className="bi bi-baby"></i></div>;
+            case 'mariage': return <div className="icon-circle bg-danger-soft text-danger"><i className="bi bi-heart-fill"></i></div>;
+            case 'deces': return <div className="icon-circle bg-secondary-soft text-secondary"><i className="bi bi-journal-text"></i></div>;
+            default: return <div className="icon-circle bg-light text-dark"><i className="bi bi-file-earmark"></i></div>;
         }
     };
 
     const getTypeLabel = (type) => {
         switch (type) {
-            case 'naissance':
-                return <><i className="bi bi-file-earmark-person me-2 text-primary"></i>Naissance</>;
-            case 'mariage':
-                return <><i className="bi bi-heart-fill me-2 text-danger"></i>Mariage</>;
-            case 'deces':
-                return <><i className="bi bi-journal-text me-2 text-secondary"></i>Décès</>;
-            default:
-                return type;
+            case 'naissance': return "Acte de Naissance";
+            case 'mariage': return "Acte de Mariage";
+            case 'deces': return "Acte de Décès";
+            default: return type;
         }
     };
 
@@ -141,9 +147,9 @@ export default function MesDemandes() {
 
             if (isNaN(date.getTime())) return 'Date invalide';
 
-            return date.toLocaleString('fr-FR', {
+            return date.toLocaleDateString('fr-FR', {
                 day: '2-digit',
-                month: 'long',
+                month: 'short',
                 year: 'numeric',
                 hour: '2-digit',
                 minute: '2-digit'
@@ -223,8 +229,9 @@ export default function MesDemandes() {
             {/* Liste des demandes */}
             {loading ? (
                 <div className="text-center my-5 p-5 modern-table-card">
-                    <div className="spinner-grow text-primary" role="status">
-                        <span className="visually-hidden">Chargement...</span>
+                    <div className="d-flex flex-column gap-3">
+                        <SkeletonLoader count={1} height="40px" width="100%" /> {/* Header */}
+                        <SkeletonLoader count={5} height="60px" width="100%" /> {/* Rows */}
                     </div>
                     <p className="mt-3 text-muted fw-bold">Récupération de vos dossiers...</p>
                 </div>
@@ -359,341 +366,208 @@ export default function MesDemandes() {
             }
 
             {/* Modal de Suivi / Détails / Edition */}
-            {
-                selectedDemande && (
-                    <div className="custom-modal-backdrop d-flex align-items-center justify-content-center" style={{ zIndex: 1060, backgroundColor: 'rgba(0,0,0,0.6)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0 }}>
-                        <div className="bg-white shadow-lg overflow-hidden fade-in" style={{ width: '95%', maxWidth: '900px', maxHeight: '95vh', display: 'flex', flexDirection: 'column', borderRadius: '0', borderTop: '5px solid #f27405' }}>
+            {selectedDemande && (
+                <div className="custom-modal-backdrop d-flex align-items-center justify-content-center animate__animated animate__fadeIn"
+                    style={{ zIndex: 1060, backgroundColor: 'rgba(0, 26, 65, 0.7)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, backdropFilter: 'blur(4px)' }}>
+                    <div className="card shadow-lg border-0 overflow-hidden animate__animated animate__zoomIn"
+                        style={{ width: '95%', maxWidth: '850px', maxHeight: '90vh', display: 'flex', flexDirection: 'column', borderRadius: '1.5rem' }}>
 
-                            {/* Header Modal style Maquette */}
-                            <div className="p-4 d-flex justify-content-between align-items-center bg-white border-bottom">
-                                <h2 className="fw-bold m-0 text-dark" style={{ fontSize: '1.8rem' }}>
-                                    {isEditing ? 'Modifier ma demande' : 'Détails Demande'}
-                                </h2>
-                                <span className="text-muted small">Détails Demande</span>
-                            </div>
-
-                            {/* Tabs Navigation (if not editing) */}
-                            {!isEditing && (
-                                <div className="d-flex border-bottom bg-light">
-                                    <button
-                                        className={`flex-fill py-3 border-0 bg-transparent fw-bold small text-uppercase ${viewMode === 'tracking' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'}`}
-                                        onClick={() => setViewMode('tracking')}
-                                    >
-                                        <i className="bi bi-geo-alt me-2"></i>Suivi
-                                    </button>
-                                    <button
-                                        className={`flex-fill py-3 border-0 bg-transparent fw-bold small text-uppercase ${viewMode === 'details' ? 'text-primary border-bottom border-primary border-3' : 'text-muted'}`}
-                                        onClick={() => setViewMode('details')}
-                                    >
-                                        <i className="bi bi-info-circle me-2"></i>Détails
-                                    </button>
+                        {/* Enhanced Header */}
+                        <div className="p-4 d-flex justify-content-between align-items-center bg-white border-bottom">
+                            <div className="d-flex align-items-center gap-3">
+                                {getTypeIcon(selectedDemande.type)}
+                                <div>
+                                    <h4 className="fw-bold m-0 text-dark">
+                                        {isEditing ? 'Modification du dossier' : 'Détails de la demande'}
+                                    </h4>
+                                    <span className="text-muted small fw-bold text-uppercase">Réf: {selectedDemande.id.substring(0, 8).toUpperCase()}</span>
                                 </div>
-                            )}
+                            </div>
+                            <button className="btn-close shadow-none p-2 bg-light rounded-circle" onClick={() => setSelectedDemande(null)}></button>
+                        </div>
 
-                            {/* Modal Body */}
-                            <div className="p-4 overflow-auto" style={{ flex: 1 }}>
-                                {viewMode === 'tracking' ? (
+                        {/* Tabs Navigation */}
+                        {!isEditing && (
+                            <div className="d-flex bg-white px-4 pt-2 border-bottom">
+                                <button
+                                    className={`btn px-4 py-2 fw-bold small text-uppercase transition-all border-bottom border-3 ${viewMode === 'tracking' ? 'text-primary border-primary' : 'text-muted border-transparent opacity-50'}`}
+                                    onClick={() => setViewMode('tracking')}
+                                >
+                                    Suivi en temps réel
+                                </button>
+                                <button
+                                    className={`btn px-4 py-2 fw-bold small text-uppercase transition-all border-bottom border-3 ${viewMode === 'details' ? 'text-primary border-primary' : 'text-muted border-transparent opacity-50'}`}
+                                    onClick={() => setViewMode('details')}
+                                >
+                                    Fiche d'informations
+                                </button>
+                            </div>
+                        )}
+
+                        {/* Modal Body */}
+                        <div className="p-4 overflow-auto bg-light" style={{ flex: 1 }}>
+                            {viewMode === 'tracking' ? (
+                                <div className="p-3 bg-white rounded-4 shadow-sm">
                                     <TrackingTimeline status={selectedDemande.statut} type={selectedDemande.type} />
-                                ) : isEditing ? (
-                                    <form onSubmit={handleUpdate}>
-                                        <div className="alert alert-success small mb-4 rounded-4 border-0 shadow-sm" style={{ backgroundColor: '#d1e7dd', color: '#0f5132', borderLeft: '5px solid #198754' }}>
-                                            <i className="bi bi-check-circle-fill me-2 text-success"></i>
-                                            Vérifiez vos informations avant de valider les modifications.
-                                        </div>
+                                </div>
+                            ) : isEditing ? (
+                                <form onSubmit={handleUpdate} className="bg-white p-4 rounded-4 shadow-sm">
+                                    <div className="alert alert-info border-0 shadow-sm rounded-3 d-flex align-items-center gap-3 mb-4">
+                                        <i className="bi bi-info-circle-fill fs-4"></i>
+                                        <span className="fw-bold small">Vous modifiez actuellement les informations de votre demande. Assurez-vous de l'exactitude des nouvelles données.</span>
+                                    </div>
+                                    <div className="row g-4">
+                                        {(() => {
+                                            const labelMap = {
+                                                nomEnfant: "Nom de l'enfant", prenomEnfant: "Prénoms l'enfant", sexeEnfant: "Sexe l'enfant",
+                                                dateNaissanceEnfant: "Date naissance", lieuNaissanceEnfant: "Lieu naissance",
+                                                nomPere: "Nom du Père", prenomPere: "Prénom du Père", professionPere: "Profession Père",
+                                                nomMere: "Nom de la Mère", prenomMere: "Prénom de la Mère", professionMere: "Profession Mère",
+                                                nomEpoux: "Nom Époux", prenomEpoux: "Prénom Époux", nomEpouse: "Nom Épouse",
+                                                prenomEpouse: "Prénom Épouse", dateMariage: "Date Mariage", lieuMariage: "Lieu Mariage",
+                                                nomDefunt: "Nom Défunt", prenomDefunt: "Prénom Défunt", dateDeces: "Date Décès", lieuDeces: "Lieu Décès"
+                                            };
+
+                                            const renderField = (key) => {
+                                                const value = editData[key];
+                                                if (value === undefined) return null;
+                                                const isDate = key.toLowerCase().includes('date');
+                                                const label = labelMap[key] || key.replace(/([A-Z])/g, ' $1').toUpperCase();
+
+                                                return (
+                                                    <div className="col-md-6" key={key}>
+                                                        <label className="form-label small fw-bold text-muted text-uppercase">{label}</label>
+                                                        <input
+                                                            type={isDate ? "date" : "text"}
+                                                            className="form-control bg-light border-0 py-2 px-3 fw-bold"
+                                                            value={value || ''}
+                                                            onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
+                                                            required
+                                                        />
+                                                    </div>
+                                                );
+                                            };
+
+                                            const renderSection = (title, fields) => (
+                                                <div className="col-12 mb-4">
+                                                    <h6 className="fw-bold text-primary-dark mb-3 border-start border-3 border-primary ps-2">{title}</h6>
+                                                    <div className="row g-3">
+                                                        {fields.map(f => renderField(f))}
+                                                    </div>
+                                                </div>
+                                            );
+
+                                            if (selectedDemande.type === 'naissance') {
+                                                return (
+                                                    <>
+                                                        {renderSection("Identité de l'enfant", ["nomEnfant", "prenomEnfant", "sexeEnfant", "dateNaissanceEnfant"])}
+                                                        {renderSection("Filiation", ["nomPere", "prenomPere", "nomMere", "prenomMere"])}
+                                                    </>
+                                                );
+                                            } else if (selectedDemande.type === 'mariage') {
+                                                return renderSection("Détails du Mariage", ["nomEpoux", "prenomEpoux", "nomEpouse", "prenomEpouse", "dateMariage", "lieuMariage"]);
+                                            } else if (selectedDemande.type === 'deces') {
+                                                return renderSection("Identité du Défunt", ["nomDefunt", "prenomDefunt", "dateDeces", "lieuDeces"]);
+                                            }
+                                        })()}
+                                    </div>
+                                    <div className="d-flex gap-3 mt-5 pt-4 border-top">
+                                        <button type="button" className="btn btn-light rounded-pill px-4" onClick={() => setIsEditing(false)}>Abandonner</button>
+                                        <button type="submit" className="btn btn-primary rounded-pill px-5 fw-bold ms-auto" style={{ background: '#001a41' }} disabled={actionLoading}>
+                                            {actionLoading ? <span className="spinner-border spinner-border-sm me-2"></span> : 'Mettre à jour'}
+                                        </button>
+                                    </div>
+                                </form>
+                            ) : (
+                                <div className="details-view animate__animated animate__fadeIn">
+                                    {/* Action Bar */}
+                                    <div className="d-flex flex-wrap gap-3 mb-4 p-3 bg-white rounded-4 shadow-sm align-items-center">
+                                        {selectedDemande.statut === 'en_attente' && (
+                                            <button className="btn btn-outline-primary border-2 rounded-pill px-4 fw-bold" onClick={startEditing}>
+                                                <i className="bi bi-pencil-square me-2"></i>Modifier
+                                            </button>
+                                        )}
+                                        <button className="btn btn-outline-secondary border-2 rounded-pill px-4 fw-bold" onClick={() => window.print()}>
+                                            <i className="bi bi-printer me-2"></i>Imprimer
+                                        </button>
+                                        {selectedDemande.statut === 'en_attente' && (
+                                            <button className="btn btn-outline-danger border-2 rounded-pill px-4 fw-bold ms-auto" onClick={() => handleDelete(selectedDemande.id)}>
+                                                <i className="bi bi-trash-fill"></i>
+                                            </button>
+                                        )}
+                                    </div>
+
+                                    {/* Information Grid */}
+                                    <div className="bg-white p-4 rounded-4 shadow-sm">
+                                        {selectedDemande.statut === 'rejetee' && (
+                                            <div className="alert alert-danger border-0 rounded-4 p-4 mb-4">
+                                                <h6 className="fw-bold d-flex align-items-center gap-2"><i className="bi bi-exclamation-triangle-fill fs-4"></i> Motif du rejet</h6>
+                                                <p className="mb-0 fw-bold">{selectedDemande.motifRejet || "Informations incorrectes ou incomplètes."}</p>
+                                            </div>
+                                        )}
+
                                         <div className="row g-4">
-                                            {(() => {
+                                            {Object.entries(selectedDemande.donnees).map(([key, value]) => {
                                                 const labelMap = {
-                                                    // Naissance
-                                                    nomEnfant: "Nom de l'enfant",
-                                                    prenomEnfant: "Prénom de l'enfant",
-                                                    sexeEnfant: "Sexe de l'enfant",
-                                                    dateNaissanceEnfant: "Date de naissance l'enfant",
-                                                    lieuNaissanceEnfant: "Lieu de naissance l'enfant",
-                                                    nomPere: "Nom du Père",
-                                                    prenomPere: "Prénom du Père",
-                                                    dateNaissancePere: "Date naissance Père",
-                                                    professionPere: "Profession du Père",
-                                                    domicilePere: "Domicile du Père",
-                                                    nomMere: "Nom de la Mère",
-                                                    prenomMere: "Prénom de la Mère",
-                                                    dateNaissanceMere: "Date naissance Mère",
-                                                    professionMere: "Profession de la Mère",
-                                                    domicileMere: "Domicile de la Mère",
-                                                    // Mariage
-                                                    nomEpoux: "Nom de l'époux",
-                                                    prenomEpoux: "Prénom de l'époux",
-                                                    professionEpoux: "Profession de l'époux",
-                                                    domicileEpoux: "Domicile de l'époux",
-                                                    nomEpouse: "Nom de l'épouse",
-                                                    prenomEpouse: "Prénom de l'épouse",
-                                                    dateMariage: "Date du mariage",
-                                                    lieuMariage: "Lieu du mariage",
-                                                    regimeMatrimonial: "Régime matrimonial",
-                                                    // Décès
-                                                    nomDefunt: "Nom du défunt",
-                                                    prenomDefunt: "Prénom du défunt",
-                                                    dateDeces: "Date du décès",
-                                                    lieuDeces: "Lieu du décès",
-                                                    causeDeces: "Cause du décès",
-                                                    nomDeclarant: "Nom du déclarant",
-                                                    prenomDeclarant: "Prénom du déclarant",
-                                                    lienParente: "Lien de parenté",
-                                                    domicileDeclarant: "Domicile du déclarant"
+                                                    nomEnfant: "Nom", prenomEnfant: "Prénom", sexeEnfant: "Sexe",
+                                                    dateNaissanceEnfant: "Date de naissance", lieuNaissanceEnfant: "Lieu de naissance",
+                                                    nomPere: "Père", prenomPere: "Prénom Père", professionPere: "Profession Père",
+                                                    nomMere: "Mère", prenomMere: "Prénom Mère", professionMere: "Profession Mère",
+                                                    nomEpoux: "Époux", prenomEpoux: "Prénom Époux", nomEpouse: "Épouse",
+                                                    prenomEpouse: "Prénom Épouse", dateMariage: "Date Mariage", lieuMariage: "Lieu Mariage",
+                                                    nomDefunt: "Défunt", prenomDefunt: "Prénom Défunt", dateDeces: "Date Décès", lieuDeces: "Lieu Décès"
                                                 };
-
-                                                const renderField = (key) => {
-                                                    const value = editData[key];
-                                                    if (value === undefined) return null;
-                                                    const isDate = key.toLowerCase().includes('date');
-                                                    const label = labelMap[key] || key.replace(/([A-Z])/g, ' $1').toUpperCase();
-
-                                                    return (
-                                                        <div className="col-md-6 mb-2" key={key}>
-                                                            <label className="form-label small fw-bold text-muted text-uppercase mb-1" style={{ fontSize: '0.7rem' }}>{label}</label>
-                                                            {key === 'sexeEnfant' ? (
-                                                                <select
-                                                                    className="form-select form-select-sm bg-light border-0"
-                                                                    style={{ borderRadius: '4px' }}
-                                                                    value={value}
-                                                                    onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
-                                                                    required
-                                                                >
-                                                                    <option value="M">Masculin</option>
-                                                                    <option value="F">Féminin</option>
-                                                                </select>
-                                                            ) : key === 'regimeMatrimonial' ? (
-                                                                <select
-                                                                    className="form-select form-select-sm bg-light border-0"
-                                                                    style={{ borderRadius: '4px' }}
-                                                                    value={value}
-                                                                    onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
-                                                                    required
-                                                                >
-                                                                    <option value="monogamie">Monogamie</option>
-                                                                    <option value="polygamie">Polygamie</option>
-                                                                    <option value="communaute_biens">Communauté de biens</option>
-                                                                    <option value="separation_biens">Séparation de biens</option>
-                                                                </select>
-                                                            ) : key === 'lienParente' ? (
-                                                                <select
-                                                                    className="form-select form-select-sm bg-light border-0"
-                                                                    style={{ borderRadius: '4px' }}
-                                                                    value={value}
-                                                                    onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
-                                                                    required
-                                                                >
-                                                                    <option value="">Sélectionnez le lien...</option>
-                                                                    <option value="Pere">Père</option>
-                                                                    <option value="Mere">Mère</option>
-                                                                    <option value="Fils">Fils</option>
-                                                                    <option value="Fille">Fille</option>
-                                                                    <option value="Frere">Frère</option>
-                                                                    <option value="Soeur">Sœur</option>
-                                                                    <option value="Conjoint">Conjoint(e)</option>
-                                                                    <option value="Autre">Autre</option>
-                                                                </select>
-                                                            ) : (
-                                                                <input
-                                                                    type={isDate ? "date" : "text"}
-                                                                    className="form-control form-control-sm bg-light border-0"
-                                                                    style={{ borderRadius: '4px' }}
-                                                                    value={value}
-                                                                    onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
-                                                                    required
-                                                                />
-                                                            )}
-                                                        </div>
-                                                    );
-                                                };
-
-                                                const renderSection = (title, fields) => (
-                                                    <div className="col-12 mt-3 mb-2">
-                                                        <h6 className="fw-bold text-primary text-uppercase small border-bottom pb-2 mb-3" style={{ letterSpacing: '1px' }}>{title}</h6>
-                                                        <div className="row g-3">
-                                                            {fields.map(f => renderField(f))}
+                                                const label = labelMap[key] || key;
+                                                return (
+                                                    <div className="col-md-6" key={key}>
+                                                        <div className="p-3 bg-light rounded-3 border-start border-4 border-primary">
+                                                            <div className="text-muted small fw-bold text-uppercase">{label}</div>
+                                                            <div className="fw-bold text-dark fs-5">{value || "—"}</div>
                                                         </div>
                                                     </div>
                                                 );
-
-                                                if (selectedDemande.type === 'naissance') {
-                                                    return (
-                                                        <>
-                                                            {renderSection("L'Enfant", ["nomEnfant", "prenomEnfant", "sexeEnfant", "dateNaissanceEnfant", "lieuNaissanceEnfant"])}
-                                                            {renderSection("Le Père", ["nomPere", "prenomPere", "dateNaissancePere", "professionPere", "domicilePere"])}
-                                                            {renderSection("La Mère", ["nomMere", "prenomMere", "dateNaissanceMere", "professionMere", "domicileMere"])}
-                                                        </>
-                                                    );
-                                                } else if (selectedDemande.type === 'mariage') {
-                                                    return (
-                                                        <>
-                                                            {renderSection("L'Époux", ["nomEpoux", "prenomEpoux", "professionEpoux", "domicileEpoux"])}
-                                                            {renderSection("L'Épouse", ["nomEpouse", "prenomEpouse", "dateMariage", "lieuMariage", "regimeMatrimonial"])}
-                                                        </>
-                                                    );
-                                                } else if (selectedDemande.type === 'deces') {
-                                                    return (
-                                                        <>
-                                                            {renderSection("Le Défunt", ["nomDefunt", "prenomDefunt", "dateDeces", "lieuDeces", "causeDeces"])}
-                                                            {renderSection("Le Déclarant", ["nomDeclarant", "prenomDeclarant", "lienParente", "domicileDeclarant"])}
-                                                        </>
-                                                    );
-                                                }
-                                                return null;
-                                            })()}
+                                            })}
                                         </div>
-                                        <div className="d-flex gap-2 mt-5 pt-3 border-top justify-content-end">
-                                            <button type="button" className="btn btn-light border px-4" onClick={() => setIsEditing(false)}>Annuler</button>
-                                            <button type="submit" className="btn btn-primary px-5 fw-bold" disabled={actionLoading}>
-                                                {actionLoading ? <span className="spinner-border spinner-border-sm me-2"></span> : 'ENREGISTRER LES MODIFICATIONS'}
-                                            </button>
-                                        </div>
-                                    </form>
-                                ) : (
-                                    <div className="details-view">
-                                        {/* Barre d'outils style Maquette */}
-                                        <div className="d-flex flex-wrap gap-2 mb-4 align-items-center justify-content-between border-bottom pb-4">
-                                            <div className="d-flex flex-wrap gap-2">
-                                                <button className="btn d-flex flex-column align-items-center justify-content-center text-white p-2"
-                                                    style={{ backgroundColor: '#8b4513', width: '90px', height: '70px', borderRadius: '4px' }}
-                                                    onClick={() => showToast("Affichage des pièces justificatives (Bientôt disponible)", "info")}>
-                                                    <i className="bi bi-image mb-1 fs-5"></i>
-                                                    <span style={{ fontSize: '0.75rem' }}>Pièce</span>
-                                                </button>
-
-                                                {selectedDemande.statut === 'en_attente' && (
-                                                    <button className="btn d-flex flex-column align-items-center justify-content-center text-white p-2"
-                                                        style={{ backgroundColor: '#0d6efd', width: '90px', height: '70px', borderRadius: '4px' }}
-                                                        onClick={startEditing}>
-                                                        <i className="bi bi-pencil-square mb-1 fs-5"></i>
-                                                        <span style={{ fontSize: '0.75rem' }}>Modifier</span>
-                                                    </button>
-                                                )}
-
-                                                <button className="btn d-flex flex-column align-items-center justify-content-center text-white p-2"
-                                                    style={{ backgroundColor: '#6f42c1', width: '90px', height: '70px', borderRadius: '4px' }}
-                                                    onClick={() => window.print()}>
-                                                    <i className="bi bi-printer mb-1 fs-5"></i>
-                                                    <span style={{ fontSize: '0.75rem' }}>Imprimer</span>
-                                                </button>
-
-                                                {selectedDemande.statut === 'en_attente' && (
-                                                    <button className="btn d-flex flex-column align-items-center justify-content-center text-white p-2"
-                                                        style={{ backgroundColor: '#dc3545', width: '90px', height: '70px', borderRadius: '4px' }}
-                                                        onClick={() => handleDelete(selectedDemande.id)}>
-                                                        <i className="bi bi-x-circle mb-1 fs-5"></i>
-                                                        <span style={{ fontSize: '0.75rem' }}>Annuler</span>
-                                                    </button>
-                                                )}
-                                            </div>
-
-                                            {/* Bloc de Statut */}
-                                            <div className={`text-white d-flex flex-column align-items-center justify-content-center p-2 rounded-2 shadow-sm ${selectedDemande.statut === 'en_attente' ? 'bg-primary' : (selectedDemande.statut === 'acceptee' ? 'bg-success' : 'bg-danger')}`}
-                                                style={{ width: '100px', height: '80px' }}>
-                                                <i className={`bi ${selectedDemande.statut === 'en_attente' ? 'bi-eye-slash-fill' : 'bi-check-circle-fill'} fs-4 mb-1`}></i>
-                                                <span className="fw-bold text-center" style={{ fontSize: '0.65rem' }}>
-                                                    {selectedDemande.statut === 'en_attente' ? 'NON TRAITÉE' : selectedDemande.statut.toUpperCase()}
-                                                </span>
-                                            </div>
-                                        </div>
-
-                                        {/* Grille d'informations dynamique par type d'acte */}
-                                        <div className="row g-4">
-                                            {selectedDemande.type === 'naissance' && (
-                                                <>
-                                                    <div className="col-md-6 border-end">
-                                                        <h6 className="fw-bold text-primary mb-3 text-uppercase small">L'Enfant</h6>
-                                                        <DetailRow label="Nom" value={selectedDemande.donnees.nomEnfant} />
-                                                        <DetailRow label="Prénom" value={selectedDemande.donnees.prenomEnfant} />
-                                                        <DetailRow label="Sexe" value={selectedDemande.donnees.sexeEnfant === 'M' ? 'Masculin' : 'Féminin'} />
-                                                        <DetailRow label="Date naissance" value={formatSimpleDate(selectedDemande.donnees.dateNaissanceEnfant)} />
-
-                                                        <h6 className="fw-bold text-primary mt-4 mb-3 text-uppercase small">Le Père</h6>
-                                                        <DetailRow label="Nom du Père" value={selectedDemande.donnees.nomPere} />
-                                                        <DetailRow label="Profession" value={selectedDemande.donnees.professionPere} />
-                                                    </div>
-                                                    <div className="col-md-6">
-                                                        <h6 className="fw-bold text-primary mb-3 text-uppercase small">La Mère</h6>
-                                                        <DetailRow label="Nom de la Mère" value={selectedDemande.donnees.nomMere} />
-                                                        <DetailRow label="Prénom de la Mère" value={selectedDemande.donnees.prenomMere} />
-                                                        <DetailRow label="Profession" value={selectedDemande.donnees.professionMere} />
-
-                                                        <h6 className="fw-bold text-primary mt-4 mb-3 text-uppercase small">Infos Demande</h6>
-                                                        <DetailRow label="Type" value="Acte de Naissance" />
-                                                        <DetailRow label="Soumis le" value={formatDate(selectedDemande.dateDemande)} />
-                                                    </div>
-                                                </>
-                                            )}
-
-                                            {selectedDemande.type === 'mariage' && (
-                                                <>
-                                                    <div className="col-md-6 border-end">
-                                                        <h6 className="fw-bold text-primary mb-3 text-uppercase small">L'Époux</h6>
-                                                        <DetailRow label="Nom" value={selectedDemande.donnees.nomEpoux} />
-                                                        <DetailRow label="Prénom" value={selectedDemande.donnees.prenomEpoux} />
-                                                        <DetailRow label="Profession" value={selectedDemande.donnees.professionEpoux} />
-
-                                                        <h6 className="fw-bold text-primary mt-4 mb-3 text-uppercase small">L'Épouse</h6>
-                                                        <DetailRow label="Nom" value={selectedDemande.donnees.nomEpouse} />
-                                                        <DetailRow label="Prénom" value={selectedDemande.donnees.prenomEpouse} />
-                                                    </div>
-                                                    <div className="col-md-6">
-                                                        <h6 className="fw-bold text-primary mb-3 text-uppercase small">Le Mariage</h6>
-                                                        <DetailRow label="Date Mariage" value={formatSimpleDate(selectedDemande.donnees.dateMariage)} />
-                                                        <DetailRow label="Lieu Mariage" value={selectedDemande.donnees.lieuMariage} />
-                                                        <DetailRow label="Régime" value={selectedDemande.donnees.regimeMatrimonial} />
-
-                                                        <h6 className="fw-bold text-primary mt-4 mb-3 text-uppercase small">Infos Demande</h6>
-                                                        <DetailRow label="Type" value="Acte de Mariage" />
-                                                        <DetailRow label="Soumis le" value={formatDate(selectedDemande.dateDemande)} />
-                                                    </div>
-                                                </>
-                                            )}
-
-                                            {selectedDemande.type === 'deces' && (
-                                                <>
-                                                    <div className="col-md-6 border-end">
-                                                        <h6 className="fw-bold text-primary mb-3 text-uppercase small">Le Défunt</h6>
-                                                        <DetailRow label="Nom" value={selectedDemande.donnees.nomDefunt} />
-                                                        <DetailRow label="Prénom" value={selectedDemande.donnees.prenomDefunt} />
-                                                        <DetailRow label="Date Décès" value={formatSimpleDate(selectedDemande.donnees.dateDeces)} />
-                                                        <DetailRow label="Lieu Décès" value={selectedDemande.donnees.lieuDeces} />
-                                                    </div>
-                                                    <div className="col-md-6">
-                                                        <h6 className="fw-bold text-primary mb-3 text-uppercase small">Le Déclarant</h6>
-                                                        <DetailRow label="Nom Déclarant" value={selectedDemande.donnees.nomDeclarant} />
-                                                        <DetailRow label="Lien Parenté" value={selectedDemande.donnees.lienParente} />
-
-                                                        <h6 className="fw-bold text-primary mt-4 mb-3 text-uppercase small">Infos Demande</h6>
-                                                        <DetailRow label="Type" value="Acte de Décès" />
-                                                        <DetailRow label="Soumis le" value={formatDate(selectedDemande.dateDemande)} />
-                                                    </div>
-                                                </>
-                                            )}
-                                        </div>
-
-                                        {selectedDemande.statut === 'rejetee' && selectedDemande.motifRejet && (
-                                            <div className="alert alert-danger mt-4 rounded-4 border-0 shadow-sm" style={{ borderLeft: '5px solid #dc3545' }}>
-                                                <h6 className="fw-bold text-danger"><i className="bi bi-exclamation-triangle-fill me-2"></i>Motif du rejet :</h6>
-                                                <p className="mb-0 small">{selectedDemande.motifRejet}</p>
-                                            </div>
-                                        )}
                                     </div>
-                                )}
-                            </div>
-
-                            {/* Footer style Maquette */}
-                            {!isEditing && (
-                                <div className="p-3 bg-light border-top text-center">
-                                    <button className="btn btn-secondary px-5 fw-bold" style={{ borderRadius: '4px' }} onClick={() => setSelectedDemande(null)}>
-                                        FERMER
-                                    </button>
                                 </div>
                             )}
                         </div>
+
+                        {/* Centered Footer */}
+                        <div className="p-4 bg-white border-top text-center">
+                            <button className="btn btn-dark rounded-pill px-5 fw-bold shadow-sm" style={{ background: '#001a41' }} onClick={() => setSelectedDemande(null)}>
+                                Fermer cette vue
+                            </button>
+                        </div>
                     </div>
-                )
-            }
-        </div >
+                </div>
+            )}
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .bg-primary-soft { background-color: rgba(0, 123, 255, 0.1); }
+                .bg-danger-soft { background-color: rgba(220, 53, 69, 0.1); }
+                .bg-secondary-soft { background-color: rgba(108, 117, 125, 0.1); }
+                .icon-circle {
+                    width: 45px;
+                    height: 45px;
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.25rem;
+                }
+                .hover-bg-light:hover {
+                    background-color: #f8f9fa !important;
+                }
+                .transition-all {
+                    transition: all 0.2s ease-in-out;
+                }
+                .text-primary-dark {
+                    color: #001a41;
+                }
+            `}} />
+        </div>
     );
 }
 

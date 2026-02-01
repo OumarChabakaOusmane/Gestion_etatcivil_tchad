@@ -33,14 +33,14 @@ router.get('/me', authMiddleware, getMyDemandes);
  * @desc    Récupère les statistiques des demandes
  * @access  Privé (Admin)
  */
-router.get('/stats', authMiddleware, roleMiddleware('admin'), getStatistics);
+router.get('/stats', authMiddleware, roleMiddleware('admin', 'agent'), getStatistics);
 
 /**
  * @route   GET /api/demandes
  * @desc    Récupère toutes les demandes
  * @access  Privé (Admin)
  */
-router.get('/', authMiddleware, roleMiddleware('admin'), getAllDemandes);
+router.get('/', authMiddleware, roleMiddleware('admin', 'agent'), getAllDemandes);
 
 /**
  * @route   GET /api/demandes/:id
@@ -54,7 +54,7 @@ router.get('/:id', authMiddleware, getDemandeById);
  * @desc    Met à jour le statut d'une demande (accepter/rejeter)
  * @access  Privé (Admin)
  */
-router.patch('/:id/statut', authMiddleware, roleMiddleware('admin'), updateDemandeStatut);
+router.patch('/:id/statut', authMiddleware, roleMiddleware('admin', 'agent'), updateDemandeStatut);
 
 /**
  * @route   POST /api/demandes/:id/documents

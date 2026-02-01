@@ -100,6 +100,15 @@ export default function Navbar() {
                                         Mes demandes
                                     </Link>
                                 </li>
+                                <li className="nav-item">
+                                    <Link
+                                        className={`nav-link ${isActive('/actualites') ? 'active fw-bold' : ''}`}
+                                        to="/actualites"
+                                    >
+                                        <i className="bi bi-newspaper me-1"></i>
+                                        Actualités
+                                    </Link>
+                                </li>
                                 <li className="nav-item dropdown">
                                     <a
                                         className="nav-link dropdown-toggle"

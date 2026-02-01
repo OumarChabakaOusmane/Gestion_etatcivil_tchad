@@ -5,6 +5,9 @@ const Deces = require('../models/Deces');
 const User = require('../models/user.model');
 const Notification = require('../models/notification.model');
 const emailService = require('../services/emailService');
+const smsService = require('../services/smsService');
+const { sendPushNotification } = require('../services/expoPushService');
+const logAction = require('../utils/auditLogger');
 
 /**
  * Crée une nouvelle demande
@@ -48,19 +51,48 @@ const createDemande = async (req, res) => {
         const nouvelleDemande = await Demande.create(demandeData);
 
         // NOTIFICATION AUX ADMINS (Async)
+        // NOTIFICATION AUX ADMINS ET AGENTS (Async)
         try {
+            // Récupérer les Admins ET les Agents
             const admins = await User.findByRole('admin');
-            for (const admin of admins) {
+            const agents = await User.findByRole('agent');
+            const staff = [...admins, ...agents];
+
+            // Pour éviter les doublons si un jour un user a plusieurs casquettes (rare mais possible)
+            const notifiedUserIds = new Set();
+
+            for (const member of staff) {
+                const memberId = member.id || member._id;
+
+                if (notifiedUserIds.has(memberId)) continue;
+                notifiedUserIds.add(memberId);
+
+                // 1. Notification Interne (In-App)
                 await Notification.create({
-                    userId: admin.id || admin._id,
+                    userId: memberId,
                     title: 'Nouvelle demande',
                     message: `Une nouvelle demande de ${type} a été soumise par ${req.user.prenom} ${req.user.nom}.`,
                     type: 'info',
                     link: `/admin/demandes`
                 });
+
+                // 2. Notification Email (Alerte)
+                if (member.email) {
+                    emailService.sendNewDemandeAlert(
+                        member.email,
+                        member.prenom || 'Agent',
+                        type,
+                        `${req.user.prenom} ${req.user.nom}`
+                    );
+                }
+            }
+
+            // Notification SMS au citoyen (Confirmation de réception)
+            if (req.user.telephone) {
+                smsService.sendReceptionSms(req.user.telephone, type);
             }
         } catch (notifErr) {
-            console.error('Erreur notification admin:', notifErr);
+            console.error('Erreur notification admin/SMS:', notifErr);
         }
 
         res.status(201).json({
@@ -310,30 +342,63 @@ const updateDemandeStatut = async (req, res) => {
             });
         } catch (notifErr) {
             console.error('Erreur notification citoyen:', notifErr);
+
+
         }
 
-        // ENVOI DE LA NOTIFICATION PAR EMAIL (Async non bloquant)
+        // [AUDIT LOG] Enregistrer l'action de validation/rejet
+        const logActionType = statut === 'acceptee' ? 'DEMANDE_ACCEPTED' : 'DEMANDE_REJECTED';
+        const logDetails = {
+            demandeId: req.params.id,
+            type: demande.type,
+            motif: motifRejet || 'N/A',
+            acteId: acteId || 'N/A'
+        };
+        logAction(req, logActionType, logDetails);
+
+        // ENVOI DE LA NOTIFICATION PAR EMAIL ET SMS (Async non bloquant)
         try {
             const citoyen = await User.findById(demande.userId);
-            if (citoyen && citoyen.email) {
-                if (statut === 'acceptee') {
-                    emailService.sendNotificationValidation(
-                        citoyen.email,
-                        `${citoyen.prenom} ${citoyen.nom}`,
-                        demande.type,
-                        req.params.id
-                    );
-                } else if (statut === 'rejetee') {
-                    emailService.sendNotificationRejet(
-                        citoyen.email,
-                        `${citoyen.prenom} ${citoyen.nom}`,
-                        demande.type,
-                        motifRejet
-                    );
+            if (citoyen) {
+                // [NEW] Notification PUSH
+                if (citoyen.expoPushToken) {
+                    const pushTitle = statut === 'acceptee' ? '✅ Demande Validée' : '❌ Demande Rejetée';
+                    const pushBody = statut === 'acceptee'
+                        ? `Votre demande de ${demande.type} a été validée.`
+                        : `Votre demande a été rejetée: ${motifRejet || 'Aucun motif'}`;
+
+                    await sendPushNotification(citoyen.expoPushToken, pushTitle, pushBody, { demandeId: req.params.id });
+                }
+
+                if (citoyen.email) {
+                    if (statut === 'acceptee') {
+                        emailService.sendNotificationValidation(
+                            citoyen.email,
+                            `${citoyen.prenom} ${citoyen.nom}`,
+                            demande.type,
+                            req.params.id
+                        );
+                    } else if (statut === 'rejetee') {
+                        emailService.sendNotificationRejet(
+                            citoyen.email,
+                            `${citoyen.prenom} ${citoyen.nom}`,
+                            demande.type,
+                            motifRejet
+                        );
+                    }
+                }
+
+                // SMS SIMULATION
+                if (citoyen.telephone) {
+                    if (statut === 'acceptee') {
+                        smsService.sendValidationSms(citoyen.telephone, demande.type, acteId || req.params.id);
+                    } else if (statut === 'rejetee') {
+                        smsService.sendRejetSms(citoyen.telephone, demande.type, motifRejet || 'Non spécifié');
+                    }
                 }
             }
-        } catch (mailErr) {
-            console.error('⚠️ Échec de préparation de l\'email de notification:', mailErr);
+        } catch (mailSmsErr) {
+            console.error('⚠️ Échec de préparation de la notification (Email/SMS):', mailSmsErr);
         }
 
         res.status(200).json({

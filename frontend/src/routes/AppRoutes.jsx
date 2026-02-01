@@ -32,6 +32,12 @@ import AdminDemandes from "../pages/Admin/AdminDemandes";
 import AdminReports from "../pages/Admin/AdminReports";
 import AdminUtilisateurs from "../pages/Admin/AdminUtilisateurs";
 import AdminSettings from "../pages/Admin/AdminSettings";
+import AdminMessages from "../pages/Admin/AdminMessages";
+import VerifyOtp from "../pages/Auth/VerifyOtp";
+import ResetPassword from "../pages/Auth/ResetPassword";
+import AdminLogs from "../pages/Admin/AdminLogs";
+import Actualites from "../pages/Public/Actualites";
+import AdminArticles from "../pages/Admin/AdminArticles";
 
 export default function AppRoutes() {
   return (
@@ -40,10 +46,13 @@ export default function AppRoutes() {
         {/* Routes publiques */}
         <Route path="/" element={<Home />} />
         <Route path="/services" element={<Services />} />
+        <Route path="/actualites" element={<Actualites />} />
         <Route path="/contact" element={<Contact />} />
         <Route path="/login" element={<Login />} />
         <Route path="/register" element={<Register />} />
         <Route path="/forgot-password" element={<ForgotPassword />} />
+        <Route path="/reset-password/:token" element={<ResetPassword />} />
+        <Route path="/verify-otp" element={<VerifyOtp />} />
 
         {/* Routes citoyens protégées */}
         <Route
@@ -194,6 +203,39 @@ export default function AppRoutes() {
             <ProtectedRoute adminOnly={true}>
               <AdminLayout>
                 <AdminSettings />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/messages"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <AdminLayout>
+                <AdminMessages />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/admin/logs"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <AdminLayout>
+                <AdminLogs />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+
+
+        <Route
+          path="/admin/articles"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <AdminLayout>
+                <AdminArticles />
               </AdminLayout>
             </ProtectedRoute>
           }

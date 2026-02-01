@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import PublicNavbar from '../../components/PublicNavbar';
 import ServiceCard from '../../components/ServiceCard';
 import DemandeCard from '../../components/DemandeCard';
+import HelpSection from '../../components/HelpSection';
 import ContactSection from '../../components/ContactSection';
 import Footer from '../../components/Footer';
 import { useLanguage } from '../../context/LanguageContext';
@@ -13,28 +14,35 @@ export default function Home() {
             <PublicNavbar />
 
             {/* Hero Section Premium */}
-            <section id="accueil" className="hero-section" style={{
-                backgroundImage: `linear-gradient(rgba(0, 32, 91, 0.6), rgba(0, 32, 91, 0.6)), url('/logotechad.jpg')`,
+            <section id="accueil" className="hero-section position-relative overflow-hidden" style={{
+                backgroundImage: `linear-gradient(135deg, rgba(0, 32, 91, 0.85) 0%, rgba(0, 32, 91, 0.6) 100%), url('/logotechad.jpg')`,
                 backgroundSize: 'cover',
                 backgroundPosition: 'center',
-                backgroundAttachment: 'fixed'
+                backgroundAttachment: 'fixed',
+                minHeight: '100vh',
+                display: 'flex',
+                alignItems: 'center'
             }}>
-                <div className="hero-bg-shape"></div>
-                <div className="hero-content">
-                    <h1 className="hero-title">
-                        {t('homeTitle')}<br />{t('homeTitle2')}
-                    </h1>
-                    <p className="hero-subtitle">
-                        {t('homeSubtitle')}
-                    </p>
-                    <div className="hero-actions">
-                        <Link to="/register" className="btn btn-primary-custom">
-                            <i className="bi bi-person-plus me-2"></i>
-                            {t('btnStart')}
-                        </Link>
-                        <a href="#services" className="btn btn-outline-custom">
-                            {t('btnLearnMore')}
-                        </a>
+                <div className="container position-relative" style={{ zIndex: 2 }}>
+                    <div className="row">
+                        <div className="col-lg-8 animate__animated animate__fadeInUp">
+                            <h1 className="hero-title fw-bold text-white mb-4" style={{ fontSize: '3.5rem', lineHeight: '1.2' }}>
+                                {t('homeTitle')} <br />
+                                <span className="text-warning">{t('homeTitle2')}</span>
+                            </h1>
+                            <p className="hero-subtitle text-white-50 fs-4 mb-5" style={{ maxWidth: '600px' }}>
+                                {t('homeSubtitle')}
+                            </p>
+                            <div className="d-flex gap-3 hero-actions">
+                                <Link to="/register" className="btn btn-primary-custom btn-lg px-5 py-3 rounded-pill shadow-lg hover-lift transition-all">
+                                    <i className="bi bi-person-plus me-2"></i>
+                                    {t('btnStart')}
+                                </Link>
+                                <a href="#services" className="btn btn-outline-light btn-lg px-5 py-3 rounded-pill hover-lift transition-all">
+                                    {t('btnLearnMore')}
+                                </a>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </section>
@@ -82,10 +90,10 @@ export default function Home() {
                         </div>
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* How it works */}
-            <section id="comment-ca-marche" className="bg-light py-5">
+            < section id="comment-ca-marche" className="bg-light py-5" >
                 <div className="container py-5">
                     <div className="section-title">
                         <h2>{t('howItWorksTitle')}</h2>
@@ -132,10 +140,11 @@ export default function Home() {
                         </Link>
                     </div>
                 </div>
-            </section>
+            </section >
 
             {/* Demandes Section */}
-            <section id="demandes" className="py-5" style={{ backgroundColor: '#f8fafc' }}>
+            < section id="demandes" className="py-5" style={{ backgroundColor: '#f8fafc' }
+            }>
                 <div className="container py-5">
                     <div className="section-title">
                         <h2>{t('demandeSectionTitle')}</h2>
@@ -166,11 +175,13 @@ export default function Home() {
                         />
                     </div>
                 </div>
-            </section>
+            </section >
+
+            <HelpSection />
 
             <ContactSection />
 
             <Footer />
-        </div>
+        </div >
     );
 }

@@ -1,0 +1,21 @@
+:root {
+    /* Couleurs du Tchad - Palette Premium */
+    --tchad-blue: #002664;
+    --tchad-blue-dark: #001a45;
+    --tchad-yellow: #ffcf00;
+    --tchad-red: #d21034;
+    --tchad-green: #10b981;
+    --tchad-bg: #f4f7fa;
+
+    /* Neutral colors */
+    --glass-bg: rgba(255, 255, 255, 0.7);
+    --glass-border: rgba(255, 255, 255, 0.3);
+    --soft-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
+
+    /* Admin Theme Custom */
+    --admin-navy: #001e3c;
+    --admin-hover: rgba(148, 163, 184, 0.2);
+    /* Slate color for hover */
+    --admin-active: rgba(255, 255, 255, 0.15);
+    /* Semi-transparent white for active */
+}

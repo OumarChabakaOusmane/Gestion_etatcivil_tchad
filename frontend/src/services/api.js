@@ -29,11 +29,16 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
-        // Si le token est expiré ou invalide, rediriger vers login
-        if (error.response && error.response.status === 401) {
+        // Ne pas rediriger si c'est une erreur de connexion ou de vérification OTP
+        // car on veut afficher l'erreur sur la page
+        const isAuthRoute = error.config?.url?.includes('/auth/login') ||
+            error.config?.url?.includes('/auth/verify-otp');
+
+        // Si le token est expiré ou invalide (et que ce n'est pas une tentative de login)
+        if (error.response && error.response.status === 401 && !isAuthRoute) {
             localStorage.removeItem('token');
             localStorage.removeItem('user');
-            window.location.href = '/';
+            window.location.href = '/login'; // Rediriger explicitement vers login
         }
         return Promise.reject(error);
     }

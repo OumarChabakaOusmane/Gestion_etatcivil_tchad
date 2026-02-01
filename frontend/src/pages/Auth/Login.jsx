@@ -47,7 +47,24 @@ export default function Login() {
 
     } catch (err) {
       console.error("Erreur de login:", err);
-      setError(err.message || "Erreur de connexion. Vérifiez vos identifiants.");
+
+      if (err.requireVerification) {
+        // Redirection vers OTP si compte non vérifié
+        navigate('/verify-otp', { state: { email: err.email } });
+        return;
+      }
+
+      // Extraction plus robuste du message d'erreur pour éviter de passer un objet à React
+      let errorMessage = "Erreur de connexion. Vérifiez vos identifiants.";
+      if (typeof err === 'string') {
+        errorMessage = err;
+      } else if (err && typeof err.message === 'string') {
+        errorMessage = err.message;
+      } else if (err && err.error && typeof err.error === 'string') {
+        errorMessage = err.error;
+      }
+
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -114,14 +131,19 @@ export default function Login() {
                         }}>
                         <span style={{ fontSize: '2rem' }}>🔐</span>
                       </div>
-                      <h2 className="fw-bold mb-1 text-dark">{t('loginTitle')}</h2>
-                      <p className="text-muted small">{t('loginSubtitle')}</p>
+                      <h2 className="fw-bold mb-1 text-dark"><span>{t('loginTitle')}</span></h2>
+                      <p className="text-muted small"><span>{t('loginSubtitle')}</span></p>
                     </div>
 
                     {error && (
-                      <div className="alert alert-danger border-0 rounded-3 d-flex align-items-center mb-4 py-2" role="alert">
-                        <i className="bi bi-exclamation-triangle-fill me-2"></i>
-                        <small className="fw-medium">{error}</small>
+                      <div key="login-error-alert" translate="no" className="alert alert-danger border-start border-4 border-danger rounded-4 d-flex align-items-center mb-4 py-3 shadow-sm" role="alert" style={{ background: '#fff5f5' }}>
+                        <div className="bg-danger text-white rounded-circle d-flex align-items-center justify-content-center me-3" style={{ width: '32px', height: '32px', flexShrink: 0 }}>
+                          <i className="bi bi-x-lg fs-6"></i>
+                        </div>
+                        <div>
+                          <p className="fw-bold mb-0 text-danger" style={{ fontSize: '0.9rem' }}><span>Erreur d'accès</span></p>
+                          <small className="text-secondary" style={{ fontSize: '0.8rem' }}><span>{error}</span></small>
+                        </div>
                       </div>
                     )}
 

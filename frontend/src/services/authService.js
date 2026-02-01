@@ -134,6 +134,52 @@ const authService = {
         } catch (error) {
             throw error.response?.data || error;
         }
+    },
+
+    /**
+     * Vérifie le code OTP
+     * @param {string} email
+     * @param {string} otp
+     */
+    async verifyOtp(email, otp) {
+        try {
+            const response = await api.post('/auth/verify-otp', { email, otp });
+            if (response.data.success) {
+                // Stocker le token et les informations utilisateur
+                localStorage.setItem('token', response.data.token);
+                localStorage.setItem('user', JSON.stringify(response.data.user));
+            }
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
+    },
+
+    /**
+     * Renvoie le code OTP
+     * @param {string} email
+     */
+    async resendOtp(email) {
+        try {
+            const response = await api.post('/auth/resend-otp', { email });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
+    },
+
+    /**
+     * Réinitialise le mot de passe
+     * @param {string} token
+     * @param {string} password
+     */
+    async resetPassword(token, password) {
+        try {
+            const response = await api.put(`/auth/reset-password/${token}`, { password });
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
     }
 };
 

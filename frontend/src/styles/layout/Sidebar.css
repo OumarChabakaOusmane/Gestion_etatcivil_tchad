@@ -1,0 +1,133 @@
+.sidebar-wrapper {
+    width: 280px;
+    background: linear-gradient(180deg, #202885 0%, #151a5c 100%);
+    /* Navy Blue matching Navbar */
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    padding: 2rem 0;
+    border-right: 1px solid rgba(255, 255, 255, 0.05);
+    box-shadow: 10px 0 30px rgba(0, 0, 0, 0.05);
+    position: relative;
+    z-index: 10;
+}
+
+.sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+    padding: 0 1rem;
+    flex: 1;
+}
+
+.sidebar-link {
+    display: flex;
+    align-items: center;
+    gap: 1.25rem;
+    padding: 0.875rem 1.25rem;
+    border-radius: 12px;
+    text-decoration: none !important;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    font-size: 0.95rem;
+    font-weight: 500;
+    position: relative;
+    overflow: hidden;
+}
+
+.sidebar-link.active {
+    background-color: rgba(255, 255, 255, 0.15);
+    /* Subtle white overlay */
+    color: white !important;
+    font-weight: 700;
+}
+
+.sidebar-link.active::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 4px;
+    height: 60%;
+    background-color: white;
+    border-radius: 0 4px 4px 0;
+}
+
+.sidebar-link:not(.active) {
+    color: #ffffff;
+}
+
+.sidebar-link:not(.active):hover {
+    background-color: rgba(255, 255, 255, 0.05);
+    color: white;
+    transform: translateX(5px);
+}
+
+.sidebar-icon {
+    font-size: 1.4rem;
+    transition: transform 0.3s ease;
+}
+
+.sidebar-link:hover .sidebar-icon {
+    transform: scale(1.1);
+}
+
+/* User Footer Section in Sidebar */
+.sidebar-footer {
+    padding: 1.5rem;
+    margin-top: auto;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-snippet {
+    display: flex;
+    align-items: center;
+    gap: 0.85rem;
+    padding: 0.75rem;
+    border-radius: 12px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.user-avatar-mini {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 2px solid rgba(255, 255, 255, 0.1);
+}
+
+.user-info-mini {
+    flex: 1;
+    min-width: 0;
+}
+
+.user-name-mini {
+    display: block;
+    color: white;
+    font-size: 0.85rem;
+    font-weight: 700;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.user-role-mini {
+    display: block;
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 0.75rem;
+}
+
+.logout-trigger {
+    color: rgba(255, 255, 255, 0.7);
+    cursor: pointer;
+    transition: all 0.2s ease;
+    background: none;
+    border: none;
+    padding: 5px;
+}
+
+.logout-trigger:hover {
+    color: #ff4d4d;
+    transform: rotate(15deg);
+}

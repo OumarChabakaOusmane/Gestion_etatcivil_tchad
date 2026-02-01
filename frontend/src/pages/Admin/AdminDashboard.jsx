@@ -1,10 +1,10 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import demandeService from '../../services/demandeService';
 import userService from '../../services/userService';
-import authService from '../../services/authService';
 import useCurrentUser from '../../hooks/useCurrentUser';
+import SafeRechartsContainer from '../../components/SafeRechartsContainer';
 
 export default function AdminDashboard() {
     const navigate = useNavigate();
@@ -15,13 +15,14 @@ export default function AdminDashboard() {
         rejetee: 0,
         totalUsers: 0,
         countsByType: [
-            { name: 'Naissance', value: 0, color: '#0d6efd' },
-            { name: 'Mariage', value: 0, color: '#ffc107' },
-            { name: 'Décès', value: 0, color: '#dc3545' }
+            { name: 'Naissance', value: 0, color: '#001a41' },
+            { name: 'Mariage', value: 0, color: '#FECB00' },
+            { name: 'Décès', value: 0, color: '#D21034' }
         ]
     });
     const [recentDemandes, setRecentDemandes] = useState([]);
     const [recentUsers, setRecentUsers] = useState([]);
+    const [trendData, setTrendData] = useState([]);
     const [loading, setLoading] = useState(true);
     const currentUser = useCurrentUser();
 
@@ -33,12 +34,13 @@ export default function AdminDashboard() {
         } else {
             date = new Date(dateInput);
         }
-        return isNaN(date.getTime()) ? "-" : date.toLocaleDateString();
+        return isNaN(date.getTime()) ? "-" : date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
     };
 
     useEffect(() => {
         loadAdminStats();
-        const interval = setInterval(loadAdminStats, 2000);
+        // Auto-reload every 30 seconds instead of 5 for better performance
+        const interval = setInterval(loadAdminStats, 30000);
         return () => clearInterval(interval);
     }, []);
 
@@ -66,11 +68,34 @@ export default function AdminDashboard() {
                 rejetee: demandes.filter(d => d.statut === 'rejetee').length,
                 totalUsers: allUsers.length,
                 countsByType: [
-                    { name: 'Naissance', value: naissance, color: '#0d6efd' },
-                    { name: 'Mariage', value: mariage, color: '#ffc107' },
-                    { name: 'Décès', value: deces, color: '#dc3545' }
+                    { name: 'Naissance', value: naissance, color: '#001a41' },
+                    { name: 'Mariage', value: mariage, color: '#FECB00' },
+                    { name: 'Décès', value: deces, color: '#D21034' }
                 ]
             });
+
+            // Process Trend Data (Group by last 7 days)
+            const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+            const trendMap = {};
+            const now = new Date();
+            for (let i = 6; i >= 0; i--) {
+                const d = new Date();
+                d.setDate(now.getDate() - i);
+                const dayLabel = days[d.getDay()];
+                trendMap[dayLabel] = 0;
+            }
+
+            demandes.forEach(d => {
+                const date = d.dateDemande?._seconds ? new Date(d.dateDemande._seconds * 1000) : new Date(d.dateDemande);
+                const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
+                if (diffDays >= 0 && diffDays < 7) {
+                    const label = days[date.getDay()];
+                    if (trendMap[label] !== undefined) trendMap[label]++;
+                }
+            });
+
+            const finalTrend = Object.keys(trendMap).map(key => ({ name: key, value: trendMap[key] }));
+            setTrendData(finalTrend);
 
             const sortedDemandes = [...demandes].sort((a, b) => {
                 const dateA = a.dateDemande?._seconds ? a.dateDemande._seconds * 1000 : new Date(a.dateDemande);
@@ -89,216 +114,324 @@ export default function AdminDashboard() {
         }
     };
 
+    if (loading) return (
+        <div className="d-flex justify-content-center align-items-center" style={{ height: '70vh' }}>
+            <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }}></div>
+        </div>
+    );
+
     return (
-        <div className="p-0">
-            <div className="p-4">
-                {loading ? (
-                    <div className="d-flex justify-content-center align-items-center" style={{ height: '60vh' }}>
-                        <div className="spinner-border text-primary" style={{ width: '3rem', height: '3rem' }}></div>
+        <div className="p-4 p-lg-5 animate__animated animate__fadeIn">
+            {/* Header Dashboard */}
+            <div className="d-flex justify-content-between align-items-end mb-5">
+                <div>
+                    <h2 className="fw-bold text-dark mb-1">Tableau de Bord</h2>
+                    <p className="text-muted mb-0">Bienvenue sur votre espace de gestion centralisé.</p>
+                </div>
+                <div className="d-none d-md-block">
+                    <div className="badge bg-light text-dark p-2 px-3 border rounded-pill shadow-none fw-bold">
+                        <i className="bi bi-calendar3 me-2 text-primary"></i>
+                        {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </div>
-                ) : (
-                    <>
-                        <section className="row g-4 mb-5">
-                            <div className="col-md-3">
-                                <div className="card border-0 rounded-4 shadow-sm text-white cursor-pointer"
-                                    style={{ backgroundColor: 'var(--admin-navy)', transition: 'transform 0.2s' }}
-                                    onClick={() => navigate('/admin/demandes?filter=en_attente')}
-                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-                                    <div className="card-body p-4 d-flex align-items-center gap-3">
-                                        <div className="bg-white bg-opacity-20 rounded-circle p-3 d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
-                                            <i className="bi bi-hourglass-split fs-3"></i>
-                                        </div>
-                                        <div>
-                                            <h2 className="fw-bold m-0">{stats.en_attente}</h2>
-                                            <span className="small opacity-75">Demandes en attente</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="col-md-3">
-                                <div className="card border-0 rounded-4 shadow-sm text-white cursor-pointer"
-                                    style={{ backgroundColor: '#10b981', transition: 'transform 0.2s' }}
-                                    onClick={() => navigate('/admin/demandes?filter=acceptee')}
-                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-                                    <div className="card-body p-4 d-flex align-items-center gap-3">
-                                        <div className="bg-white bg-opacity-20 rounded-circle p-3 d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
-                                            <i className="bi bi-check-circle-fill fs-3"></i>
-                                        </div>
-                                        <div>
-                                            <h2 className="fw-bold m-0">{stats.acceptee}</h2>
-                                            <span className="small opacity-75">Demandes approuvées</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="col-md-3">
-                                <div className="card border-0 rounded-4 shadow-sm text-white cursor-pointer"
-                                    style={{ backgroundColor: '#f43f5e', transition: 'transform 0.2s' }}
-                                    onClick={() => navigate('/admin/demandes?filter=rejetee')}
-                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-                                    <div className="card-body p-4 d-flex align-items-center gap-3">
-                                        <div className="bg-white bg-opacity-20 rounded-circle p-3 d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
-                                            <i className="bi bi-x-circle-fill fs-3"></i>
-                                        </div>
-                                        <div>
-                                            <h2 className="fw-bold m-0">{stats.rejetee}</h2>
-                                            <span className="small opacity-75">Demandes rejetées</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                            <div className="col-md-3">
-                                <div className="card border-0 rounded-4 shadow-sm text-white cursor-pointer"
-                                    style={{ backgroundColor: '#3b82f6', transition: 'transform 0.2s' }}
-                                    onClick={() => navigate('/admin/utilisateurs')}
-                                    onMouseOver={(e) => e.currentTarget.style.transform = 'translateY(-5px)'}
-                                    onMouseOut={(e) => e.currentTarget.style.transform = 'translateY(0)'}>
-                                    <div className="card-body p-4 d-flex align-items-center gap-3">
-                                        <div className="bg-white bg-opacity-20 rounded-circle p-3 d-flex align-items-center justify-content-center" style={{ width: '60px', height: '60px' }}>
-                                            <i className="bi bi-people-fill fs-3"></i>
-                                        </div>
-                                        <div>
-                                            <h2 className="fw-bold m-0">{stats.totalUsers}</h2>
-                                            <span className="small opacity-75">Utilisateurs inscrits</span>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </section>
+                </div>
+            </div>
 
-                        <div className="row g-4 mb-5">
-                            <div className="col-lg-7">
-                                <div className="card border-0 rounded-4 shadow-sm h-100">
-                                    <div className="card-body p-4">
-                                        <h5 className="fw-bold text-dark mb-4">Statistiques des Demandes</h5>
-                                        <div className="row align-items-center">
-                                            <div className="col-md-6">
-                                                <div style={{ height: '250px', minHeight: '250px', width: '100%', minWidth: 0, position: 'relative' }}>
-                                                    <ResponsiveContainer width="100%" height="100%" debounce={300}>
-                                                        <PieChart>
-                                                            <Pie
-                                                                data={stats.countsByType.some(c => c.value > 0) ? stats.countsByType : [{ name: 'Vide', value: 1, color: '#eee' }]}
-                                                                innerRadius={60}
-                                                                outerRadius={85}
-                                                                stroke="none"
-                                                                dataKey="value"
-                                                                isAnimationActive={false}
-                                                            >
-                                                                {stats.countsByType.map((entry, index) => (
-                                                                    <Cell key={`cell-${index}`} fill={entry.color} />
-                                                                ))}
-                                                            </Pie>
-                                                            <Tooltip wrapperStyle={{ zIndex: 1000 }} />
-                                                        </PieChart>
-                                                    </ResponsiveContainer>
-                                                </div>
-                                            </div>
-                                            <div className="col-md-6">
-                                                <div className="d-flex flex-column gap-3">
-                                                    {stats.countsByType.map((item, idx) => (
-                                                        <div key={idx} className="d-flex align-items-center justify-content-between p-2 rounded-3 bg-light">
-                                                            <div className="d-flex align-items-center gap-2">
-                                                                <div className="rounded-circle" style={{ width: '12px', height: '12px', backgroundColor: item.color }}></div>
-                                                                <span className="small fw-bold text-muted">Actes de {item.name}</span>
-                                                            </div>
-                                                            <span className="badge bg-white text-dark shadow-sm px-3 rounded-pill">
-                                                                {stats.total > 0 ? Math.round((item.value / stats.total) * 100) : 0}%
-                                                            </span>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
+            {/* Stats Cards Overhaul */}
+            <div className="row g-4 mb-5">
+                <div className="col-md-3">
+                    <div className="premium-stat-card vibrant bg-vibrant-blue shadow-lg p-4 transition-all cursor-pointer h-100"
+                        onClick={() => navigate('/admin/demandes?filter=en_attente')}>
+                        <div className="d-flex align-items-center gap-3">
+                            <div className="stat-icon-wrapper shadow-sm">
+                                <i className="bi bi-clock-history"></i>
                             </div>
-
-                            <div className="col-lg-5">
-                                <div className="card border-0 rounded-4 shadow-sm h-100">
-                                    <div className="card-body p-4">
-                                        <div className="d-flex justify-content-between align-items-center mb-4">
-                                            <h5 className="fw-bold text-dark m-0">Utilisateurs récents</h5>
-                                            <Link to="/admin/utilisateurs" className="small fw-bold text-primary text-decoration-none">Voir tous</Link>
-                                        </div>
-                                        <div className="table-responsive">
-                                            <table className="table align-middle table-borderless">
-                                                <thead>
-                                                    <tr className="bg-light">
-                                                        <th className="rounded-start small text-muted text-uppercase fw-bold">Noms</th>
-                                                        <th className="rounded-end small text-muted text-uppercase fw-bold text-end">Inscrit le</th>
-                                                    </tr>
-                                                </thead>
-                                                <tbody>
-                                                    {recentUsers.map((user, idx) => (
-                                                        <tr key={user.id || user._id || idx} className="border-bottom-faint cursor-pointer hover-bg-light" onClick={() => navigate('/admin/utilisateurs')}>
-                                                            <td className="py-3 px-0">
-                                                                <div className="d-flex align-items-center gap-2">
-                                                                    <div className="bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold text-uppercase" style={{ width: '35px', height: '35px', fontSize: '0.8rem' }}>
-                                                                        {user.nom ? user.nom[0] : 'U'}
-                                                                    </div>
-                                                                    <span className="fw-bold text-dark small">{user.prenom} {user.nom}</span>
-                                                                </div>
-                                                            </td>
-                                                            <td className="py-3 px-0 text-end text-muted small">{formatDate(user.createdAt)}</td>
-                                                        </tr>
-                                                    ))}
-                                                </tbody>
-                                            </table>
-                                        </div>
-                                    </div>
+                            <div>
+                                <h3 className="m-0 fw-black">{stats.en_attente}</h3>
+                                <span className="small fw-bold text-uppercase opacity-75">En Attente</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-3">
+                    <div className="premium-stat-card vibrant bg-vibrant-green shadow-lg p-4 transition-all cursor-pointer h-100"
+                        onClick={() => navigate('/admin/demandes?filter=acceptee')}>
+                        <div className="d-flex align-items-center gap-3">
+                            <div className="stat-icon-wrapper shadow-sm">
+                                <i className="bi bi-check-circle-fill"></i>
+                            </div>
+                            <div>
+                                <h3 className="m-0 fw-black">{stats.acceptee}</h3>
+                                <span className="small fw-bold text-uppercase opacity-75">Approuvées</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div className="col-md-3">
+                    <div className="premium-stat-card vibrant bg-vibrant-red shadow-lg p-4 transition-all cursor-pointer h-100"
+                        onClick={() => navigate('/admin/demandes?filter=rejetee')}>
+                        <div className="d-flex align-items-center gap-3">
+                            <div className="stat-icon-wrapper shadow-sm">
+                                <i className="bi bi-x-circle-fill"></i>
+                            </div>
+                            <div>
+                                <h3 className="m-0 fw-black">{stats.rejetee}</h3>
+                                <span className="small fw-bold text-uppercase opacity-75">Rejetées</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {currentUser?.role === 'admin' && (
+                    <div className="col-md-3">
+                        <div className="premium-stat-card vibrant bg-vibrant-sky shadow-lg p-4 transition-all cursor-pointer h-100"
+                            onClick={() => navigate('/admin/utilisateurs')}>
+                            <div className="d-flex align-items-center gap-3">
+                                <div className="stat-icon-wrapper shadow-sm">
+                                    <i className="bi bi-people-fill"></i>
+                                </div>
+                                <div>
+                                    <h3 className="m-0 fw-black">{stats.totalUsers}</h3>
+                                    <span className="small fw-bold text-uppercase opacity-75">Utilisateurs</span>
                                 </div>
                             </div>
                         </div>
+                    </div>
+                )}
+            </div>
 
-                        <section className="card border-0 rounded-4 shadow-sm mb-5">
-                            <div className="card-body p-4">
-                                <h5 className="fw-bold text-dark mb-4">Demandes en Attente</h5>
+            <div className="row g-4 mb-5">
+                {/* Main Activity Chart */}
+                <div className="col-lg-8">
+                    <div className="card border-0 rounded-4 shadow-sm p-4" style={{ minHeight: '450px' }}>
+                        <div className="d-flex justify-content-between align-items-center mb-4">
+                            <h5 className="fw-bold text-dark m-0">Volume des Demandes</h5>
+                            <span className="badge bg-light text-muted rounded-pill px-3 py-2 fw-bold small shadow-none border">7 derniers jours</span>
+                        </div>
+                        <div style={{ height: '350px', width: '100%', minWidth: 0, minHeight: '350px' }}>
+                            {!loading ? (
+                                <SafeRechartsContainer>
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                                        <AreaChart data={trendData}>
+                                            <defs>
+                                                <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
+                                                    <stop offset="5%" stopColor="#001a41" stopOpacity={0.15} />
+                                                    <stop offset="95%" stopColor="#001a41" stopOpacity={0} />
+                                                </linearGradient>
+                                            </defs>
+                                            <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f0f0f0" />
+                                            <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#888', fontSize: 12 }} dy={10} />
+                                            <YAxis axisLine={false} tickLine={false} tick={{ fill: '#888', fontSize: 12 }} dx={-10} />
+                                            <Tooltip
+                                                contentStyle={{ borderRadius: '15px', border: 'none', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}
+                                                itemStyle={{ color: '#001a41', fontWeight: 'bold' }}
+                                            />
+                                            <Area type="monotone" dataKey="value" stroke="#001a41" strokeWidth={3} fillOpacity={1} fill="url(#colorValue)" />
+                                        </AreaChart>
+                                    </ResponsiveContainer>
+                                </SafeRechartsContainer>
+                            ) : (
+                                <div className="d-flex align-items-center justify-content-center h-100">
+                                    <div className="spinner-border text-primary" role="status"></div>
+                                </div>
+                            )}
+                        </div>
+                    </div>
+                </div>
+
+                {/* Pie Chart Distribution */}
+                <div className="col-lg-4">
+                    <div className="card border-0 rounded-4 shadow-sm p-4" style={{ minHeight: '450px' }}>
+                        <h5 className="fw-bold text-dark mb-4 text-center">Répartition par Type</h5>
+                        <div style={{ height: '300px', width: '100%', position: 'relative', minWidth: 0, minHeight: '300px' }}>
+                            {!loading ? (
+                                <SafeRechartsContainer>
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                                        <PieChart>
+                                            <Pie
+                                                data={stats.countsByType.some(c => c.value > 0) ? stats.countsByType : [{ name: 'Aucun', value: 1, color: '#f0f0f0' }]}
+                                                innerRadius={70}
+                                                outerRadius={95}
+                                                paddingAngle={8}
+                                                dataKey="value"
+                                                stroke="none"
+                                            >
+                                                {stats.countsByType.map((entry, index) => (
+                                                    <Cell key={`cell-${index}`} fill={entry.color} />
+                                                ))}
+                                            </Pie>
+                                            <Tooltip />
+                                        </PieChart>
+                                    </ResponsiveContainer>
+                                </SafeRechartsContainer>
+                            ) : (
+                                <div className="d-flex align-items-center justify-content-center h-100">
+                                    <div className="spinner-border text-primary" role="status"></div>
+                                </div>
+                            )}
+                            <div className="position-absolute top-50 start-50 translate-middle text-center">
+                                <div className="display-6 fw-bold text-dark">{stats.total}</div>
+                                <div className="text-muted small fw-bold">TOTAL</div>
+                            </div>
+                        </div>
+                        <div className="mt-2">
+                            {stats.countsByType.map((item, idx) => (
+                                <div key={idx} className="d-flex align-items-center justify-content-between mb-2 p-2 rounded-3 bg-light bg-opacity-50">
+                                    <div className="d-flex align-items-center gap-2">
+                                        <div className="rounded-circle" style={{ width: '10px', height: '10px', backgroundColor: item.color }}></div>
+                                        <span className="small text-muted fw-bold">{item.name}</span>
+                                    </div>
+                                    <span className="fw-bold small">{item.value}</span>
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="row g-4 mb-5">
+                {/* Pending Demandes Table */}
+                <div className={currentUser?.role === 'admin' ? "col-lg-7" : "col-12"}>
+                    <div className="card border-0 rounded-4 shadow-sm h-100 overflow-hidden">
+                        <div className="card-header bg-white border-0 p-4 pb-0 d-flex justify-content-between align-items-center">
+                            <h5 className="fw-bold text-dark m-0">Demandes en Attente</h5>
+                            <Link to="/admin/demandes?filter=en_attente" className="btn btn-dark-soft btn-sm rounded-pill px-3 fw-bold small tracking-wide">VOIR TOUT</Link>
+                        </div>
+                        <div className="card-body p-0 mt-3">
+                            <div className="table-responsive">
+                                <table className="table table-hover align-middle mb-0">
+                                    <thead className="bg-light">
+                                        <tr>
+                                            <th className="ps-4 border-0 small text-muted text-uppercase fw-bold py-3">ID</th>
+                                            <th className="border-0 small text-muted text-uppercase fw-bold py-3">Type</th>
+                                            <th className="border-0 small text-muted text-uppercase fw-bold py-3">Citoyen</th>
+                                            <th className="pe-4 border-0 small text-muted text-uppercase fw-bold text-end py-3">Action</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {recentDemandes.filter(d => d.statut === 'en_attente').slice(0, 5).map(d => (
+                                            <tr key={d.id || d._id} className="cursor-pointer border-bottom-faint" onClick={() => navigate('/admin/demandes?filter=en_attente')}>
+                                                <td className="ps-4 py-3 fw-bold text-primary small">#{(d.id || d._id).slice(-4).toUpperCase()}</td>
+                                                <td className="py-3">
+                                                    <span className={`badge ${d.type === 'naissance' ? 'bg-primary' : d.type === 'mariage' ? 'bg-warning text-dark' : 'bg-danger'} bg-opacity-10 ${d.type === 'naissance' ? 'text-primary' : d.type === 'mariage' ? 'text-warning' : 'text-danger'} text-uppercase px-2 rounded-pill x-small fw-bold`}>
+                                                        {d.type}
+                                                    </span>
+                                                </td>
+                                                <td className="py-3">
+                                                    <div className="fw-bold text-dark small">{d.userId?.prenom} {d.userId?.nom}</div>
+                                                    <div className="text-muted" style={{ fontSize: '0.7rem' }}>{formatDate(d.dateDemande)}</div>
+                                                </td>
+                                                <td className="pe-4 py-3 text-end">
+                                                    <button className="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold border-2 small">
+                                                        Examiner
+                                                    </button>
+                                                </td>
+                                            </tr>
+                                        ))}
+                                        {recentDemandes.filter(d => d.statut === 'en_attente').length === 0 && (
+                                            <tr>
+                                                <td colSpan="4" className="text-center py-5 text-muted fst-italic">Aucune demande en attente</td>
+                                            </tr>
+                                        )}
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                {/* Recent Users Table - Admin Only */}
+                {currentUser?.role === 'admin' && (
+                    <div className="col-lg-5">
+                        <div className="card border-0 rounded-4 shadow-sm h-100 overflow-hidden">
+                            <div className="card-header bg-white border-0 p-4 pb-0 d-flex justify-content-between align-items-center">
+                                <h5 className="fw-bold text-dark m-0">Inscriptions Récentes</h5>
+                                <Link to="/admin/utilisateurs" className="btn btn-dark-soft btn-sm rounded-pill px-3 fw-bold small tracking-wide">VOIR TOUT</Link>
+                            </div>
+                            <div className="card-body p-0 mt-3">
                                 <div className="table-responsive">
-                                    <table className="table table-hover align-middle">
+                                    <table className="table table-hover align-middle mb-0">
                                         <thead className="bg-light">
                                             <tr>
-                                                <th className="ps-4 border-0 small text-muted text-uppercase fw-bold">ID</th>
-                                                <th className="border-0 small text-muted text-uppercase fw-bold">Type</th>
-                                                <th className="border-0 small text-muted text-uppercase fw-bold">Citoyen</th>
-                                                <th className="border-0 small text-muted text-uppercase fw-bold text-center">Soumise le</th>
-                                                <th className="pe-4 border-0 small text-muted text-uppercase fw-bold text-end">Actions</th>
+                                                <th className="ps-4 border-0 small text-muted text-uppercase fw-bold py-3">Utilisateur</th>
+                                                <th className="pe-4 border-0 small text-muted text-uppercase fw-bold text-end py-3">Inscrit le</th>
                                             </tr>
                                         </thead>
                                         <tbody>
-                                            {recentDemandes.filter(d => d.statut === 'en_attente').map(d => (
-                                                <tr key={d.id || d._id} className="cursor-pointer" onClick={() => navigate('/admin/demandes?filter=en_attente')}>
-                                                    <td className="ps-4 py-3 fw-bold text-muted small">#{(d.id || d._id).slice(-4).toUpperCase()}</td>
-                                                    <td className="py-3">
-                                                        <span className="badge bg-primary bg-opacity-10 text-primary text-uppercase px-3 rounded-pill small fw-bold">
-                                                            {d.type}
-                                                        </span>
+                                            {recentUsers.map((user, idx) => (
+                                                <tr key={user.id || user._id || idx} className="cursor-pointer border-bottom-faint" onClick={() => navigate('/admin/utilisateurs')}>
+                                                    <td className="ps-4 py-3">
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <div className="avatar-initial-sm bg-primary-soft text-primary">
+                                                                {user.nom ? user.nom[0] : 'U'}
+                                                            </div>
+                                                            <div className="fw-bold text-dark small">{user.prenom} {user.nom}</div>
+                                                        </div>
                                                     </td>
-                                                    <td className="py-3 fw-bold text-dark">{d.userId?.prenom || 'Nom'} {d.userId?.nom || 'Inconnu'}</td>
-                                                    <td className="py-3 text-center text-muted small">
-                                                        {formatDate(d.dateDemande)}
-                                                    </td>
-                                                    <td className="pe-4 py-3 text-end">
-                                                        <button
-                                                            onClick={(e) => { e.stopPropagation(); navigate('/admin/demandes?filter=en_attente'); }}
-                                                            className="btn btn-primary btn-sm px-4 rounded-3 border-0"
-                                                            style={{ backgroundColor: 'var(--admin-navy)' }}
-                                                        >
-                                                            Examiner
-                                                        </button>
-                                                    </td>
+                                                    <td className="pe-4 py-3 text-end text-muted small">{formatDate(user.createdAt)}</td>
                                                 </tr>
                                             ))}
                                         </tbody>
                                     </table>
                                 </div>
                             </div>
-                        </section>
-                    </>
+                        </div>
+                    </div>
                 )}
             </div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .stat-icon-wrapper {
+                    width: 50px;
+                    height: 50px;
+                    border-radius: 15px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-size: 1.5rem;
+                }
+                .bg-primary-soft { background: rgba(0, 26, 65, 0.1); }
+                .bg-success-soft { background: rgba(16, 185, 129, 0.15); }
+                .bg-warning-soft { background: rgba(254, 203, 0, 0.15); }
+                .bg-danger-soft { background: rgba(210, 16, 52, 0.1); }
+                
+                .premium-stat-card {
+                    min-height: 180px;
+                    display: flex;
+                    align-items: center;
+                }
+
+                .premium-stat-card:hover {
+                    background: #fff;
+                    transform: translateY(-5px);
+                    box-shadow: 0 15px 30px rgba(0, 26, 65, 0.08) !important;
+                }
+                
+                .btn-dark-soft {
+                    background: rgba(0, 26, 65, 0.05);
+                    color: #001a41;
+                    border: none;
+                }
+                .btn-dark-soft:hover {
+                    background: #001a41;
+                    color: #fff;
+                }
+                
+                .avatar-initial-sm {
+                    width: 32px;
+                    height: 32px;
+                    border-radius: 10px;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    font-weight: bold;
+                    font-size: 0.75rem;
+                }
+                
+                .x-small { font-size: 0.65rem; }
+                .tracking-wide { letter-spacing: 0.5px; }
+                .border-bottom-faint { border-bottom: 1px solid rgba(0,0,0,0.03); }
+            `}} />
         </div>
     );
 }
+

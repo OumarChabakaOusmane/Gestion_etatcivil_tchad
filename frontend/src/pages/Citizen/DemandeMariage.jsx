@@ -30,6 +30,7 @@ export default function DemandeMariage() {
     });
 
     const [error, setError] = useState("");
+    const [successMessage, setSuccessMessage] = useState("");
     const [loading, setLoading] = useState(false);
     const navigate = useNavigate();
 
@@ -80,11 +81,13 @@ export default function DemandeMariage() {
         const errors = validateStep(step);
 
         if (errors.length > 0) {
-            alert("⚠️ Veuillez remplir tous les champs obligatoires :\n\n" + errors.join("\n"));
+            setError("Veuillez remplir tous les champs obligatoires avant de continuer.");
+            window.scrollTo(0, 0);
             return;
         }
 
         setStep(prev => prev + 1);
+        setError(""); // Clear error on successful step change
         window.scrollTo(0, 0);
     };
 
@@ -100,8 +103,10 @@ export default function DemandeMariage() {
 
         try {
             await demandeService.createDemande('mariage', formData);
-            alert('Demande de mariage soumise avec succès !');
-            window.location.href = '/mes-demandes';
+            setSuccessMessage('Demande de mariage soumise avec succès ! Redirection...');
+            setTimeout(() => {
+                navigate('/mes-demandes');
+            }, 2000);
         } catch (err) {
             console.error(err);
             setError(err.response?.data?.message || "Erreur lors de la soumission de la demande");
@@ -113,38 +118,41 @@ export default function DemandeMariage() {
         switch (step) {
             case 1:
                 return (
-                    <div className="form-step-content">
-                        <h4 className="fw-bold mb-4 text-primary"><i className="bi bi-person-fill me-2"></i>Informations sur l'époux</h4>
-                        <div className="row g-3">
+                    <div className="form-step-content animate__animated animate__fadeIn">
+                        <h4 className="fw-bold mb-4 text-primary-dark d-flex align-items-center gap-2">
+                            <i className="bi bi-person-fill fs-3 text-primary"></i>
+                            Informations sur l'époux
+                        </h4>
+                        <div className="row g-4">
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Nom</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Nom</label>
                                 <input type="text" name="nomEpoux" className="form-control form-control-lg bg-light border-0" value={formData.nomEpoux} onChange={handleChange} required />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Prénom(s)</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Prénom(s)</label>
                                 <input type="text" name="prenomEpoux" className="form-control form-control-lg bg-light border-0" value={formData.prenomEpoux} onChange={handleChange} required />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Date de naissance</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Date de naissance</label>
                                 <input type="date" name="dateNaissanceEpoux" className="form-control form-control-lg bg-light border-0" value={formData.dateNaissanceEpoux} onChange={handleChange} required />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Lieu de naissance</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Lieu de naissance</label>
                                 <input type="text" name="lieuNaissanceEpoux" className="form-control form-control-lg bg-light border-0" value={formData.lieuNaissanceEpoux} onChange={handleChange} required />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Nationalité</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Nationalité</label>
                                 <select name="nationaliteEpoux" className="form-select form-select-lg bg-light border-0" value={formData.nationaliteEpoux} onChange={handleChange} required>
                                     <option value="TCHADIENNE">TCHADIENNE</option>
                                     <option value="ETRANGER">ÉTRANGER</option>
                                 </select>
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Profession</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Profession</label>
                                 <input type="text" name="professionEpoux" className="form-control form-control-lg bg-light border-0" value={formData.professionEpoux} onChange={handleChange} required />
                             </div>
                             <div className="col-12">
-                                <label className="form-label fw-bold">Domicile</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Domicile</label>
                                 <input type="text" name="domicileEpoux" className="form-control form-control-lg bg-light border-0" value={formData.domicileEpoux} onChange={handleChange} required />
                             </div>
                         </div>
@@ -152,38 +160,41 @@ export default function DemandeMariage() {
                 );
             case 2:
                 return (
-                    <div className="form-step-content">
-                        <h4 className="fw-bold mb-4 text-danger"><i className="bi bi-person-fill-lock me-2"></i>Informations sur l'épouse</h4>
-                        <div className="row g-3">
+                    <div className="form-step-content animate__animated animate__fadeIn">
+                        <h4 className="fw-bold mb-4 text-primary-dark d-flex align-items-center gap-2">
+                            <i className="bi bi-person-fill-lock fs-3 text-danger"></i>
+                            Informations sur l'épouse
+                        </h4>
+                        <div className="row g-4">
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Nom</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Nom</label>
                                 <input type="text" name="nomEpouse" className="form-control form-control-lg bg-light border-0" value={formData.nomEpouse} onChange={handleChange} required />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Prénom(s)</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Prénom(s)</label>
                                 <input type="text" name="prenomEpouse" className="form-control form-control-lg bg-light border-0" value={formData.prenomEpouse} onChange={handleChange} required />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Date de naissance</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Date de naissance</label>
                                 <input type="date" name="dateNaissanceEpouse" className="form-control form-control-lg bg-light border-0" value={formData.dateNaissanceEpouse} onChange={handleChange} required />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Lieu de naissance</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Lieu de naissance</label>
                                 <input type="text" name="lieuNaissanceEpouse" className="form-control form-control-lg bg-light border-0" value={formData.lieuNaissanceEpouse} onChange={handleChange} required />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Nationalité</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Nationalité</label>
                                 <select name="nationaliteEpouse" className="form-select form-select-lg bg-light border-0" value={formData.nationaliteEpouse} onChange={handleChange} required>
                                     <option value="TCHADIENNE">TCHADIENNE</option>
                                     <option value="ETRANGER">ÉTRANGER</option>
                                 </select>
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Profession</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Profession</label>
                                 <input type="text" name="professionEpouse" className="form-control form-control-lg bg-light border-0" value={formData.professionEpouse} onChange={handleChange} required />
                             </div>
                             <div className="col-12">
-                                <label className="form-label fw-bold">Domicile</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Domicile</label>
                                 <input type="text" name="domicileEpouse" className="form-control form-control-lg bg-light border-0" value={formData.domicileEpouse} onChange={handleChange} required />
                             </div>
                         </div>
@@ -191,19 +202,22 @@ export default function DemandeMariage() {
                 );
             case 3:
                 return (
-                    <div className="form-step-content">
-                        <h4 className="fw-bold mb-4 text-warning"><i className="bi bi-heart-fill me-2"></i>Informations sur le mariage</h4>
-                        <div className="row g-3">
+                    <div className="form-step-content animate__animated animate__fadeIn">
+                        <h4 className="fw-bold mb-4 text-primary-dark d-flex align-items-center gap-2">
+                            <i className="bi bi-heart-fill fs-3 text-warning"></i>
+                            Informations sur le mariage
+                        </h4>
+                        <div className="row g-4">
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Date du mariage</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Date du mariage</label>
                                 <input type="date" name="dateMariage" className="form-control form-control-lg bg-light border-0" value={formData.dateMariage} onChange={handleChange} required />
                             </div>
                             <div className="col-md-6">
-                                <label className="form-label fw-bold">Lieu du mariage</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Lieu du mariage</label>
                                 <input type="text" name="lieuMariage" className="form-control form-control-lg bg-light border-0" value={formData.lieuMariage} onChange={handleChange} required />
                             </div>
                             <div className="col-md-12">
-                                <label className="form-label fw-bold">Régime matrimonial</label>
+                                <label className="form-label fw-bold small text-muted text-uppercase">Régime matrimonial</label>
                                 <select name="regimeMatrimonial" className="form-select form-select-lg bg-light border-0" value={formData.regimeMatrimonial} onChange={handleChange}>
                                     <option value="monogamie">Monogamie</option>
                                     <option value="polygamie">Polygamie</option>
@@ -216,24 +230,39 @@ export default function DemandeMariage() {
                 );
             case 4:
                 return (
-                    <div className="form-step-content">
-                        <h4 className="fw-bold mb-4 text-primary"><i className="bi bi-clipboard-check me-2"></i>Validation finale</h4>
-                        <div className="alert alert-info border-0 shadow-sm rounded-4 p-4">
-                            <h5 className="fw-bold mb-3 text-dark">Résumé de l'union</h5>
-                            <div className="row g-2">
-                                <div className="col-6 text-muted">Époux:</div>
-                                <div className="col-6 fw-bold">{formData.prenomEpoux} {formData.nomEpoux}</div>
-                                <div className="col-6 text-muted">Épouse:</div>
-                                <div className="col-6 fw-bold">{formData.prenomEpouse} {formData.nomEpouse}</div>
-                                <hr className="my-2 opacity-10" />
-                                <div className="col-6 text-muted">Célébré le:</div>
-                                <div className="col-6 fw-bold">{formData.dateMariage} à {formData.lieuMariage}</div>
-                                <div className="col-6 text-muted">Régime:</div>
-                                <div className="col-6 fw-bold text-capitalize">{formData.regimeMatrimonial.replace('_', ' ')}</div>
+                    <div className="form-step-content animate__animated animate__fadeIn">
+                        <h4 className="fw-bold mb-4 text-primary-dark d-flex align-items-center gap-2">
+                            <i className="bi bi-clipboard-check fs-3 text-primary"></i>
+                            Validation finale
+                        </h4>
+                        <div className="alert alert-info border-0 shadow-sm rounded-4 p-4 mb-4">
+                            <h5 className="fw-bold mb-4 text-dark d-flex align-items-center gap-2">
+                                <i className="bi bi-info-circle-fill"></i> Résumé de l'union
+                            </h5>
+                            <div className="row g-3">
+                                <div className="col-md-6">
+                                    <div className="p-3 bg-white rounded-3 shadow-xs border border-light">
+                                        <div className="text-muted small text-uppercase fw-bold mb-1">Époux</div>
+                                        <div className="fw-bold text-dark fs-5">{formData.prenomEpoux} {formData.nomEpoux}</div>
+                                    </div>
+                                </div>
+                                <div className="col-md-6">
+                                    <div className="p-3 bg-white rounded-3 shadow-xs border border-light">
+                                        <div className="text-muted small text-uppercase fw-bold mb-1">Épouse</div>
+                                        <div className="fw-bold text-dark fs-5">{formData.prenomEpouse} {formData.nomEpouse}</div>
+                                    </div>
+                                </div>
+                                <div className="col-md-12">
+                                    <div className="p-3 bg-white rounded-3 shadow-xs border border-light">
+                                        <div className="text-muted small text-uppercase fw-bold mb-1">Détails de la cérémonie</div>
+                                        <div className="fw-bold text-dark">Le {formData.dateMariage} à {formData.lieuMariage}</div>
+                                        <div className="text-muted mt-2 small text-capitalize"><i className="bi bi-shield-check me-1"></i>Régime: {formData.regimeMatrimonial.replace('_', ' ')}</div>
+                                    </div>
+                                </div>
                             </div>
                         </div>
-                        <p className="text-muted small italic mt-4">
-                            <i className="bi bi-info-circle me-1"></i> En soumettant ce formulaire, vous certifiez sur l'honneur l'exactitude des informations fournies.
+                        <p className="text-muted small italic">
+                            <i className="bi bi-shield-lock me-1"></i> En soumettant ce formulaire, vous certifiez sur l'honneur l'exactitude des informations fournies.
                         </p>
                     </div>
                 );
@@ -243,70 +272,136 @@ export default function DemandeMariage() {
     };
 
     return (
-        <div className="fade-in">
-            <div className="dashboard-header-simple py-2 mb-4">
-                <div className="d-flex align-items-center">
-                    <button onClick={() => navigate('/demander-acte')} className="btn btn-link text-decoration-none text-muted p-0 me-3 hover-translate transition-all">
-                        <i className="bi bi-arrow-left fs-4"></i>
-                    </button>
-                    <div>
-                        <h2 className="fw-bold mb-0">Demande d'acte de mariage</h2>
-                        <p className="text-muted small mb-0">Mariage Civil - République du Tchad</p>
-                    </div>
+        <div className="fade-in px-lg-4 pb-5">
+            {/* Header Section */}
+            <div className="d-flex align-items-center mb-5 mt-3">
+                <button
+                    onClick={() => navigate('/dashboard')}
+                    className="btn btn-outline-secondary rounded-circle p-2 me-4 shadow-sm d-flex align-items-center justify-content-center"
+                    style={{ width: '45px', height: '45px' }}
+                >
+                    <i className="bi bi-arrow-left fs-5"></i>
+                </button>
+                <div>
+                    <h1 className="fw-bold text-dark mb-1" style={{ fontSize: '2.2rem', letterSpacing: '-0.5px' }}>Demande d'acte de mariage</h1>
+                    <p className="text-muted mb-0">Déclaration officielle d'union - République du Tchad</p>
                 </div>
             </div>
 
             <div className="row justify-content-center">
-                <div className="col-lg-10">
-
-                    <div className="glass-card p-4 p-md-5 border-0 shadow-lg rounded-4 overflow-hidden position-relative">
-                        <div className="stepper-container">
+                <div className="col-lg-12">
+                    {/* Premium Stepper */}
+                    <div className="card border-0 shadow-sm rounded-4 mb-5 p-4 bg-white">
+                        <div className="stepper-horizontal d-flex justify-content-between position-relative">
+                            <div className="stepper-progress-bar" style={{
+                                position: 'absolute', top: '22px', left: '12%', right: '12%', height: '2px', background: '#e9ecef', zIndex: 0
+                            }}>
+                                <div className="progress-fill" style={{
+                                    width: `${((step - 1) / (steps.length - 1)) * 100}%`, height: '100%', background: '#001a41', transition: 'width 0.4s ease'
+                                }}></div>
+                            </div>
                             {steps.map((s) => (
-                                <div key={s.id} className={`stepper-item ${step === s.id ? 'active' : ''} ${step > s.id ? 'completed' : ''}`}>
-                                    <div className="stepper-dot shadow-sm">
+                                <div key={s.id} className={`stepper-point d-flex flex-column align-items-center position-relative`} style={{ zIndex: 1, width: '25%' }}>
+                                    <div className={`stepper-circle d-flex align-items-center justify-content-center rounded-circle shadow-sm mb-3 transition-all ${step >= s.id ? 'active' : ''}`}
+                                        style={{
+                                            width: '45px',
+                                            height: '45px',
+                                            background: step > s.id ? '#059669' : (step === s.id ? '#001a41' : '#fff'),
+                                            color: (step >= s.id) ? '#fff' : '#adb5bd',
+                                            border: step >= s.id ? 'none' : '2px solid #dee2e6',
+                                            fontSize: '1.2rem',
+                                            fontWeight: '700'
+                                        }}>
                                         {step > s.id ? <i className="bi bi-check-lg"></i> : s.id}
                                     </div>
-                                    <span className="stepper-label d-none d-md-block">{s.label}</span>
+                                    <span className={`small fw-bold text-uppercase d-none d-md-block ${step >= s.id ? 'text-primary-dark' : 'text-muted'}`} style={{ fontSize: '0.7rem', letterSpacing: '0.8px' }}>
+                                        {s.label}
+                                    </span>
                                 </div>
                             ))}
                         </div>
+                    </div>
 
-                        {error && (
-                            <div className="alert alert-danger rounded-4 border-0 shadow-sm mb-4">
-                                <i className="bi bi-exclamation-triangle me-2"></i>{error}
-                            </div>
-                        )}
+                    {/* Form Card */}
+                    <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
+                        <div className="card-body p-4 p-md-5">
+                            {error && (
+                                <div className="alert alert-danger rounded-3 border-0 shadow-sm mb-4 d-flex align-items-center gap-3">
+                                    <i className="bi bi-exclamation-octagon-fill fs-4"></i>
+                                    <span className="fw-bold">{error}</span>
+                                </div>
+                            )}
 
-                        <form onSubmit={handleSubmit}>
-                            {renderStepContent()}
+                            {successMessage && (
+                                <div className="alert alert-success rounded-3 border-0 shadow-sm mb-4 d-flex align-items-center gap-3">
+                                    <i className="bi bi-check-circle-fill fs-4 text-success"></i>
+                                    <span className="fw-bold">{successMessage}</span>
+                                </div>
+                            )}
 
-                            <div className="d-flex justify-content-between mt-5 pt-4 border-top">
-                                {step > 1 ? (
-                                    <button type="button" className="btn btn-light btn-lg rounded-pill px-4 shadow-none" onClick={prevStep}>
-                                        <i className="bi bi-arrow-left me-2"></i>Précédent
-                                    </button>
-                                ) : (
-                                    <div></div>
-                                )}
+                            <form onSubmit={handleSubmit}>
+                                <div className="form-content-area" style={{ minHeight: '350px' }}>
+                                    {renderStepContent()}
+                                </div>
 
-                                {step < 4 ? (
-                                    <button type="button" className="btn btn-primary-custom btn-lg rounded-pill px-5 shadow-sm" onClick={nextStep}>
-                                        Suivant<i className="bi bi-arrow-right ms-2"></i>
-                                    </button>
-                                ) : (
-                                    <button type="submit" className="btn btn-success btn-lg rounded-pill px-5 shadow-sm" disabled={loading}>
-                                        {loading ? (
-                                            <><span className="spinner-border spinner-border-sm me-2"></span>Envoi...</>
-                                        ) : (
-                                            <><i className="bi bi-send-check me-2"></i>Soumettre la demande</>
-                                        )}
-                                    </button>
-                                )}
-                            </div>
-                        </form>
+                                {/* Navigation Buttons */}
+                                <div className="d-flex justify-content-between mt-5 pt-4 border-top">
+                                    {step > 1 ? (
+                                        <button type="button" className="btn btn-light rounded-pill px-4 py-2 fw-bold d-flex align-items-center gap-2" onClick={prevStep}>
+                                            <i className="bi bi-arrow-left"></i> Précédent
+                                        </button>
+                                    ) : (
+                                        <div></div>
+                                    )}
+
+                                    {step < 4 ? (
+                                        <button type="button" className="btn btn-primary rounded-pill px-5 py-2 fw-bold shadow-sm d-flex align-items-center gap-2"
+                                            onClick={nextStep} style={{ background: '#001a41' }}>
+                                            Continuer <i className="bi bi-arrow-right"></i>
+                                        </button>
+                                    ) : (
+                                        <button type="submit" className="btn btn-success rounded-pill px-5 py-2 fw-bold shadow-sm d-flex align-items-center gap-2" disabled={loading} style={{ background: '#059669' }}>
+                                            {loading ? (
+                                                <><span className="spinner-border spinner-border-sm"></span> Traitement...</>
+                                            ) : (
+                                                <><i className="bi bi-send-fill"></i> Soumettre la demande</>
+                                            )}
+                                        </button>
+                                    )}
+                                </div>
+                            </form>
+                        </div>
                     </div>
                 </div>
             </div>
+
+            <style dangerouslySetInnerHTML={{
+                __html: `
+                .stepper-circle.active {
+                    transform: scale(1.1);
+                    box-shadow: 0 0 0 5px rgba(0, 26, 65, 0.1) !important;
+                }
+                .text-primary-dark {
+                    color: #001a41;
+                }
+                .form-control:focus, .form-select:focus {
+                    background-color: #fff !important;
+                    box-shadow: 0 0 0 4px rgba(0, 26, 65, 0.05) !important;
+                    border: 1px solid rgba(0, 26, 65, 0.1) !important;
+                }
+                .form-label {
+                    margin-bottom: 0.5rem;
+                    color: #495057;
+                }
+                .input-group-text {
+                    background-color: #f8f9fa;
+                    border: 0;
+                    color: #adb5bd;
+                }
+                .shadow-xs {
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+                }
+            `}} />
         </div>
     );
 }

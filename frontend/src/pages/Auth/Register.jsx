@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import authService from "../../services/authService";
 import PublicNavbar from "../../components/PublicNavbar";
 import { useLanguage } from "../../context/LanguageContext";
+import uploadService from "../../services/uploadService";
 
 export default function Register() {
   const { t, language } = useLanguage();
@@ -25,6 +26,15 @@ export default function Register() {
     });
   };
 
+  // State pour la photo
+  const [photo, setPhoto] = useState(null);
+
+  const handlePhotoChange = (e) => {
+    if (e.target.files[0]) {
+      setPhoto(e.target.files[0]);
+    }
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
@@ -44,11 +54,24 @@ export default function Register() {
 
     try {
       const { confirmPassword, ...userData } = formData;
+
+      // Upload photo if exists
+      if (photo) {
+        try {
+          const photoUrl = await uploadService.uploadImage(photo, 'profile_photos');
+          userData.photo = photoUrl;
+        } catch (uploadError) {
+          console.error("Erreur upload photo:", uploadError);
+          // On continue quand même sans photo ou on bloque ? 
+          // Pour l'instant on continue sans photo si échec
+        }
+      }
+
       await authService.register(userData);
 
-      // Redirection vers login après inscription réussie
-      alert(language === 'ar' ? "تم التسجيل بنجاح! يمكنك الآن تسجيل الدخول." : "Inscription réussie ! Vous pouvez maintenant vous connecter.");
-      navigate("/login");
+      // Redirection vers OTP après inscription réussie
+      alert(language === 'ar' ? "تم التسجيل بنجاح! يرجى التحقق من رمز OTP." : "Inscription réussie ! Veuillez vérifier votre code OTP.");
+      navigate("/verify-otp", { state: { email: formData.email } });
     } catch (err) {
       setError(err.message || "Erreur lors de l'inscription");
     } finally {

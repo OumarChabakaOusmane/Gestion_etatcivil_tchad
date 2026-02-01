@@ -1,5 +1,10 @@
 const express = require("express");
 const cors = require("cors");
+const dns = require('dns');
+// Force l'utilisation de IPv4 pour éviter les erreurs ENETUNREACH avec Firebase sur certains réseaux
+if (dns.setDefaultResultOrder) {
+  dns.setDefaultResultOrder('ipv4first');
+}
 require("dotenv").config();
 
 // Import des routes
@@ -10,13 +15,17 @@ const mariageRoutes = require("./routes/mariage.routes");
 const decesRoutes = require("./routes/deces.routes");
 const demandeRoutes = require("./routes/demande.routes");
 const notificationRoutes = require("./routes/notification.routes");
+const contactRoutes = require("./routes/contact.routes");
+const searchRoutes = require('./routes/search.routes');
+const auditRoutes = require('./routes/audit.routes');
+const articleRoutes = require('./routes/article.routes');
 const { db } = require("./config/firebase");
 
 const app = express();
 
 // Configuration CORS
 app.use(cors({
-  origin: 'http://localhost:5173', // URL du frontend Vite
+  origin: true, // Accepte toutes les origines (utile pour le dev réseau)
   credentials: true
 }));
 
@@ -45,6 +54,10 @@ app.use("/api/deces", decesRoutes);
 
 // Routes des demandes (protégées)
 app.use("/api/demandes", demandeRoutes);
+app.use('/api/contact', contactRoutes);
+app.use('/api/search', searchRoutes);
+app.use('/api/logs', auditRoutes);
+app.use('/api/articles', articleRoutes);
 
 // Routes des notifications (protégées)
 app.use("/api/notifications", notificationRoutes);
@@ -67,6 +80,10 @@ app.get("/api/test-db", async (req, res) => {
 
 const PORT = process.env.PORT || 5000;
 
-app.listen(PORT, () => {
-  console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
-});
+if (process.env.NODE_ENV !== 'test') {
+  app.listen(PORT, () => {
+    console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
