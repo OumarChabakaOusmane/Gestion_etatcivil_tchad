@@ -1,5 +1,5 @@
 import React from 'react';
-// Deployment Version: 1.1.0 - Sync Sidebar menus
+// Deployment Version: 1.2.0 - Force sync for new features (Mariage, Deces)
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/authService';
 import useCurrentUser from '../hooks/useCurrentUser';
