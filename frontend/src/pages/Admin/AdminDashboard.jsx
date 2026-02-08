@@ -125,12 +125,12 @@ export default function AdminDashboard() {
             {/* Header Dashboard */}
             <div className="d-flex justify-content-between align-items-end mb-5">
                 <div>
-                    <h2 className="fw-bold text-dark mb-1">Tableau de Bord</h2>
-                    <p className="text-muted mb-0">Bienvenue sur votre espace de gestion centralisé.</p>
+                    <h1 className="fw-black text-dark mb-1 display-5">Tableau de Bord</h1>
+                    <p className="text-muted mb-0 fs-5">Bienvenue sur votre espace de gestion centralisé.</p>
                 </div>
                 <div className="d-none d-md-block">
-                    <div className="badge bg-light text-dark p-2 px-3 border rounded-pill shadow-none fw-bold">
-                        <i className="bi bi-calendar3 me-2 text-primary"></i>
+                    <div className="badge bg-white text-dark p-3 px-4 border rounded-pill shadow-sm fw-bold fs-6">
+                        <i className="bi bi-calendar3 me-2 text-primary fs-5"></i>
                         {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </div>
                 </div>
@@ -146,8 +146,8 @@ export default function AdminDashboard() {
                                 <i className="bi bi-clock-history"></i>
                             </div>
                             <div>
-                                <h3 className="m-0 fw-black">{stats.en_attente}</h3>
-                                <span className="small fw-bold text-uppercase opacity-75">En Attente</span>
+                                <h2 className="m-0 fw-black display-6">{stats.en_attente}</h2>
+                                <span className="small fw-bold text-uppercase opacity-75 tracking-wider" style={{ fontSize: '0.8rem' }}>En Attente</span>
                             </div>
                         </div>
                     </div>
@@ -160,8 +160,8 @@ export default function AdminDashboard() {
                                 <i className="bi bi-check-circle-fill"></i>
                             </div>
                             <div>
-                                <h3 className="m-0 fw-black">{stats.acceptee}</h3>
-                                <span className="small fw-bold text-uppercase opacity-75">Approuvées</span>
+                                <h2 className="m-0 fw-black display-6">{stats.acceptee}</h2>
+                                <span className="small fw-bold text-uppercase opacity-75 tracking-wider" style={{ fontSize: '0.8rem' }}>Approuvées</span>
                             </div>
                         </div>
                     </div>
@@ -174,8 +174,8 @@ export default function AdminDashboard() {
                                 <i className="bi bi-x-circle-fill"></i>
                             </div>
                             <div>
-                                <h3 className="m-0 fw-black">{stats.rejetee}</h3>
-                                <span className="small fw-bold text-uppercase opacity-75">Rejetées</span>
+                                <h2 className="m-0 fw-black display-6">{stats.rejetee}</h2>
+                                <span className="small fw-bold text-uppercase opacity-75 tracking-wider" style={{ fontSize: '0.8rem' }}>Rejetées</span>
                             </div>
                         </div>
                     </div>
@@ -189,8 +189,8 @@ export default function AdminDashboard() {
                                     <i className="bi bi-people-fill"></i>
                                 </div>
                                 <div>
-                                    <h3 className="m-0 fw-black">{stats.totalUsers}</h3>
-                                    <span className="small fw-bold text-uppercase opacity-75">Utilisateurs</span>
+                                    <h2 className="m-0 fw-black display-6">{stats.totalUsers}</h2>
+                                    <span className="small fw-bold text-uppercase opacity-75 tracking-wider" style={{ fontSize: '0.8rem' }}>Utilisateurs</span>
                                 </div>
                             </div>
                         </div>
@@ -316,7 +316,7 @@ export default function AdminDashboard() {
                                                     </span>
                                                 </td>
                                                 <td className="py-3">
-                                                    <div className="fw-bold text-dark small">{d.userId?.prenom} {d.userId?.nom}</div>
+                                                    <div className="fw-bold text-dark small">{d.userId?.prenom || "-"} {d.userId?.nom?.toUpperCase() || ""}</div>
                                                     <div className="text-muted" style={{ fontSize: '0.7rem' }}>{formatDate(d.dateDemande)}</div>
                                                 </td>
                                                 <td className="pe-4 py-3 text-end">
@@ -361,9 +361,9 @@ export default function AdminDashboard() {
                                                     <td className="ps-4 py-3">
                                                         <div className="d-flex align-items-center gap-2">
                                                             <div className="avatar-initial-sm bg-primary-soft text-primary">
-                                                                {user.nom ? user.nom[0] : 'U'}
+                                                                {user.prenom ? user.prenom[0] : (user.nom ? user.nom[0] : 'U')}
                                                             </div>
-                                                            <div className="fw-bold text-dark small">{user.prenom} {user.nom}</div>
+                                                            <div className="fw-bold text-dark small">{user.prenom} {user.nom?.toUpperCase()}</div>
                                                         </div>
                                                     </td>
                                                     <td className="pe-4 py-3 text-end text-muted small">{formatDate(user.createdAt)}</td>
@@ -380,31 +380,54 @@ export default function AdminDashboard() {
 
             <style dangerouslySetInnerHTML={{
                 __html: `
+                .premium-stat-card {
+                    border: none;
+                    border-radius: 24px;
+                    transition: all 0.4s cubic-bezier(0.165, 0.84, 0.44, 1);
+                    position: relative;
+                    overflow: hidden;
+                    z-index: 1;
+                    backdrop-filter: blur(10px);
+                }
+                
+                .premium-stat-card::after {
+                    content: "";
+                    position: absolute;
+                    top: 0; left: 0; right: 0; bottom: 0;
+                    background: linear-gradient(135deg, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 100%);
+                    z-index: -1;
+                }
+
+                .bg-vibrant-blue { background: linear-gradient(135deg, #001a41 0%, #00338d 100%); color: #fff; }
+                .bg-vibrant-yellow { background: linear-gradient(135deg, #FECB00 0%, #f7d959 100%); color: #001a41; }
+                .bg-vibrant-red { background: linear-gradient(135deg, #D21034 0%, #e64d5d 100%); color: #fff; }
+                .bg-vibrant-green { background: linear-gradient(135deg, #10b981 0%, #34d399 100%); color: #fff; }
+                
                 .stat-icon-wrapper {
-                    width: 50px;
-                    height: 50px;
-                    border-radius: 15px;
+                    width: 64px;
+                    height: 64px;
+                    border-radius: 20px;
+                    background: rgba(255, 255, 255, 0.2);
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    font-size: 1.5rem;
+                    font-size: 1.8rem;
                 }
+                
+                .premium-stat-card:hover {
+                    transform: translateY(-10px) scale(1.02);
+                    box-shadow: 0 20px 40px rgba(0,0,0,0.15) !important;
+                }
+
+                .premium-stat-card:hover .stat-icon-wrapper {
+                    transform: rotate(10deg);
+                    background: rgba(255, 255, 255, 0.3);
+                }
+                
                 .bg-primary-soft { background: rgba(0, 26, 65, 0.1); }
                 .bg-success-soft { background: rgba(16, 185, 129, 0.15); }
                 .bg-warning-soft { background: rgba(254, 203, 0, 0.15); }
                 .bg-danger-soft { background: rgba(210, 16, 52, 0.1); }
-                
-                .premium-stat-card {
-                    min-height: 180px;
-                    display: flex;
-                    align-items: center;
-                }
-
-                .premium-stat-card:hover {
-                    background: #fff;
-                    transform: translateY(-5px);
-                    box-shadow: 0 15px 30px rgba(0, 26, 65, 0.08) !important;
-                }
                 
                 .btn-dark-soft {
                     background: rgba(0, 26, 65, 0.05);

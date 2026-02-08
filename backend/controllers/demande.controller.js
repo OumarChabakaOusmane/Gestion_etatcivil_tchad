@@ -562,6 +562,55 @@ const deleteDemande = async (req, res) => {
     }
 };
 
+// Vérifie une demande publiquement (via QR Code)
+// @route GET /api/demandes/public/verifier/:id
+// @access Publique
+const verifyDemandePublique = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const demande = await Demande.findById(id);
+
+        if (!demande) {
+            return res.status(404).json({ success: false, message: 'Document non trouvé' });
+        }
+
+        // On ne renvoie que les infos nécessaires pour la vérification publique
+        // pour des raisons de confidentialité
+        const publicInfo = {
+            id: demande.id,
+            type: demande.type,
+            statut: demande.statut,
+            dateDemande: demande.dateDemande,
+            donnees: {
+                nomEnfant: demande.donnees?.nomEnfant,
+                prenomEnfant: demande.donnees?.prenomEnfant,
+                nomEpoux: demande.donnees?.nomEpoux,
+                prenomEpoux: demande.donnees?.prenomEpoux,
+                nomEpouse: demande.donnees?.nomEpouse,
+                prenomEpouse: demande.donnees?.prenomEpouse,
+                nomDefunt: demande.donnees?.nomDefunt,
+                prenomDefunt: demande.donnees?.prenomDefunt,
+                dateNaissanceEnfant: demande.donnees?.dateNaissanceEnfant,
+                dateMariage: demande.donnees?.dateMariage,
+                dateDeces: demande.donnees?.dateDeces
+            }
+        };
+
+        if (demande.statut !== 'acceptee') {
+            return res.status(403).json({
+                success: false,
+                message: 'Cet acte n\'est pas encore validé officiellement',
+                statut: demande.statut
+            });
+        }
+
+        res.json({ success: true, data: publicInfo });
+    } catch (error) {
+        console.error('Erreur verifyDemandePublique:', error);
+        res.status(500).json({ success: false, message: 'Erreur serveur' });
+    }
+};
+
 module.exports = {
     createDemande,
     getMyDemandes,
@@ -571,5 +620,6 @@ module.exports = {
     addDocuments,
     getStatistics,
     updateDemande,
-    deleteDemande
+    deleteDemande,
+    verifyDemandePublique
 };

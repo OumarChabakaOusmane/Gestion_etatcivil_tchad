@@ -59,7 +59,7 @@ class Article {
 
     static async findAll(filters = {}) {
         try {
-            let query = db.collection('articles').orderBy('createdAt', 'desc');
+            let query = db.collection('articles');
 
             if (filters.isPublished !== undefined) {
                 query = query.where('isPublished', '==', filters.isPublished);
@@ -70,7 +70,16 @@ class Article {
             }
 
             const snapshot = await query.get();
-            return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+            let articles = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+
+            // Tri en mémoire pour éviter l'erreur d'index manquant sur Firestore
+            articles.sort((a, b) => {
+                const dateA = new Date(a.createdAt || 0);
+                const dateB = new Date(b.createdAt || 0);
+                return dateB - dateA; // Décroissant
+            });
+
+            return articles;
         } catch (error) {
             throw error;
         }

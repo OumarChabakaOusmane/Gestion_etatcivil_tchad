@@ -39,14 +39,15 @@ export default function PublicNavbar() {
                 padding: '0.8rem 0'
             }}>
             <div className={`container ${language === 'ar' ? 'rtl' : ''}`}>
-                <Link className="navbar-brand fw-bold d-flex align-items-center gap-3" to="/">
-                    <img
-                        src="/drapeau-tchad.jpg"
-                        alt="Logo Tchad"
-                        style={{ height: '40px', width: 'auto', borderRadius: '4px', border: '1px solid rgba(255, 255, 255, 0.2)' }}
-                    />
-                    <div className="d-flex flex-column text-white" style={{ lineHeight: '1.2' }}>
-                        <span style={{ fontSize: '1.05rem', letterSpacing: '0.5px', fontWeight: '800' }}>{t('etatCivil')}</span>
+                <Link className="brand-logo-modern" to="/">
+                    <div className="tchad-flag-clean">
+                        <div className="bar-blue"></div>
+                        <div className="bar-yellow"></div>
+                        <div className="bar-red"></div>
+                    </div>
+                    <div className="brand-text-container">
+                        <span className="brand-main-text" style={{ color: '#ffffff' }}>{t('etatCivil')}</span>
+                        <span className="brand-sub-text" style={{ color: '#ffffff', opacity: 0.8 }}>République du Tchad</span>
                     </div>
                 </Link>
 
@@ -99,6 +100,15 @@ export default function PublicNavbar() {
                             >
                                 {t('navAide')}
                             </button>
+                        </li>
+                        <li className="nav-item">
+                            <Link
+                                className={`nav-link px-3 ${isActive('/actualites') ? 'active fw-bold text-white' : 'text-white-50'}`}
+                                to="/actualites"
+                                style={{ transition: 'all 0.3s ease' }}
+                            >
+                                Actualités
+                            </Link>
                         </li>
                         <li className="nav-item">
                             <button

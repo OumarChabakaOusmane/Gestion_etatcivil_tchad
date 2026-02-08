@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import authService from "../../services/authService";
 import PublicNavbar from "../../components/PublicNavbar";
@@ -7,6 +7,7 @@ import uploadService from "../../services/uploadService";
 
 export default function Register() {
   const { t, language } = useLanguage();
+  const navigate = useNavigate();
   const [formData, setFormData] = useState({
     nom: "",
     prenom: "",
@@ -17,7 +18,17 @@ export default function Register() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (authService.isAuthenticated()) {
+      const user = authService.getCurrentUser();
+      if (user?.role === 'admin') {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -67,11 +78,19 @@ export default function Register() {
         }
       }
 
-      await authService.register(userData);
-
       // Redirection vers OTP après inscription réussie
-      alert(language === 'ar' ? "تم التسجيل بنجاح! يرجى التحقق من رمز OTP." : "Inscription réussie ! Veuillez vérifier votre code OTP.");
-      navigate("/verify-otp", { state: { email: formData.email } });
+      const response = await authService.register(userData);
+
+      // Récupérer l'OTP de la réponse (si disponible en développement)
+      const otpCode = response?.data?.otpCode;
+
+      navigate("/verify-otp", {
+        state: {
+          email: formData.email,
+          otpCode: otpCode, // Passer l'OTP pour l'afficher
+          justRegistered: true
+        }
+      });
     } catch (err) {
       setError(err.message || "Erreur lors de l'inscription");
     } finally {
@@ -167,7 +186,7 @@ export default function Register() {
                               placeholder="Nom"
                               value={formData.nom}
                               onChange={handleChange}
-                              autoComplete="off"
+                              autoComplete="family-name"
                               required
                             />
                             <label htmlFor="nom">{t('labelLastName')} *</label>
@@ -184,7 +203,7 @@ export default function Register() {
                               placeholder="Prénom"
                               value={formData.prenom}
                               onChange={handleChange}
-                              autoComplete="off"
+                              autoComplete="given-name"
                               required
                             />
                             <label htmlFor="prenom">{t('labelFirstName')} *</label>
@@ -201,7 +220,7 @@ export default function Register() {
                               placeholder="Email"
                               value={formData.email}
                               onChange={handleChange}
-                              autoComplete="off"
+                              autoComplete="email"
                               required
                             />
                             <label htmlFor="email">{t('labelEmailAuth')} *</label>
@@ -218,7 +237,7 @@ export default function Register() {
                               placeholder="Téléphone"
                               value={formData.telephone}
                               onChange={handleChange}
-                              autoComplete="off"
+                              autoComplete="tel"
                               required
                             />
                             <label htmlFor="telephone">{t('phoneLabel')} *</label>

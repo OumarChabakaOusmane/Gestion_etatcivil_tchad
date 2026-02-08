@@ -53,7 +53,7 @@ router.put('/push-token', authMiddleware, updatePushToken);
  * @desc    Récupère tous les utilisateurs
  * @access  Privé (Admin)
  */
-router.get('/', authMiddleware, roleMiddleware('admin'), getAllUsers);
+router.get('/', authMiddleware, roleMiddleware('admin', 'agent'), getAllUsers);
 
 /**
  * @route   PATCH /api/users/:id/role

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { formatName } from '../../utils/textHelper';
 import userService from '../../services/userService';
 import authService from '../../services/authService';
 import exportHelper from '../../utils/exportHelper';
@@ -7,6 +8,7 @@ const AdminUtilisateurs = () => {
     const [users, setUsers] = useState([]);
     const [loading, setLoading] = useState(true);
     const [searchTerm, setSearchTerm] = useState('');
+    const [filterRole, setFilterRole] = useState('all');
     const [actionLoading, setActionLoading] = useState(false);
     const [notification, setNotification] = useState(null);
     const currentUser = authService.getCurrentUser();
@@ -53,7 +55,7 @@ const AdminUtilisateurs = () => {
         else if (user.role === 'agent') newRole = 'admin';
         else newRole = 'user';
 
-        if (!window.confirm(`Changer le rôle de ${user.nom} ${user.prenom} de ${user.role} à ${newRole} ?`)) return;
+        if (!window.confirm(`Changer le rôle de ${formatName(user.nom)} ${formatName(user.prenom)} de ${user.role} à ${newRole} ?`)) return;
 
         try {
             setActionLoading(true);
@@ -69,7 +71,7 @@ const AdminUtilisateurs = () => {
 
     const handleDeleteUser = async (user) => {
         const userId = user.id || user._id;
-        if (!window.confirm(`Supprimer définitivement l'utilisateur ${user.nom} ${user.prenom} ? Cette action est irréversible.`)) return;
+        if (!window.confirm(`Supprimer définitivement l'utilisateur ${formatName(user.nom)} ${formatName(user.prenom)} ? Cette action est irréversible.`)) return;
 
         try {
             setActionLoading(true);
@@ -106,11 +108,16 @@ const AdminUtilisateurs = () => {
     };
 
 
-    const filteredUsers = users.filter(u =>
-        u.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.prenom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        u.email?.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    const filteredUsers = users.filter(u => {
+        const matchesSearch =
+            u.nom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.prenom?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+            u.email?.toLowerCase().includes(searchTerm.toLowerCase());
+
+        const matchesRole = filterRole === 'all' || u.role === filterRole;
+
+        return matchesSearch && matchesRole;
+    });
 
     return (
         <div className="p-4 p-lg-5 animate__animated animate__fadeIn">
@@ -154,7 +161,21 @@ const AdminUtilisateurs = () => {
                     />
                     <i className="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-4 text-muted"></i>
                 </div>
+
                 <div className="d-flex gap-2">
+                    <select
+                        className="form-select rounded-pill border-light bg-light shadow-none px-4"
+                        value={filterRole}
+                        onChange={(e) => setFilterRole(e.target.value)}
+                    >
+                        <option value="all">Tous les rôles</option>
+                        <option value="user">Citoyens</option>
+                        <option value="agent">Agents</option>
+                        <option value="admin">Administrateurs</option>
+                    </select>
+                </div>
+
+                <div className="ms-auto d-flex gap-2">
                     <button onClick={handleExport} className="btn btn-outline-success rounded-pill px-4 fw-bold shadow-sm d-flex align-items-center gap-2 transition-all">
                         <i className="bi bi-file-earmark-excel-fill"></i> Exporter
                     </button>
@@ -203,21 +224,31 @@ const AdminUtilisateurs = () => {
                                                         <img src={user.photo} alt="Avatar" className="rounded-circle border border-2 border-white shadow-sm" style={{ width: '48px', height: '48px', objectFit: 'cover' }} />
                                                     ) : (
                                                         <div className="bg-primary-soft text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style={{ width: '48px', height: '48px' }}>
-                                                            {user.prenom?.[0]}{user.nom?.[0]}
+                                                            {user.nom?.[0]}{user.prenom?.[0]}
                                                         </div>
                                                     )}
                                                     {isMe && <div className="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" style={{ width: '12px', height: '12px' }}></div>}
                                                 </div>
                                                 <div>
-                                                    <div className="fw-bold text-dark" style={{ fontSize: '1rem' }}>{user.prenom} {user.nom} {isMe && <span className="badge bg-secondary-soft text-secondary ms-1 small px-2">Vous</span>}</div>
+                                                    <div className="fw-bold text-dark" style={{ fontSize: '1.1rem' }}>{formatName(user.nom)} {formatName(user.prenom)} {isMe && <span className="badge bg-secondary-soft text-secondary ms-1 small px-2">Vous</span>}</div>
                                                     <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>ID: {userId?.slice(-8).toUpperCase()}</div>
                                                 </div>
                                             </div>
                                         </td>
                                         <td className="py-4">
-                                            <div className="d-flex flex-column">
-                                                <span className="fw-bold text-dark" style={{ fontSize: '0.95rem' }}><i className="bi bi-envelope-at me-1 opacity-50"></i>{user.email}</span>
-                                                <span className="fw-bold text-dark mt-1" style={{ fontSize: '0.9rem' }}><i className="bi bi-phone me-1 opacity-50"></i>{user.telephone || 'Non renseigné'}</span>
+                                            <div className="d-flex flex-column gap-1">
+                                                <span className="fw-bold text-dark d-flex align-items-center gap-2" style={{ fontSize: '0.9rem' }}>
+                                                    <div className="bg-primary bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '24px', height: '24px' }}>
+                                                        <i className="bi bi-envelope-fill text-primary" style={{ fontSize: '0.75rem' }}></i>
+                                                    </div>
+                                                    {user.email}
+                                                </span>
+                                                <span className="fw-bold text-dark d-flex align-items-center gap-2" style={{ fontSize: '0.9rem' }}>
+                                                    <div className="bg-success bg-opacity-10 rounded-circle d-flex align-items-center justify-content-center" style={{ width: '24px', height: '24px' }}>
+                                                        <i className="bi bi-telephone-fill text-success" style={{ fontSize: '0.75rem' }}></i>
+                                                    </div>
+                                                    {user.telephone || 'Non renseigné'}
+                                                </span>
                                             </div>
                                         </td>
                                         <td className="py-4">
@@ -273,12 +304,12 @@ const AdminUtilisateurs = () => {
                                 <form onSubmit={handleCreateUser}>
                                     <div className="row g-3">
                                         <div className="col-6">
-                                            <input type="text" className="form-control rounded-3 py-2" placeholder="Prénom"
-                                                value={newUser.prenom} onChange={e => setNewUser({ ...newUser, prenom: e.target.value })} required />
-                                        </div>
-                                        <div className="col-6">
                                             <input type="text" className="form-control rounded-3 py-2" placeholder="Nom"
                                                 value={newUser.nom} onChange={e => setNewUser({ ...newUser, nom: e.target.value })} required />
+                                        </div>
+                                        <div className="col-6">
+                                            <input type="text" className="form-control rounded-3 py-2" placeholder="Prénom"
+                                                value={newUser.prenom} onChange={e => setNewUser({ ...newUser, prenom: e.target.value })} required />
                                         </div>
                                         <div className="col-12">
                                             <input type="email" className="form-control rounded-3 py-2" placeholder="Email"

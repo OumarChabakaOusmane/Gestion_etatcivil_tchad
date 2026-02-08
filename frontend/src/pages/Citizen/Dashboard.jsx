@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
+import { formatName } from '../../utils/textHelper';
 import demandeService from "../../services/demandeService";
 import authService from "../../services/authService";
 import welcomeBanner from "../../assets/welcome_banner.png";
@@ -45,11 +46,14 @@ export default function Dashboard() {
             setStats(statsData);
 
             const sorted = [...demandes].sort((a, b) => {
-                const dateA = a.dateDemande?.toDate ? a.dateDemande.toDate() :
-                    (a.dateDemande?._seconds ? new Date(a.dateDemande._seconds * 1000) : new Date(a.dateDemande));
-                const dateB = b.dateDemande?.toDate ? b.dateDemande.toDate() :
-                    (b.dateDemande?._seconds ? new Date(b.dateDemande._seconds * 1000) : new Date(b.dateDemande));
-                return dateB - dateA;
+                const getDate = (d) => {
+                    if (!d) return 0;
+                    if (d.toDate) return d.toDate();
+                    if (d._seconds) return new Date(d._seconds * 1000);
+                    const parsed = new Date(d);
+                    return isNaN(parsed.getTime()) ? 0 : parsed;
+                };
+                return getDate(b.dateDemande) - getDate(a.dateDemande);
             });
             setRecentDemandes(sorted.slice(0, 5));
         } catch (error) {
@@ -86,12 +90,12 @@ export default function Dashboard() {
     }
 
     return (
-        <div className={`fade-in font-family-sans pb-5 ${language === 'ar' ? 'rtl' : ''}`}>
+        <div className={`fade -in font - family - sans pb - 5 ${language === 'ar' ? 'rtl' : ''} `}>
             {/* Header section with brand colors */}
             <div className="d-flex justify-content-between align-items-end mb-4">
                 <div>
                     <h1 className="fw-bold text-dark mb-1" style={{ fontSize: '2.5rem' }}>
-                        {t('welcome')}, {user?.prenom || 'Citoyen'} !
+                        {t('welcome')}, {formatName(user?.nom)} {formatName(user?.prenom)} !
                     </h1>
                     <p className="text-muted mb-0">
                         {stats?.en_attente > 0
@@ -236,8 +240,8 @@ export default function Dashboard() {
                                 <tr key={demande.id || demande._id}>
                                     <td className="px-4 py-3">
                                         <div className="d-flex align-items-center gap-3">
-                                            <div className={`rounded bg-opacity-10 p-2 bg-${demande.type === 'naissance' ? 'primary' : demande.type === 'mariage' ? 'warning' : 'danger'}`}>
-                                                <i className={`bi bi-${demande.type === 'naissance' ? 'person-badge' : demande.type === 'mariage' ? 'heart' : 'shield-shaded'} text-${demande.type === 'naissance' ? 'primary' : demande.type === 'mariage' ? 'warning' : 'danger'}`}></i>
+                                            <div className={`rounded bg - opacity - 10 p - 2 bg - ${demande.type === 'naissance' ? 'primary' : demande.type === 'mariage' ? 'warning' : 'danger'} `}>
+                                                <i className={`bi bi - ${demande.type === 'naissance' ? 'person-badge' : demande.type === 'mariage' ? 'heart' : 'shield-shaded'} text - ${demande.type === 'naissance' ? 'primary' : demande.type === 'mariage' ? 'warning' : 'danger'} `}></i>
                                             </div>
                                             <span className="fw-bold text-dark">
                                                 Acte de {demande.type}
@@ -291,28 +295,27 @@ export default function Dashboard() {
 
             <style dangerouslySetInnerHTML={{
                 __html: `
-                .hover-translate:hover {
-                    transform: translateY(-5px);
-                }
-                .hover-lift:hover {
-                    transform: translateY(-8px);
-                    box-shadow: 0 1rem 3rem rgba(0,0,0,.1) !important;
-                }
-                .hover-lift:hover .bg-opacity-10 {
-                    background-opacity: 0.2 !important;
-                }
+    .hover - translate:hover {
+    transform: translateY(-5px);
+}
+                .hover - lift:hover {
+    transform: translateY(-8px);
+    box - shadow: 0 1rem 3rem rgba(0, 0, 0, .1)!important;
+}
+                .hover - lift: hover.bg - opacity - 10 {
+    background - opacity: 0.2!important;
+}
                 .dot {
-                    width: 8px;
-                    height: 8px;
-                    border-radius: 50%;
-                    display: inline-block;
-                }
-                .dot-warning { background-color: #ffc107; box-shadow: 0 0 8px #ffc107; }
-                .dot-success { background-color: #198754; box-shadow: 0 0 8px #198754; }
-                .dot-danger { background-color: #dc3545; box-shadow: 0 0 8px #dc3545; }
-                .transition-all { transition: all 0.3s ease; }
-            `}} />
+    width: 8px;
+    height: 8px;
+    border - radius: 50 %;
+    display: inline - block;
+}
+                .dot - warning { background - color: #ffc107; box - shadow: 0 0 8px #ffc107; }
+                .dot - success { background - color: #198754; box - shadow: 0 0 8px #198754; }
+                .dot - danger { background - color: #dc3545; box - shadow: 0 0 8px #dc3545; }
+                .transition - all { transition: all 0.3s ease; }
+`}} />
         </div>
     );
 }
-

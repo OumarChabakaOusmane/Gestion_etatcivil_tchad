@@ -1,10 +1,11 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import authService from "../../services/authService";
 import PublicNavbar from "../../components/PublicNavbar";
 import { useLanguage } from "../../context/LanguageContext";
 
 export default function Login() {
+  const navigate = useNavigate();
   const { t, language } = useLanguage();
   const [formData, setFormData] = useState({
     email: "",
@@ -12,7 +13,16 @@ export default function Login() {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
-  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (authService.isAuthenticated()) {
+      if (authService.hasAdminAccess()) {
+        navigate('/admin/dashboard');
+      } else {
+        navigate('/dashboard');
+      }
+    }
+  }, [navigate]);
 
   const handleChange = (e) => {
     setFormData({
@@ -37,8 +47,8 @@ export default function Login() {
       console.log("Rôle détecté:", user.role);
 
       // Forcer un rechargement complet pour garantir l'initialisation du state
-      if (user.role === 'admin') {
-        console.log("Redirection vers Admin Dashboard");
+      if (user.role === 'admin' || user.role === 'agent') {
+        console.log("Redirection vers Admin/Agent Dashboard");
         window.location.href = '/admin/dashboard';
       } else {
         console.log("Redirection vers Citizen Dashboard");
@@ -157,7 +167,7 @@ export default function Login() {
                           placeholder="Email"
                           value={formData.email}
                           onChange={handleChange}
-                          autoComplete="off"
+                          autoComplete="email"
                           required
                           style={{ height: '55px' }}
                         />
@@ -173,7 +183,7 @@ export default function Login() {
                           placeholder="Mot de passe"
                           value={formData.password}
                           onChange={handleChange}
-                          autoComplete="off"
+                          autoComplete="current-password"
                           required
                           style={{ height: '55px' }}
                         />
@@ -236,8 +246,6 @@ export default function Login() {
           </div>
         </div>
       </div>
-
-
     </>
   );
 }

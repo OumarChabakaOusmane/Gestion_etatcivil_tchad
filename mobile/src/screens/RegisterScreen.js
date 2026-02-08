@@ -70,6 +70,8 @@ export default function RegisterScreen({ navigation }) {
                                 value={formData.nom}
                                 onChangeText={(text) => setFormData({ ...formData, nom: text })}
                                 placeholder="Ex: Alkhali"
+                                autoComplete="name-family"
+                                textContentType="familyName"
                             />
                         </View>
                         <View style={{ flex: 1, marginLeft: 8 }}>
@@ -79,6 +81,8 @@ export default function RegisterScreen({ navigation }) {
                                 value={formData.prenom}
                                 onChangeText={(text) => setFormData({ ...formData, prenom: text })}
                                 placeholder="Ex: Mahamat"
+                                autoComplete="name-given"
+                                textContentType="givenName"
                             />
                         </View>
                     </View>
@@ -91,6 +95,8 @@ export default function RegisterScreen({ navigation }) {
                         placeholder="votre@email.com"
                         keyboardType="email-address"
                         autoCapitalize="none"
+                        autoComplete="email"
+                        textContentType="emailAddress"
                     />
 
                     <Text style={styles.label}>Téléphone</Text>
@@ -100,6 +106,8 @@ export default function RegisterScreen({ navigation }) {
                         onChangeText={(text) => setFormData({ ...formData, telephone: text })}
                         placeholder="66000000"
                         keyboardType="phone-pad"
+                        autoComplete="tel"
+                        textContentType="telephoneNumber"
                     />
 
                     <Text style={styles.label}>Mot de passe</Text>
@@ -109,6 +117,8 @@ export default function RegisterScreen({ navigation }) {
                         onChangeText={(text) => setFormData({ ...formData, password: text })}
                         placeholder="********"
                         secureTextEntry
+                        autoComplete="password"
+                        textContentType="password"
                     />
 
                     <TouchableOpacity

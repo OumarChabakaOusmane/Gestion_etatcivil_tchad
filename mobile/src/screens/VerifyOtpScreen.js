@@ -13,10 +13,11 @@ import {
 import { useAuth } from '../context/AuthContext';
 
 export default function VerifyOtpScreen({ route, navigation }) {
-    const { verifyOtp } = useAuth();
+    const { verifyOtp, resendOtp } = useAuth();
     const { email } = route.params;
     const [otp, setOtp] = useState('');
     const [loading, setLoading] = useState(false);
+    const [resendLoading, setResendLoading] = useState(false);
 
     const handleVerify = async () => {
         if (otp.length !== 6) {
@@ -38,6 +39,18 @@ export default function VerifyOtpScreen({ route, navigation }) {
             Alert.alert('Erreur', message);
         } finally {
             setLoading(false);
+        }
+    };
+
+    const handleResend = async () => {
+        setResendLoading(true);
+        try {
+            await resendOtp(email);
+            Alert.alert('Succès', 'Un nouveau code a été envoyé à votre adresse email.');
+        } catch (error) {
+            Alert.alert('Erreur', 'Impossible de renvoyer le code. Veuillez réessayer.');
+        } finally {
+            setResendLoading(false);
         }
     };
 
@@ -78,8 +91,16 @@ export default function VerifyOtpScreen({ route, navigation }) {
                     </TouchableOpacity>
                 </View>
 
-                <TouchableOpacity style={styles.resendBtn}>
-                    <Text style={styles.resendText}>Renvoyer le code</Text>
+                <TouchableOpacity
+                    style={styles.resendBtn}
+                    onPress={handleResend}
+                    disabled={resendLoading}
+                >
+                    {resendLoading ? (
+                        <ActivityIndicator color="#001a41" />
+                    ) : (
+                        <Text style={styles.resendText}>Renvoyer le code</Text>
+                    )}
                 </TouchableOpacity>
             </View>
         </KeyboardAvoidingView>

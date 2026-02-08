@@ -15,9 +15,12 @@ export default function ProfileScreen({ navigation }) {
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={styles.profileHeader}>
                     <View style={styles.avatar}>
-                        <Text style={styles.avatarText}>{user?.prenom[0]}{user?.nom[0]}</Text>
+                        <Text style={styles.avatarText}>
+                            {user?.nom ? user.nom[0].toUpperCase() : ''}
+                            {user?.prenom ? user.prenom[0].toUpperCase() : ''}
+                        </Text>
                     </View>
-                    <Text style={styles.name}>{user?.prenom} {user?.nom}</Text>
+                    <Text style={styles.name}>{(user?.nom || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} {(user?.prenom || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Text>
                     <View style={styles.badge}>
                         <Text style={styles.badgeText}>{user?.role?.toUpperCase()}</Text>
                     </View>

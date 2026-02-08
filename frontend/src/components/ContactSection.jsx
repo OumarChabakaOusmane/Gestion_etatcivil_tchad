@@ -186,7 +186,7 @@ export default function ContactSection() {
                                         </div>
                                         <div>
                                             <h6 className="fw-bold mb-1 text-dark">{t('phoneLabel')}</h6>
-                                            <p className="text-muted mb-0">+235 XX XX XX XX</p>
+                                            <p className="text-muted mb-0">{t('phoneValue')}</p>
                                         </div>
                                     </div>
 

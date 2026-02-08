@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import demandeService from "../../services/demandeService";
 import TrackingTimeline from "../../components/TrackingTimeline";
 import SkeletonLoader from "../../components/SkeletonLoader";
+import { normalizeText } from "../../utils/textHelper";
 
 export default function MesDemandes() {
     const [demandes, setDemandes] = useState([]);
@@ -522,7 +523,7 @@ export default function MesDemandes() {
                                                     <div className="col-md-6" key={key}>
                                                         <div className="p-3 bg-light rounded-3 border-start border-4 border-primary">
                                                             <div className="text-muted small fw-bold text-uppercase">{label}</div>
-                                                            <div className="fw-bold text-dark fs-5">{value || "—"}</div>
+                                                            <div className="fw-bold text-dark fs-5">{normalizeText(value) || "—"}</div>
                                                         </div>
                                                     </div>
                                                 );

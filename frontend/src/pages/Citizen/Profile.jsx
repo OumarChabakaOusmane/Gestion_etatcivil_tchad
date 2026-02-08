@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { formatName } from '../../utils/textHelper';
 import authService from '../../services/authService';
 import uploadService from '../../services/uploadService';
 
@@ -159,7 +160,7 @@ const Profile = () => {
                                 </button>
                             </div>
 
-                            <h3 className="fw-bold text-dark mb-1">{user?.prenom} {user?.nom}</h3>
+                            <h3 className="fw-bold text-dark mb-1">{formatName(user?.nom)} {formatName(user?.prenom)}</h3>
                             <p className="text-muted small text-uppercase fw-bold mb-4" style={{ letterSpacing: '1px' }}>
                                 <span className={`badge rounded-pill px-3 py-2 ${user?.role === 'admin' ? 'bg-danger-subtle text-danger' : 'bg-primary-subtle text-primary'}`}>
                                     {user?.role === 'admin' ? 'Administrateur' : 'Citoyen'}
@@ -217,12 +218,12 @@ const Profile = () => {
                                     <form onSubmit={handleProfileUpdate} className="animate__animated animate__fadeIn">
                                         <div className="row g-4">
                                             <div className="col-md-6">
-                                                <label className="form-label fw-bold small text-muted text-uppercase">Prénom</label>
-                                                <input type="text" className="form-control form-control-lg bg-light border-0" name="prenom" value={formData.prenom} onChange={handleInputChange} required />
-                                            </div>
-                                            <div className="col-md-6">
                                                 <label className="form-label fw-bold small text-muted text-uppercase">Nom</label>
                                                 <input type="text" className="form-control form-control-lg bg-light border-0" name="nom" value={formData.nom} onChange={handleInputChange} required />
+                                            </div>
+                                            <div className="col-md-6">
+                                                <label className="form-label fw-bold small text-muted text-uppercase">Prénom</label>
+                                                <input type="text" className="form-control form-control-lg bg-light border-0" name="prenom" value={formData.prenom} onChange={handleInputChange} required />
                                             </div>
                                             <div className="col-md-12">
                                                 <label className="form-label fw-bold small text-muted text-uppercase">Téléphone</label>
@@ -243,8 +244,8 @@ const Profile = () => {
                                         <div className="profile-info-grid">
                                             <div className="info-item mb-4 pb-3 border-bottom d-flex justify-content-between align-items-center">
                                                 <div>
-                                                    <label className="d-block text-muted small text-uppercase fw-bold mb-1">Prénom et Nom</label>
-                                                    <span className="fs-5 fw-bold text-dark">{user?.prenom} {user?.nom}</span>
+                                                    <label className="d-block text-muted small text-uppercase fw-bold mb-1">Nom et Prénom</label>
+                                                    <span className="fs-5 fw-bold text-dark">{formatName(user?.nom)} {formatName(user?.prenom)}</span>
                                                 </div>
                                             </div>
                                             <div className="info-item mb-4 pb-3 border-bottom d-flex justify-content-between align-items-center">

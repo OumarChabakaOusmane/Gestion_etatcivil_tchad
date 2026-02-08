@@ -25,7 +25,8 @@ class Naissance {
           dateNaissance: data.dateNaissancePere,
           lieuNaissance: data.lieuNaissancePere,
           nationalite: data.nationalitePere,
-          profession: data.professionPere
+          profession: data.professionPere,
+          nni: data.nniPere || null
         },
 
         // Mère
@@ -34,7 +35,8 @@ class Naissance {
           dateNaissance: data.dateNaissanceMere,
           lieuNaissance: data.lieuNaissanceMere,
           nationalite: data.nationaliteMere,
-          profession: data.professionMere
+          profession: data.professionMere,
+          nni: data.nniMere || null
         },
 
         // Adresse

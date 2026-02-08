@@ -34,7 +34,7 @@ export default function MesDemandesScreen() {
 
     const fetchDemandes = async () => {
         try {
-            const data = await demandeService.getMesDemandes();
+            const data = await demandeService.getMyDemandes();
             setDemandes(data);
         } catch (error) {
             console.error(error);

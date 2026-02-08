@@ -52,10 +52,10 @@ const SmsSimulator = () => {
             } catch (e) { console.log("Audio not supported"); }
         }
 
-        // Cacher automatiquement après 8 secondes
+        // Cacher automatiquement après 60 secondes
         setTimeout(() => {
             setIsVisible(false);
-        }, 8000);
+        }, 60000);
     };
 
     return (

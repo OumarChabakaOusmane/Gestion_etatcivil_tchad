@@ -21,6 +21,11 @@ export const authService = {
         return response.data;
     },
 
+    resendOtp: async (email) => {
+        const response = await api.post('/auth/resend-otp', { email });
+        return response.data;
+    },
+
     updatePushToken: async (token) => {
         const response = await api.put('/users/push-token', { token });
         return response.data;

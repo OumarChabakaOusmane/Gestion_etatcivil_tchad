@@ -43,7 +43,8 @@ const createUser = async (req, res) => {
             email,
             password,
             telephone,
-            role
+            role,
+            isVerified: true // Les comptes créés par l'admin sont auto-vérifiés
         });
 
         // [AUDIT LOG]

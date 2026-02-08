@@ -1,4 +1,6 @@
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import articleService from '../../services/articleService';
 import PublicNavbar from '../../components/PublicNavbar';
 import ServiceCard from '../../components/ServiceCard';
 import DemandeCard from '../../components/DemandeCard';
@@ -6,6 +8,61 @@ import HelpSection from '../../components/HelpSection';
 import ContactSection from '../../components/ContactSection';
 import Footer from '../../components/Footer';
 import { useLanguage } from '../../context/LanguageContext';
+
+function RecentNews() {
+    const [articles, setArticles] = useState([]);
+    const [loading, setLoading] = useState(true);
+
+    useEffect(() => {
+        const fetchNews = async () => {
+            try {
+                const response = await articleService.getAllArticles({ limit: 3 });
+                setArticles(response.data?.slice(0, 3) || []);
+            } catch (error) {
+                console.error('Error fetching recent news:', error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        fetchNews();
+    }, []);
+
+    if (loading) return (
+        <div className="d-flex justify-content-center py-4">
+            <div className="spinner-border text-primary" role="status"></div>
+        </div>
+    );
+
+    if (articles.length === 0) return null;
+
+    return (
+        <div className="row g-4 mt-2">
+            {articles.map((article) => (
+                <div key={article.id} className="col-md-4">
+                    <div className="card h-100 border-0 shadow-sm rounded-4 overflow-hidden hover-lift transition-all">
+                        <div style={{ height: '200px' }}>
+                            <img
+                                src={article.image || 'https://placehold.co/600x400?text=Actualité'}
+                                alt={article.title}
+                                className="w-100 h-100 object-fit-cover"
+                            />
+                        </div>
+                        <div className="card-body p-4">
+                            <span className="badge bg-light text-primary mb-2">{article.category}</span>
+                            <h5 className="card-title fw-bold mb-3">{article.title}</h5>
+                            <p className="card-text text-muted small line-clamp-3">
+                                {article.summary}
+                            </p>
+                            <Link to="/actualites" className="btn btn-link text-primary p-0 text-decoration-none fw-bold small">
+                                Lire la suite <i className="bi bi-arrow-right ms-1"></i>
+                            </Link>
+                        </div>
+                    </div>
+                </div>
+            ))}
+        </div>
+    );
+}
 
 export default function Home() {
     const { t, language } = useLanguage();
@@ -143,8 +200,7 @@ export default function Home() {
             </section >
 
             {/* Demandes Section */}
-            < section id="demandes" className="py-5" style={{ backgroundColor: '#f8fafc' }
-            }>
+            <section id="demandes" className="py-5" style={{ backgroundColor: '#f8fafc' }}>
                 <div className="container py-5">
                     <div className="section-title">
                         <h2>{t('demandeSectionTitle')}</h2>
@@ -175,7 +231,26 @@ export default function Home() {
                         />
                     </div>
                 </div>
-            </section >
+            </section>
+
+            {/* Actualités Section */}
+            <section className="py-5 bg-white">
+                <div className="container py-5">
+                    <div className="section-title">
+                        <h2>Dernières Actualités</h2>
+                        <div className="divider"></div>
+                        <p className="mt-3 text-muted">Restez informé des dernières mises à jour de l'administration.</p>
+                    </div>
+
+                    <RecentNews />
+
+                    <div className="text-center mt-5">
+                        <Link to="/actualites" className="btn btn-outline-primary rounded-pill px-5">
+                            Voir toutes les actualités
+                        </Link>
+                    </div>
+                </div>
+            </section>
 
             <HelpSection />
 

@@ -57,7 +57,7 @@ export default function Footer() {
                             </li>
                             <li className="mb-3 d-flex align-items-center text-start">
                                 <i className={`bi bi-telephone text-primary ${language === 'ar' ? 'ms-3' : 'me-3'}`}></i>
-                                <span>+235 XX XX XX XX</span>
+                                <span>{t('phoneValue')}</span>
                             </li>
                             <li className="mb-3 d-flex align-items-center text-start">
                                 <i className={`bi bi-envelope text-primary ${language === 'ar' ? 'ms-3' : 'me-3'}`}></i>

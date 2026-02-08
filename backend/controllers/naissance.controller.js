@@ -24,24 +24,26 @@ const createNaissance = async (req, res) => {
       dateNaissance,
       heureNaissance,
       lieuNaissance,
-      
+
       // Données du père
       nomPere,
       dateNaissancePere,
       lieuNaissancePere,
       nationalitePere,
       professionPere,
-      
+
       // Données de la mère
       nomMere,
       dateNaissanceMere,
       lieuNaissanceMere,
       nationaliteMere,
       professionMere,
-      
+      nniPere,
+      nniMere,
+
       // Adresse
       domicileParents,
-      
+
       // Admin
       numeroActe,
       dateDeclaration
@@ -49,9 +51,9 @@ const createNaissance = async (req, res) => {
 
     // Validation des champs obligatoires
     if (!nomEnfant || !prenomEnfant || !sexe || !dateNaissance || !lieuNaissance ||
-        !nomPere || !dateNaissancePere || !lieuNaissancePere ||
-        !nomMere || !dateNaissanceMere || !lieuNaissanceMere ||
-        !domicileParents || !numeroActe) {
+      !nomPere || !dateNaissancePere || !lieuNaissancePere ||
+      !nomMere || !dateNaissanceMere || !lieuNaissanceMere ||
+      !domicileParents || !numeroActe) {
       return res.status(400).json({
         success: false,
         message: 'Tous les champs obligatoires doivent être renseignés.'
@@ -67,24 +69,26 @@ const createNaissance = async (req, res) => {
       dateNaissance: new Date(dateNaissance),
       heureNaissance: heureNaissance || null,
       lieuNaissance,
-      
+
       // Données du père
       nomPere,
       dateNaissancePere: new Date(dateNaissancePere),
       lieuNaissancePere,
       nationalitePere: nationalitePere || null,
       professionPere: professionPere || null,
-      
+
       // Données de la mère
       nomMere,
       dateNaissanceMere: new Date(dateNaissanceMere),
       lieuNaissanceMere,
       nationaliteMere: nationaliteMere || null,
       professionMere: professionMere || null,
-      
+      nniPere: nniPere || null,
+      nniMere: nniMere || null,
+
       // Adresse
       domicileParents,
-      
+
       // Admin
       numeroActe,
       dateDeclaration: dateDeclaration ? new Date(dateDeclaration) : new Date(),
@@ -163,7 +167,7 @@ const getNaissanceById = async (req, res) => {
 
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'acte de naissance :', error);
-    
+
     if (error.code === 'not-found') {
       return res.status(404).json({
         success: false,

@@ -23,19 +23,29 @@ const createMariage = async (req, res) => {
       lieuNaissanceEpoux,
       nationaliteEpoux,
       professionEpoux,
-      
+      domicileEpoux,
+      temoin1Epoux,
+      temoin2Epoux,
+      signatureEpoux,
+
       // Épouse
       nomEpouse,
       dateNaissanceEpouse,
       lieuNaissanceEpouse,
       nationaliteEpouse,
       professionEpouse,
-      
+      domicileEpouse,
+      temoin1Epouse,
+      temoin2Epouse,
+      signatureEpouse,
+
       // Mariage
       dateMariage,
       lieuMariage,
       regimeMatrimonial,
-      
+      dotMontant,
+      dotConditions,
+
       // Admin
       numeroActe,
       dateDeclaration
@@ -43,8 +53,8 @@ const createMariage = async (req, res) => {
 
     // Validation des champs obligatoires
     if (!nomEpoux || !dateNaissanceEpoux || !lieuNaissanceEpoux ||
-        !nomEpouse || !dateNaissanceEpouse || !lieuNaissanceEpouse ||
-        !dateMariage || !lieuMariage || !regimeMatrimonial || !numeroActe) {
+      !nomEpouse || !dateNaissanceEpouse || !lieuNaissanceEpouse ||
+      !dateMariage || !lieuMariage || !regimeMatrimonial || !numeroActe) {
       return res.status(400).json({
         success: false,
         message: 'Tous les champs obligatoires doivent être renseignés.'
@@ -59,19 +69,29 @@ const createMariage = async (req, res) => {
       lieuNaissanceEpoux,
       nationaliteEpoux: nationaliteEpoux || null,
       professionEpoux: professionEpoux || null,
-      
+      domicileEpoux: domicileEpoux || null,
+      temoin1Epoux: temoin1Epoux || null,
+      temoin2Epoux: temoin2Epoux || null,
+      signatureEpoux: signatureEpoux || null,
+
       // Épouse
       nomEpouse,
       dateNaissanceEpouse: new Date(dateNaissanceEpouse),
       lieuNaissanceEpouse,
       nationaliteEpouse: nationaliteEpouse || null,
       professionEpouse: professionEpouse || null,
-      
+      domicileEpouse: domicileEpouse || null,
+      temoin1Epouse: temoin1Epouse || null,
+      temoin2Epouse: temoin2Epouse || null,
+      signatureEpouse: signatureEpouse || null,
+
       // Mariage
       dateMariage: new Date(dateMariage),
       lieuMariage,
       regimeMatrimonial,
-      
+      dotMontant: dotMontant || null,
+      dotConditions: dotConditions || null,
+
       // Admin
       numeroActe,
       dateDeclaration: dateDeclaration ? new Date(dateDeclaration) : new Date(),
@@ -149,7 +169,7 @@ const getMariageById = async (req, res) => {
 
   } catch (error) {
     console.error('Erreur lors de la récupération de l\'acte de mariage :', error);
-    
+
     if (error.code === 'not-found') {
       return res.status(404).json({
         success: false,

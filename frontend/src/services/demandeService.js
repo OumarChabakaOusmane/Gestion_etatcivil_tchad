@@ -159,6 +159,20 @@ const demandeService = {
         } catch (error) {
             throw error.response?.data || error;
         }
+    },
+
+    /**
+     * Vérifie une demande publiquement (via QR Code)
+     * @param {string} id - ID de la demande
+     * @returns {Promise} Données de l'acte vérifié
+     */
+    async verifyDemandePublique(id) {
+        try {
+            const response = await api.get(`/demandes/public/verifier/${id}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data || error;
+        }
     }
 };
 

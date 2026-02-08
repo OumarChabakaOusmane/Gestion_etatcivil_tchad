@@ -19,15 +19,24 @@ const createDeces = async (req, res) => {
         const {
             // Données du défunt
             nomDefunt,
+            prenomDefunt,
+            sexeDefunt,
             dateNaissanceDefunt,
             lieuNaissanceDefunt,
+            nationaliteDefunt,
+            professionDefunt,
+            pereDefunt,
+            mereDefunt,
+            nniDefunt,
             dateDeces,
             lieuDeces,
             causeDeces,
 
             // Données du déclarant
             nomDeclarant,
+            prenomDeclarant,
             lienParente,
+            domicileDeclarant,
 
             // Admin
             numeroActe,
@@ -49,15 +58,24 @@ const createDeces = async (req, res) => {
         const decesData = {
             // Données du défunt
             nomDefunt,
+            prenomDefunt,
+            sexeDefunt,
             dateNaissanceDefunt: new Date(dateNaissanceDefunt),
             lieuNaissanceDefunt,
+            nationaliteDefunt,
+            professionDefunt,
+            pereDefunt,
+            mereDefunt,
+            nniDefunt,
             dateDeces: new Date(dateDeces),
             lieuDeces,
             causeDeces: causeDeces || null,
 
             // Données du déclarant
             nomDeclarant,
+            prenomDeclarant,
             lienParente,
+            domicileDeclarant,
 
             // Admin
             numeroActe,

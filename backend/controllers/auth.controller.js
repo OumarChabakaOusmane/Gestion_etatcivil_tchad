@@ -54,6 +54,11 @@ const register = async (req, res) => {
       console.error('Échec envoi OTP (Email/SMS):', mailSmsErr);
     }
 
+    // LOG OTP dans le terminal pour développement
+    console.log('=================================================');
+    console.log(`🔐 CODE OTP GÉNÉRÉ POUR ${email} : ${otpCode}`);
+    console.log('=================================================');
+
     // Réponse de succès (on demande la vérification)
     return res.status(201).json({
       success: true,
@@ -190,12 +195,20 @@ const resendOtp = async (req, res) => {
 
     await User.update(user.id, { otpCode, otpExpires });
 
-    // SIMULATION EMAIL
-    console.log('=================================================');
-    console.log(`🔄 RENVOI OTP POUR ${email} : ${otpCode}`);
-    console.log('=================================================');
+    // ENVOI EMAIL RÉEL
+    try {
+      await emailService.sendOTPEmail(email, `${user.prenom} ${user.nom}`, otpCode);
+      console.log('=================================================');
+      console.log(`🔄 RENVOI OTP POUR ${email} : ${otpCode}`);
+      console.log('=================================================');
+    } catch (emailError) {
+      console.error('Erreur envoi email OTP:', emailError);
+    }
 
-    return res.json({ success: true, message: 'Nouveau code OTP envoyé' });
+    return res.json({
+      success: true,
+      message: 'Nouveau code OTP envoyé'
+    });
 
   } catch (error) {
     console.error('Erreur resendOtp:', error);

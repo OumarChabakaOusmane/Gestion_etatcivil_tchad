@@ -21,6 +21,7 @@ export default function DemandeNaissance() {
         nationalitePere: "TCHADIENNE",
         professionPere: "",
         domicilePere: "",
+        nniPere: "",
 
         // Mère
         prenomMere: "",
@@ -29,7 +30,8 @@ export default function DemandeNaissance() {
         lieuNaissanceMere: "",
         nationaliteMere: "TCHADIENNE",
         professionMere: "",
-        domicileMere: ""
+        domicileMere: "",
+        nniMere: ""
     });
 
     const [error, setError] = useState("");
@@ -189,6 +191,10 @@ export default function DemandeNaissance() {
                                 <label className="form-label fw-bold">Domicile du père</label>
                                 <input type="text" name="domicilePere" className="form-control form-control-lg bg-light border-0" value={formData.domicilePere} onChange={handleChange} required />
                             </div>
+                            <div className="col-12">
+                                <label className="form-label fw-bold">Référence NNI du père (Optionnel)</label>
+                                <input type="text" name="nniPere" className="form-control form-control-lg bg-light border-0" value={formData.nniPere} onChange={handleChange} placeholder="Numéro National d'Identité" />
+                            </div>
                         </div>
                     </div>
                 );
@@ -228,6 +234,10 @@ export default function DemandeNaissance() {
                                 <label className="form-label fw-bold">Domicile de la mère</label>
                                 <input type="text" name="domicileMere" className="form-control form-control-lg bg-light border-0" value={formData.domicileMere} onChange={handleChange} required />
                             </div>
+                            <div className="col-12">
+                                <label className="form-label fw-bold">Référence NNI de la mère (Optionnel)</label>
+                                <input type="text" name="nniMere" className="form-control form-control-lg bg-light border-0" value={formData.nniMere} onChange={handleChange} placeholder="Numéro National d'Identité" />
+                            </div>
                         </div>
                     </div>
                 );
@@ -244,9 +254,9 @@ export default function DemandeNaissance() {
                                 <div className="col-6 fw-bold">{formData.dateNaissanceEnfant} à {formData.lieuNaissanceEnfant}</div>
                                 <hr className="my-2 opacity-10" />
                                 <div className="col-6 text-muted">Père:</div>
-                                <div className="col-6 fw-bold">{formData.prenomPere} {formData.nomPere}</div>
+                                <div className="col-6 fw-bold">{formData.prenomPere} {formData.nomPere} {formData.nniPere && `(NNI: ${formData.nniPere})`}</div>
                                 <div className="col-6 text-muted">Mère:</div>
-                                <div className="col-6 fw-bold">{formData.prenomMere} {formData.nomMere}</div>
+                                <div className="col-6 fw-bold">{formData.prenomMere} {formData.nomMere} {formData.nniMere && `(NNI: ${formData.nniMere})`}</div>
                             </div>
                         </div>
                         <p className="text-muted small italic">

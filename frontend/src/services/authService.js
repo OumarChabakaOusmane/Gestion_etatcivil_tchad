@@ -98,6 +98,24 @@ const authService = {
         const user = this.getCurrentUser();
         return user && user.role === 'admin';
     },
+
+    /**
+     * Vérifie si l'utilisateur est un agent de mairie
+     * @returns {boolean} True si agent
+     */
+    isAgent() {
+        const user = this.getCurrentUser();
+        return user && user.role === 'agent';
+    },
+
+    /**
+     * Vérifie si l'utilisateur a accès aux fonctions d'administration (Admin ou Agent)
+     * @returns {boolean} True si admin ou agent
+     */
+    hasAdminAccess() {
+        const user = this.getCurrentUser();
+        return user && (user.role === 'admin' || user.role === 'agent');
+    },
     /**
      * Met à jour le profil de l'utilisateur
      * @param {Object} userData - Nouvelles données

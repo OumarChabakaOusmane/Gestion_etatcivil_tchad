@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import demandeService from "../../services/demandeService";
+import { normalizeText, formatName } from '../../utils/textHelper';
 
-export default function AdminCreateDemande() {
+export default function AdminCreateNaissance() {
     const [step, setStep] = useState(1);
     const [formData, setFormData] = useState({
         // Enfant
@@ -44,9 +45,19 @@ export default function AdminCreateDemande() {
     ];
 
     const handleChange = (e) => {
+        const { name, value } = e.target;
+
+        // Auto-normalize specific fields (profession, lieu, nationalite)
+        let processedValue = value;
+        if (name.toLowerCase().includes('profession') ||
+            name.toLowerCase().includes('lieu') ||
+            name.toLowerCase().includes('domicile')) {
+            processedValue = normalizeText(value);
+        }
+
         setFormData({
             ...formData,
-            [e.target.name]: e.target.value
+            [name]: processedValue
         });
     };
 
@@ -248,14 +259,14 @@ export default function AdminCreateDemande() {
                             <h5 className="fw-bold mb-3 text-dark">Résumé de la déclaration (Mode GUICHET)</h5>
                             <div className="row g-2">
                                 <div className="col-6 text-muted">Enfant:</div>
-                                <div className="col-6 fw-bold">{formData.prenomEnfant} {formData.nomEnfant}</div>
+                                <div className="col-6 fw-bold">{formatName(formData.nomEnfant)} {formatName(formData.prenomEnfant)}</div>
                                 <div className="col-6 text-muted">Né(e) le:</div>
-                                <div className="col-6 fw-bold">{formData.dateNaissanceEnfant} à {formData.lieuNaissanceEnfant}</div>
+                                <div className="col-6 fw-bold">{normalizeText(formData.dateNaissanceEnfant)} à {normalizeText(formData.lieuNaissanceEnfant)}</div>
                                 <hr className="my-2 opacity-10" />
                                 <div className="col-6 text-muted">Père:</div>
-                                <div className="col-6 fw-bold">{formData.prenomPere} {formData.nomPere}</div>
+                                <div className="col-6 fw-bold">{formatName(formData.nomPere)} {formatName(formData.prenomPere)}</div>
                                 <div className="col-6 text-muted">Mère:</div>
-                                <div className="col-6 fw-bold">{formData.prenomMere} {formData.nomMere}</div>
+                                <div className="col-6 fw-bold">{formatName(formData.nomMere)} {formatName(formData.prenomMere)}</div>
                             </div>
                         </div>
                         <p className="text-muted small italic">

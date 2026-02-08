@@ -13,6 +13,9 @@ export default function DemandeMariage() {
         nationaliteEpoux: "TCHADIENNE",
         professionEpoux: "",
         domicileEpoux: "",
+        temoin1Epoux: "",
+        temoin2Epoux: "",
+        signatureEpoux: false,
 
         // Épouse
         nomEpouse: "",
@@ -22,11 +25,16 @@ export default function DemandeMariage() {
         nationaliteEpouse: "TCHADIENNE",
         professionEpouse: "",
         domicileEpouse: "",
+        temoin1Epouse: "",
+        temoin2Epouse: "",
+        signatureEpouse: false,
 
         // Mariage
         dateMariage: "",
         lieuMariage: "",
-        regimeMatrimonial: "monogamie"
+        regimeMatrimonial: "monogamie",
+        dotMontant: "",
+        dotConditions: ""
     });
 
     const [error, setError] = useState("");
@@ -59,6 +67,8 @@ export default function DemandeMariage() {
                 if (!formData.lieuNaissanceEpoux.trim()) errors.push("Le lieu de naissance de l'époux est obligatoire");
                 if (!formData.professionEpoux.trim()) errors.push("La profession de l'époux est obligatoire");
                 if (!formData.domicileEpoux.trim()) errors.push("Le domicile de l'époux est obligatoire");
+                if (!formData.temoin1Epoux.trim()) errors.push("Le premier témoin de l'époux est obligatoire");
+                if (!formData.temoin2Epoux.trim()) errors.push("Le deuxième témoin de l'époux est obligatoire");
                 break;
             case 2:
                 if (!formData.nomEpouse.trim()) errors.push("Le nom de l'épouse est obligatoire");
@@ -67,11 +77,17 @@ export default function DemandeMariage() {
                 if (!formData.lieuNaissanceEpouse.trim()) errors.push("Le lieu de naissance de l'épouse est obligatoire");
                 if (!formData.professionEpouse.trim()) errors.push("La profession de l'épouse est obligatoire");
                 if (!formData.domicileEpouse.trim()) errors.push("Le domicile de l'épouse est obligatoire");
+                if (!formData.temoin1Epouse.trim()) errors.push("Le premier témoin de l'épouse est obligatoire");
+                if (!formData.temoin2Epouse.trim()) errors.push("Le deuxième témoin de l'épouse est obligatoire");
                 break;
             case 3:
                 if (!formData.dateMariage) errors.push("La date du mariage est obligatoire");
                 if (!formData.lieuMariage.trim()) errors.push("Le lieu du mariage est obligatoire");
+                if (!formData.dotMontant.trim()) errors.push("Le montant de la dot est obligatoire");
                 break;
+            case 4:
+                if (!formData.signatureEpoux) errors.push("La signature de l'époux est obligatoire");
+                if (!formData.signatureEpouse) errors.push("La signature de l'épouse est obligatoire");
         }
 
         return errors;
@@ -155,6 +171,14 @@ export default function DemandeMariage() {
                                 <label className="form-label fw-bold small text-muted text-uppercase">Domicile</label>
                                 <input type="text" name="domicileEpoux" className="form-control form-control-lg bg-light border-0" value={formData.domicileEpoux} onChange={handleChange} required />
                             </div>
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold small text-muted text-uppercase">Premier Témoin de l'Époux</label>
+                                <input type="text" name="temoin1Epoux" className="form-control form-control-lg bg-light border-0" value={formData.temoin1Epoux} onChange={handleChange} required placeholder="Nom complet" />
+                            </div>
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold small text-muted text-uppercase">Deuxième Témoin de l'Époux</label>
+                                <input type="text" name="temoin2Epoux" className="form-control form-control-lg bg-light border-0" value={formData.temoin2Epoux} onChange={handleChange} required placeholder="Nom complet" />
+                            </div>
                         </div>
                     </div>
                 );
@@ -197,6 +221,14 @@ export default function DemandeMariage() {
                                 <label className="form-label fw-bold small text-muted text-uppercase">Domicile</label>
                                 <input type="text" name="domicileEpouse" className="form-control form-control-lg bg-light border-0" value={formData.domicileEpouse} onChange={handleChange} required />
                             </div>
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold small text-muted text-uppercase">Premier Témoin de l'Épouse</label>
+                                <input type="text" name="temoin1Epouse" className="form-control form-control-lg bg-light border-0" value={formData.temoin1Epouse} onChange={handleChange} required placeholder="Nom complet" />
+                            </div>
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold small text-muted text-uppercase">Deuxième Témoin de l'Épouse</label>
+                                <input type="text" name="temoin2Epouse" className="form-control form-control-lg bg-light border-0" value={formData.temoin2Epouse} onChange={handleChange} required placeholder="Nom complet" />
+                            </div>
                         </div>
                     </div>
                 );
@@ -224,6 +256,14 @@ export default function DemandeMariage() {
                                     <option value="communaute_biens">Communauté de biens</option>
                                     <option value="separation_biens">Séparation de biens</option>
                                 </select>
+                            </div>
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold small text-muted text-uppercase">Montant de la Dot</label>
+                                <input type="text" name="dotMontant" className="form-control form-control-lg bg-light border-0" value={formData.dotMontant} onChange={handleChange} required placeholder="Ex: 500,000 FCFA" />
+                            </div>
+                            <div className="col-md-6">
+                                <label className="form-label fw-bold small text-muted text-uppercase">Conditions de la Dot</label>
+                                <input type="text" name="dotConditions" className="form-control form-control-lg bg-light border-0" value={formData.dotConditions} onChange={handleChange} placeholder="Ex: Versée en totalité" />
                             </div>
                         </div>
                     </div>
@@ -254,15 +294,34 @@ export default function DemandeMariage() {
                                 </div>
                                 <div className="col-md-12">
                                     <div className="p-3 bg-white rounded-3 shadow-xs border border-light">
-                                        <div className="text-muted small text-uppercase fw-bold mb-1">Détails de la cérémonie</div>
+                                        <div className="text-muted small text-uppercase fw-bold mb-1">Détails de la cérémonie & Dot</div>
                                         <div className="fw-bold text-dark">Le {formData.dateMariage} à {formData.lieuMariage}</div>
                                         <div className="text-muted mt-2 small text-capitalize"><i className="bi bi-shield-check me-1"></i>Régime: {formData.regimeMatrimonial.replace('_', ' ')}</div>
+                                        <div className="text-success mt-1 fw-bold"><i className="bi bi-cash-stack me-1"></i>Dot: {formData.dotMontant}</div>
                                     </div>
                                 </div>
                             </div>
                         </div>
+                        <div className="row g-3 mb-4">
+                            <div className="col-md-6">
+                                <div className="form-check p-3 bg-light rounded-3 border">
+                                    <input className="form-check-input ms-0 me-3" type="checkbox" name="signatureEpoux" id="signedEpoux" checked={formData.signatureEpoux} onChange={(e) => setFormData({ ...formData, signatureEpoux: e.target.checked })} required />
+                                    <label className="form-check-label fw-bold text-dark" htmlFor="signedEpoux">
+                                        Signature de l'Époux (Consentement)
+                                    </label>
+                                </div>
+                            </div>
+                            <div className="col-md-6">
+                                <div className="form-check p-3 bg-light rounded-3 border">
+                                    <input className="form-check-input ms-0 me-3" type="checkbox" name="signatureEpouse" id="signedEpouse" checked={formData.signatureEpouse} onChange={(e) => setFormData({ ...formData, signatureEpouse: e.target.checked })} required />
+                                    <label className="form-check-label fw-bold text-dark" htmlFor="signedEpouse">
+                                        Signature de l'Épouse (Consentement)
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
                         <p className="text-muted small italic">
-                            <i className="bi bi-shield-lock me-1"></i> En soumettant ce formulaire, vous certifiez sur l'honneur l'exactitude des informations fournies.
+                            <i className="bi bi-shield-lock me-1"></i> En cochant ces cases, les futurs époux certifient leur consentement mutuel et l'exactitude des informations fournies.
                         </p>
                     </div>
                 );

@@ -1,10 +1,13 @@
-/* Styles personnalisés pour améliorer l'interface */
+* {
+  font-family: 'Outfit', sans-serif !important;
+}
+
 body {
-  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
 }
 
 .font-family-sans {
-  font-family: 'Plus Jakarta Sans', sans-serif !important;
+  font-family: 'Outfit', sans-serif !important;
 }
 
 /* Variables moved to variables.css */

@@ -142,7 +142,7 @@ export default function HomeScreen({ navigation }) {
             <View style={styles.privateHeader}>
                 <View>
                     <Text style={styles.welcomeLabel}>Bonjour,</Text>
-                    <Text style={styles.userNameText}>{user?.prenom} {user?.nom}</Text>
+                    <Text style={styles.userNameText}>{(user?.nom || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} {(user?.prenom || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Text>
                 </View>
                 <TouchableOpacity onPress={logout} style={styles.logoutIconBtn}>
                     <LogOut size={22} color="#E03131" />
@@ -222,7 +222,7 @@ export default function HomeScreen({ navigation }) {
                                     <Text style={styles.miniStatusText}>{item.statut}</Text>
                                 </View>
                             </View>
-                            <Text style={styles.miniInfoText}>Enfant: {item.donnees.prenomEnfant} {item.donnees.nomEnfant}</Text>
+                            <Text style={styles.miniInfoText}>Enfant: {(item.donnees.nomEnfant || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} {(item.donnees.prenomEnfant || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Text>
                             <Text style={styles.miniDateText}>Le {new Date(item.createdAt).toLocaleDateString()}</Text>
                         </View>
                     ))}

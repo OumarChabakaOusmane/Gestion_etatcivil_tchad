@@ -4,7 +4,7 @@ import { useLanguage } from '../context/LanguageContext';
 import authService from '../services/authService';
 import '../styles/layout/Sidebar.css';
 
-const Sidebar = () => {
+const Sidebar = ({ show, closeSidebar }) => {
     const location = useLocation();
     const navigate = useNavigate();
     const { t } = useLanguage();
@@ -22,16 +22,23 @@ const Sidebar = () => {
         navigate('/login');
     };
 
+    const handleLinkClick = () => {
+        if (window.innerWidth < 992 && closeSidebar) {
+            closeSidebar();
+        }
+    };
+
     const isActive = (path) => location.pathname === path;
 
     return (
-        <aside className="sidebar-wrapper">
+        <aside className={`sidebar-wrapper ${show ? 'show' : ''}`}>
             <nav className="sidebar-nav">
                 {menuItems.map((item, index) => (
                     <Link
                         key={index}
                         to={item.path}
                         className={`sidebar-link ${isActive(item.path) ? 'active' : ''}`}
+                        onClick={handleLinkClick}
                     >
                         <i className={`bi ${item.icon} sidebar-icon`}></i>
                         <span>{item.label}</span>
@@ -51,7 +58,7 @@ const Sidebar = () => {
                     <div className="user-info-mini">
                         <span className="user-name-mini">{user?.prenom} {user?.nom}</span>
                         <span className="user-role-mini text-uppercase" style={{ fontSize: '0.65rem', letterSpacing: '0.5px' }}>
-                            {user?.role === 'admin' ? 'Administrateur' : 'Citoyen'}
+                            {user?.role === 'admin' ? 'Administrateur' : user?.role === 'agent' ? 'Agent Mairie' : 'Citoyen'}
                         </span>
                     </div>
                     <button className="logout-trigger" onClick={handleLogout} title="Déconnexion">

@@ -10,6 +10,7 @@ const CitizenLayout = ({ children }) => {
     const navigate = useNavigate();
     const [user, setUser] = useState(authService.getCurrentUser());
     const [showUserMenu, setShowUserMenu] = useState(false);
+    const [showSidebar, setShowSidebar] = useState(false); // État pour le sidebar sur mobile
     const { language, setLanguage, t } = useLanguage();
 
     useEffect(() => {
@@ -27,24 +28,40 @@ const CitizenLayout = ({ children }) => {
         navigate('/');
     };
 
+    const toggleSidebar = () => setShowSidebar(!showSidebar);
+
     return (
         <div className="d-flex flex-column h-100 min-vh-100 font-family-sans">
             {/* Top Bar - Dark Blue */}
             <header className="py-3 px-4 d-flex justify-content-between align-items-center text-white shadow-sm" style={{ backgroundColor: '#0a429b', zIndex: 1050 }}>
-                <div className="d-flex align-items-center gap-3">
-                    <img
-                        src="/drapeau-tchad.jpg"
-                        alt="Logo Tchad"
-                        style={{ height: '40px', width: 'auto', borderRadius: '4px' }}
-                    />
-                    <h5 className="m-0 fw-bold" style={{ letterSpacing: '0.5px', fontSize: '1rem' }}>{t('etatCivil')}</h5>
+                <div className="d-flex align-items-center gap-2">
+                    {/* Bouton Menu Hamburger - Visible uniquement sur mobile */}
+                    <button
+                        className="btn btn-link text-white p-0 me-2 d-lg-none"
+                        onClick={toggleSidebar}
+                        aria-label="Toggle Menu"
+                    >
+                        <i className={`bi ${showSidebar ? 'bi-x' : 'bi-list'} fs-2`}></i>
+                    </button>
+
+                    <Link className="brand-logo-modern" to="/">
+                        <div className="tchad-flag-clean">
+                            <div className="bar-blue"></div>
+                            <div className="bar-yellow"></div>
+                            <div className="bar-red"></div>
+                        </div>
+                        <div className="brand-text-container d-none d-sm-block">
+                            <span className="brand-main-text" style={{ fontSize: '1rem', color: 'white' }}>{t('etatCivil')}</span>
+                        </div>
+                    </Link>
                 </div>
 
                 <div className="d-flex align-items-center gap-3">
+
                     {/* Sélecteur de langue Premium */}
                     <div className="d-flex bg-white bg-opacity-10 rounded-pill p-1 me-2 border border-white border-opacity-25 shadow-sm">
                         <button
-                            className={`btn btn-sm rounded-pill px-3 py-1 fw-bold transition-all ${language === 'fr' ? 'bg-white text-primary shadow-sm' : 'text-whiteBorder border-0'}`}
+                            className={`btn btn-sm rounded-pill px-3 py-1 fw-bold transition-all ${language === 'fr' ? 'bg-white text-primary shadow-sm' : 'text-white border-0'}`}
                             style={{ fontSize: '0.7rem' }}
                             onClick={() => setLanguage('fr')}
                         >
@@ -98,14 +115,32 @@ const CitizenLayout = ({ children }) => {
             </header >
 
             {/* Main Content Area with Sidebar */}
-            < div className="d-flex flex-grow-1 overflow-hidden" >
-                <Sidebar />
-                <main className="flex-grow-1 bg-light p-4 overflow-auto" style={{ backgroundColor: '#f5f7fa' }}>
+            <div className="d-flex flex-grow-1 overflow-hidden position-relative">
+                {/* Overlay pour fermer le sidebar sur mobile */}
+                {showSidebar && (
+                    <div
+                        className="sidebar-overlay d-lg-none"
+                        onClick={() => setShowSidebar(false)}
+                        style={{
+                            position: 'absolute',
+                            top: 0,
+                            left: 0,
+                            right: 0,
+                            bottom: 0,
+                            backgroundColor: 'rgba(0,0,0,0.5)',
+                            zIndex: 1040
+                        }}
+                    ></div>
+                )}
+
+                <Sidebar show={showSidebar} closeSidebar={() => setShowSidebar(false)} />
+
+                <main className="flex-grow-1 bg-light p-3 p-md-4 overflow-auto" style={{ backgroundColor: '#f5f7fa' }}>
                     <PageTransition>
                         {children}
                     </PageTransition>
                 </main>
-            </div >
+            </div>
         </div >
     );
 };

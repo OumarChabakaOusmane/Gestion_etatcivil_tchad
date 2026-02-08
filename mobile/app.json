@@ -20,13 +20,14 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#001a41"
       },
-      "package": "com.oumar.sigectchad"
+      "package": "com.oumar.sigectchad",
+      "usesCleartextTraffic": true
     },
     "web": {
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "apiUrl": "http://200.100.10.19:5000/api",
+      "apiUrl": "https://api.etatciviltd.com/api",
       "eas": {
         "projectId": "d02b3136-a1c2-4396-bdde-629e12dfc92d"
       }

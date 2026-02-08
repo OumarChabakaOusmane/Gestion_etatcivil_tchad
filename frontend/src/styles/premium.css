@@ -549,3 +549,75 @@
     color: #64748b;
     font-weight: 500;
 }
+
+/* BRANDING LOGO PREMIUM */
+.brand-logo-modern {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    text-decoration: none !important;
+    background: transparent !important;
+}
+
+.tchad-flag-clean {
+    display: flex;
+    width: 42px;
+    height: 28px;
+    border-radius: 3px;
+    overflow: hidden;
+    flex-shrink: 0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.15);
+}
+
+.tchad-flag-clean .bar-blue {
+    background: #002664;
+    flex: 1;
+}
+
+.tchad-flag-clean .bar-yellow {
+    background: #FECB00;
+    flex: 1;
+}
+
+.tchad-flag-clean .bar-red {
+    background: #C60C30;
+    flex: 1;
+}
+
+.brand-logo-modern:hover .tchad-flag-clean {
+    transform: scale(1.05);
+    transition: transform 0.2s ease;
+}
+
+.brand-text-container {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.brand-main-text {
+    font-weight: 800;
+    font-size: 1.25rem;
+    letter-spacing: 0.5px;
+    color: #ffffff;
+    line-height: 1.1;
+}
+
+.brand-sub-text {
+    font-weight: 500;
+    font-size: 0.65rem;
+    letter-spacing: 1.2px;
+    color: #ffffff;
+    margin-top: 1px;
+    opacity: 0.8;
+}
+
+.sidebar-brand-wrapper {
+    padding: 1.5rem 1rem;
+    margin-bottom: 0.5rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.flag-glass-effect {
+    display: none;
+}

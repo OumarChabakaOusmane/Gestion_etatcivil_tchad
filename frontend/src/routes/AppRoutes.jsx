@@ -27,7 +27,9 @@ import Aide from "../pages/Citizen/Aide";
 
 // Pages admin
 import AdminDashboard from "../pages/Admin/AdminDashboard";
-import AdminCreateDemande from '../pages/Admin/AdminCreateDemande';
+import AdminCreateNaissance from '../pages/Admin/AdminCreateNaissance';
+import AdminCreateMariage from '../pages/Admin/AdminCreateMariage';
+import AdminCreateDeces from '../pages/Admin/AdminCreateDeces';
 import AdminDemandes from "../pages/Admin/AdminDemandes";
 import AdminReports from "../pages/Admin/AdminReports";
 import AdminUtilisateurs from "../pages/Admin/AdminUtilisateurs";
@@ -38,6 +40,7 @@ import ResetPassword from "../pages/Auth/ResetPassword";
 import AdminLogs from "../pages/Admin/AdminLogs";
 import Actualites from "../pages/Public/Actualites";
 import AdminArticles from "../pages/Admin/AdminArticles";
+import VerifyCertificate from "../pages/Public/VerifyCertificate";
 
 export default function AppRoutes() {
   return (
@@ -53,6 +56,7 @@ export default function AppRoutes() {
         <Route path="/forgot-password" element={<ForgotPassword />} />
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
+        <Route path="/verifier-acte/:id" element={<VerifyCertificate />} />
 
         {/* Routes citoyens protégées */}
         <Route
@@ -172,7 +176,27 @@ export default function AppRoutes() {
           element={
             <ProtectedRoute adminOnly={true}>
               <AdminLayout>
-                <AdminCreateDemande />
+                <AdminCreateNaissance />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/guichet/mariage"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <AdminLayout>
+                <AdminCreateMariage />
+              </AdminLayout>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/admin/guichet/deces"
+          element={
+            <ProtectedRoute adminOnly={true}>
+              <AdminLayout>
+                <AdminCreateDeces />
               </AdminLayout>
             </ProtectedRoute>
           }
@@ -190,7 +214,7 @@ export default function AppRoutes() {
         <Route
           path="/admin/utilisateurs"
           element={
-            <ProtectedRoute adminOnly={true}>
+            <ProtectedRoute superAdminOnly={true}>
               <AdminLayout>
                 <AdminUtilisateurs />
               </AdminLayout>
@@ -200,7 +224,7 @@ export default function AppRoutes() {
         <Route
           path="/admin/settings"
           element={
-            <ProtectedRoute adminOnly={true}>
+            <ProtectedRoute superAdminOnly={true}>
               <AdminLayout>
                 <AdminSettings />
               </AdminLayout>
@@ -221,7 +245,7 @@ export default function AppRoutes() {
         <Route
           path="/admin/logs"
           element={
-            <ProtectedRoute adminOnly={true}>
+            <ProtectedRoute superAdminOnly={true}>
               <AdminLayout>
                 <AdminLogs />
               </AdminLayout>

@@ -32,7 +32,20 @@ try {
 }
 
 const db = admin.firestore();
-db.settings({ ignoreUndefinedProperties: true });
+
+// Configuration ultra-résiliente pour les réseaux à haute latence (Tchad)
+db.settings({
+  ignoreUndefinedProperties: true,
+  // Forcer l'utilisation de timeouts longs et de keep-alive gRPC
+  // Ces paramètres aident à maintenir la connexion active et à retenter proprement
+  grpcOptions: {
+    'grpc.keepalive_time_ms': 30000,
+    'grpc.keepalive_timeout_ms': 10000,
+    'grpc.keepalive_permit_without_calls': 1,
+    'grpc.max_reconnect_backoff_ms': 3000,
+    'grpc.initial_reconnect_backoff_ms': 1000
+  }
+});
 
 module.exports = {
   admin,

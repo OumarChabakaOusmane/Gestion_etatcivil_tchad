@@ -27,7 +27,7 @@ class User {
         role: userData.role || 'user',
         telephone: userData.telephone || '',
         photo: userData.photo || '',
-        isVerified: false, // Default to false
+        isVerified: userData.isVerified !== undefined ? userData.isVerified : false,
         otpCode: userData.otpCode || null,
         otpExpires: userData.otpExpires || null,
         expoPushToken: userData.expoPushToken || null, // [NEW] Token pour les notifications

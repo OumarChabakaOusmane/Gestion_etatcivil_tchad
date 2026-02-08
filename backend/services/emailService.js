@@ -5,20 +5,38 @@ const nodemailer = require('nodemailer');
  */
 class EmailService {
     constructor() {
-        // En développement, on peut utiliser Ethereal pour tester sans envoyer de vrais emails
-        // Ou configurer un vrai transporteur via .env
-        this.transporter = nodemailer.createTransport({
-            host: process.env.EMAIL_HOST || 'smtp.ethereal.email',
-            port: process.env.EMAIL_PORT || 587,
-            secure: process.env.EMAIL_PORT == 465,
-            auth: {
-                user: process.env.EMAIL_USER || 'pk2hr6g5cgqzh5uv@ethereal.email',
-                pass: process.env.EMAIL_PASS || 'gMs8P499BYzzKBFVrP'
-            },
-            tls: {
-                rejectUnauthorized: false
-            }
-        });
+        // Configuration du transporteur email
+        // Utilise les variables d'environnement ou Ethereal par défaut
+        const useRealEmail = process.env.EMAIL_USER && process.env.EMAIL_PASS;
+
+        if (useRealEmail) {
+            // Configuration Gmail (ou autre SMTP réel)
+            this.transporter = nodemailer.createTransport({
+                host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+                port: parseInt(process.env.EMAIL_PORT) || 587,
+                secure: process.env.EMAIL_PORT == 465, // true pour 465, false pour autres ports
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS
+                }
+            });
+            console.log('✅ Service Email configuré avec Gmail:', process.env.EMAIL_USER);
+        } else {
+            // Fallback vers Ethereal (test)
+            this.transporter = nodemailer.createTransport({
+                host: 'smtp.ethereal.email',
+                port: 587,
+                secure: false,
+                auth: {
+                    user: 'pk2hr6g5cgqzh5uv@ethereal.email',
+                    pass: 'gMs8P499BYzzKBFVrP'
+                },
+                tls: {
+                    rejectUnauthorized: false
+                }
+            });
+            console.log('⚠️ Service Email en mode TEST (Ethereal)');
+        }
     }
 
     /**
@@ -28,7 +46,12 @@ class EmailService {
         return `
             <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 600px; margin: 0 auto; border: 1px solid #e0e0e0; border-radius: 12px; overflow: hidden; background-color: #ffffff;">
                 <div style="background: linear-gradient(135deg, #001a41 0%, #00338d 100%); padding: 30px; text-align: center;">
-                    <img src="https://flagcdn.com/w80/td.png" alt="Tchad" style="width: 40px; margin-bottom: 10px; border-radius: 2px;">
+                    <!-- Drapeau du Tchad en CSS -->
+                    <div style="width: 60px; height: 40px; margin: 0 auto 15px auto; display: flex; border-radius: 3px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.2);">
+                        <div style="width: 33.33%; background-color: #002664;"></div>
+                        <div style="width: 33.33%; background-color: #FECB00;"></div>
+                        <div style="width: 33.33%; background-color: #C60C30;"></div>
+                    </div>
                     <h1 style="color: #ffffff; margin: 0; font-size: 20px; letter-spacing: 2px; text-transform: uppercase;">République du Tchad</h1>
                     <div style="color: #fecb00; font-weight: bold; font-size: 12px; margin-top: 5px; opacity: 0.8;">ÉTAT CIVIL NUMÉRIQUE</div>
                 </div>
@@ -88,11 +111,12 @@ class EmailService {
             <h2 style="color: #001a41; margin-top: 0;">Validation de votre document</h2>
             <p>Cher(e) <strong>${userName}</strong>,</p>
             <p>Nous avons le plaisir de vous informer que votre demande de <strong>${typeActe}</strong> (réf: ${idDemande.slice(-8).toUpperCase()}) a été <strong>validée</strong> par l'officier d'état civil.</p>
-            <p>Vous pouvez dès à présent vous connecter à votre espace citoyen pour télécharger votre document officiel en version PDF.</p>
+            <p>Une fois les frais de délivrance acquittés, la mairie vous transmettra votre acte officiel directement par email.</p>
+            <p>Vous pouvez également dès à présent vous connecter à votre espace citoyen pour consulter le suivi de votre dossier.</p>
             <div style="margin: 40px 0; text-align: center;">
                 <a href="${process.env.FRONTEND_URL || 'http://localhost:5173'}/mes-demandes" 
                    style="background-color: #001a41; color: #ffffff; padding: 14px 30px; text-decoration: none; border-radius: 50px; font-weight: bold; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
-                   Accéder à mes documents
+                   Accéder à mon espace
                 </a>
             </div>
             <p style="font-size: 14px; color: #666;">Merci d'utiliser nos services numériques pour vos démarches administratives.</p>

@@ -15,9 +15,14 @@ class Deces {
                 defunt: {
                     nom: data.nomDefunt,
                     prenom: data.prenomDefunt,
+                    sexe: data.sexeDefunt || null,
                     dateNaissance: data.dateNaissanceDefunt,
                     lieuNaissance: data.lieuNaissanceDefunt,
                     nationalite: data.nationaliteDefunt || null,
+                    profession: data.professionDefunt || null,
+                    pere: data.pereDefunt || null,
+                    mere: data.mereDefunt || null,
+                    nni: data.nniDefunt || null,
                     dateDeces: data.dateDeces,
                     lieuDeces: data.lieuDeces,
                     causeDeces: data.causeDeces || null

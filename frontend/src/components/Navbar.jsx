@@ -1,12 +1,15 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/authService';
 import useCurrentUser from '../hooks/useCurrentUser';
+import { useLanguage } from '../context/LanguageContext';
 
 export default function Navbar() {
     const navigate = useNavigate();
     const location = useLocation();
     const user = useCurrentUser();
     const isAdmin = authService.isAdmin();
+    const hasAdminAccess = authService.hasAdminAccess();
+    const { t } = useLanguage();
 
     const handleLogout = () => {
         if (confirm('Voulez-vous vraiment vous déconnecter ?')) {
@@ -26,11 +29,15 @@ export default function Navbar() {
         <nav className="navbar navbar-expand-lg navbar-dark shadow-lg sticky-top py-3"
             style={{ backgroundColor: 'var(--tchad-blue)', borderBottom: '2px solid var(--tchad-yellow)' }}>
             <div className="container">
-                <Link className="navbar-brand fw-bold d-flex align-items-center" to={isAdmin ? "/admin/dashboard" : "/dashboard"}>
-                    <span className="me-2 fs-3">🇹🇩</span>
-                    <div className="lh-1">
-                        <span className="d-block small text-warning opacity-75" style={{ fontSize: '0.65rem', letterSpacing: '1px' }}>RÉPUBLIQUE DU TCHAD</span>
-                        <span className="fs-5">ÉTAT CIVIL</span>
+                <Link className="brand-logo-modern" to={hasAdminAccess ? "/admin/dashboard" : "/dashboard"}>
+                    <div className="tchad-flag-clean">
+                        <div className="bar-blue"></div>
+                        <div className="bar-yellow"></div>
+                        <div className="bar-red"></div>
+                    </div>
+                    <div className="brand-text-container">
+                        <span className="brand-main-text" style={{ color: '#ffffff' }}>{t('etatCivil')}</span>
+                        <span className="brand-sub-text" style={{ color: '#ffffff', opacity: 0.8 }}>République du Tchad</span>
                     </div>
                 </Link>
 
@@ -48,7 +55,7 @@ export default function Navbar() {
 
                 <div className="collapse navbar-collapse" id="navbarNav">
                     <ul className="navbar-nav me-auto">
-                        {isAdmin ? (
+                        {hasAdminAccess ? (
                             // Menu Admin
                             <>
                                 <li className="nav-item">
@@ -162,7 +169,7 @@ export default function Navbar() {
                                     <span className="dropdown-item-text">
                                         <small className="text-muted">
                                             <i className="bi bi-shield-check me-1"></i>
-                                            {isAdmin ? 'Administrateur' : 'Citoyen'}
+                                            {user.role === 'admin' ? 'Administrateur' : user.role === 'agent' ? 'Agent Mairie' : 'Citoyen'}
                                         </small>
                                     </span>
                                 </li>

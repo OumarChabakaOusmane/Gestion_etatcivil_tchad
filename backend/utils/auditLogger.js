@@ -23,12 +23,18 @@ const logAction = async (req, action, details) => {
         };
 
         // Créer le log de manière asynchrone (non bloquante)
-        AuditLog.create(logEntry).catch(err =>
-            console.error('Failed to write audit log:', err)
-        );
+        // On capture l'erreur pour éviter qu'une panne de Firestore n'impacte l'utilisateur
+        AuditLog.create(logEntry).catch(err => {
+            if (err.code === 9) {
+                console.warn('⚠️ ALERTE INDEX : L\'index composite pour audit_logs est manquant. Consultez le plan de résolution.');
+            } else {
+                console.error('Failed to write audit log (Connectivity issue):', err.message);
+            }
+        });
 
     } catch (error) {
-        console.error('Error within logAction utility:', error);
+        // Cette erreur est propre au logger, elle ne doit JAMAIS bloquer le serveur
+        console.error('Error within logAction utility:', error.message);
     }
 };
 

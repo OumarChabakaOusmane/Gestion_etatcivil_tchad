@@ -20,7 +20,10 @@ class Mariage {
           lieuNaissance: data.lieuNaissanceEpoux,
           nationalite: data.nationaliteEpoux,
           profession: data.professionEpoux,
-          domicile: data.domicileEpoux
+          domicile: data.domicileEpoux,
+          temoin1: data.temoin1Epoux || null,
+          temoin2: data.temoin2Epoux || null,
+          signature: data.signatureEpoux || null
         },
 
         // Épouse
@@ -31,14 +34,21 @@ class Mariage {
           lieuNaissance: data.lieuNaissanceEpouse,
           nationalite: data.nationaliteEpouse,
           profession: data.professionEpouse,
-          domicile: data.domicileEpouse
+          domicile: data.domicileEpouse,
+          temoin1: data.temoin1Epouse || null,
+          temoin2: data.temoin2Epouse || null,
+          signature: data.signatureEpouse || null
         },
 
         // Mariage
         mariage: {
           date: data.dateMariage,
           lieu: data.lieuMariage,
-          regimeMatrimonial: data.regimeMatrimonial
+          regimeMatrimonial: data.regimeMatrimonial,
+          dot: {
+            montant: data.dotMontant || null,
+            conditions: data.dotConditions || null
+          }
         },
 
         // Admin

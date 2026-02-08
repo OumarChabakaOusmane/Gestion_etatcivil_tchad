@@ -11,8 +11,16 @@ const {
     addDocuments,
     getStatistics,
     updateDemande,
-    deleteDemande
+    deleteDemande,
+    verifyDemandePublique
 } = require('../controllers/demande.controller');
+
+/**
+ * @route   GET /api/demandes/public/verifier/:id
+ * @desc    Vérifie une demande publiquement (via QR Code)
+ * @access  Publique
+ */
+router.get('/public/verifier/:id', verifyDemandePublique);
 
 /**
  * @route   POST /api/demandes

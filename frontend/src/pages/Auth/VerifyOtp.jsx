@@ -9,6 +9,8 @@ export default function VerifyOtp() {
     const navigate = useNavigate();
     const location = useLocation();
     const email = location.state?.email || "";
+    // const otpCodeFromRegistration = location.state?.otpCode; // REMOVED
+    // const justRegistered = location.state?.justRegistered; // REMOVED
 
     const [otp, setOtp] = useState("");
     const [error, setError] = useState("");
@@ -56,7 +58,7 @@ export default function VerifyOtp() {
         setError("");
         try {
             await authService.resendOtp(email);
-            setMessage("Nouveau code envoyé ! (Vérifiez le terminal/console serveur)");
+            setMessage("Nouveau code envoyé par email !");
         } catch (err) {
             setError(err.response?.data?.message || err.message || "Erreur lors de l'envoi du code");
         } finally {
@@ -68,7 +70,7 @@ export default function VerifyOtp() {
         <>
             <PublicNavbar />
             <div className={`min-vh-100 d-flex align-items-center justify-content-center bg-light ${language === 'ar' ? 'rtl' : ''}`}>
-                <div className="card shadow-lg border-0 rounded-4 overflow-hidden" style={{ maxWidth: "450px", width: "100%" }}>
+                <div className="card shadow-lg border-0 rounded-4 overflow-hidden" style={{ maxWidth: "500px", width: "100%" }}>
                     <div className="card-body p-5 text-center">
                         <div className="mb-4">
                             <div className="mx-auto bg-primary bg-opacity-10 text-primary rounded-circle d-flex align-items-center justify-content-center" style={{ width: "80px", height: "80px" }}>
@@ -78,15 +80,17 @@ export default function VerifyOtp() {
 
                         <h2 className="fw-bold mb-2"><span>Vérification de sécurité</span></h2>
                         <p className="text-muted mb-4">
-                            <span>Un code à 6 chiffres a été envoyé à </span><strong><span>{email}</span></strong>.
-                            <br /><small className="text-info"><span>(Regardez le terminal backend pour le code)</span></small>
+                            <span>Un code à 6 chiffres a été envoyé à </span><strong><span>{email}</span></strong>
                         </p>
+
+                        {/* OTP DISPLAY REMOVED FOR SECURITY */}
 
                         {error && <div key="otp-error-alert" translate="no" className="alert alert-danger py-2 mb-3 small"><span>{error}</span></div>}
                         {message && <div key="otp-success-message" translate="no" className="alert alert-success py-2 mb-3 small"><span>{message}</span></div>}
 
                         <form onSubmit={handleVerify}>
                             <div className="mb-4">
+                                <label className="form-label small text-muted">Entrez le code à 6 chiffres</label>
                                 <input
                                     type="text"
                                     className="form-control form-control-lg text-center fw-bold letter-spacing-2"
@@ -105,16 +109,23 @@ export default function VerifyOtp() {
                             </button>
                         </form>
 
-                        <button
-                            onClick={handleResend}
-                            className="btn btn-link text-decoration-none text-muted small"
-                            disabled={resendLoading}
-                        >
-                            {resendLoading ? "Envoi en cours..." : "Renvoyer le code"}
-                        </button>
+                        <div className="border-top pt-3 mt-3">
+                            <p className="text-muted small mb-2">
+                                <i className="bi bi-info-circle me-1"></i>
+                                Vous n'avez pas reçu le code ?
+                            </p>
+                            <button
+                                onClick={handleResend}
+                                className="btn btn-link text-decoration-none fw-semibold"
+                                disabled={resendLoading}
+                            >
+                                {resendLoading ? "Envoi en cours..." : "Renvoyer le code par email"}
+                            </button>
+                        </div>
                     </div>
                 </div>
             </div>
         </>
     );
 }
+

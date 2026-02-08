@@ -63,11 +63,17 @@ export const AuthProvider = ({ children }) => {
     const verifyOtp = async (email, otp) => {
         const result = await authService.verifyOtp(email, otp);
         if (result.success) {
-            setUser(result.user);
+            await AsyncStorage.setItem('userToken', result.data.token);
+            await AsyncStorage.setItem('userData', JSON.stringify(result.data.user));
+            setUser(result.data.user);
             setIsLoggedIn(true);
             return { success: true };
         }
         return result;
+    };
+
+    const resendOtp = async (email) => {
+        return await authService.resendOtp(email);
     };
 
     const logout = async () => {
@@ -77,7 +83,7 @@ export const AuthProvider = ({ children }) => {
     };
 
     return (
-        <AuthContext.Provider value={{ user, isLoggedIn, loading, login, logout, verifyOtp }}>
+        <AuthContext.Provider value={{ user, isLoggedIn, loading, login, logout, verifyOtp, resendOtp }}>
             {children}
         </AuthContext.Provider>
     );

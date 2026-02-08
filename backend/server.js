@@ -22,6 +22,25 @@ const articleRoutes = require('./routes/article.routes');
 const { db } = require("./config/firebase");
 
 const app = express();
+const fs = require('fs');
+const path = require('path');
+
+// Logger ultra-agressif pour le debug mobile
+const logPath = 'C:\\Users\\Chaba\\Desktop\\Gestion_etatcivil_tchad\\backend\\access_log.txt';
+app.use((req, res, next) => {
+  const log = `${new Date().toISOString()} - [INCOMING] ${req.method} ${req.url} from ${req.ip}\n`;
+  try {
+    fs.appendFileSync(logPath, log);
+  } catch (e) { console.error('Log error:', e); }
+
+  res.on('finish', () => {
+    const logFinish = `${new Date().toISOString()} - [FINISHED] ${req.method} ${req.url} - Status: ${res.statusCode} from ${req.ip}\n`;
+    try {
+      fs.appendFileSync(logPath, logFinish);
+    } catch (e) { console.error('Log error (finish):', e); }
+  });
+  next();
+});
 
 // Configuration CORS
 app.use(cors({
@@ -35,6 +54,18 @@ app.use(express.urlencoded({ limit: '50mb', extended: true }));
 
 app.get("/", (req, res) => {
   res.json({ message: "API SIGEC-TCHAD opérationnelle 🚀" });
+});
+
+app.get("/api/debug-conn", (req, res) => {
+  const info = {
+    time: new Date().toISOString(),
+    ip: req.ip,
+    method: req.method,
+    url: req.url,
+    headers: req.headers
+  };
+  console.log('DEBUG CONN:', info);
+  res.json(info);
 });
 
 // Routes d'authentification
@@ -81,9 +112,30 @@ app.get("/api/test-db", async (req, res) => {
 const PORT = process.env.PORT || 5000;
 
 if (process.env.NODE_ENV !== 'test') {
-  app.listen(PORT, () => {
-    console.log(`🚀 Serveur lancé sur http://localhost:${PORT}`);
+  const server = app.listen(PORT, '0.0.0.0', () => {
+    const { networkInterfaces } = require('os');
+    const nets = networkInterfaces();
+    console.log(`🚀 Serveur lancé sur le port ${PORT}`);
+    console.log(`🏠 Accès local : http://localhost:${PORT}`);
+
+    for (const name of Object.keys(nets)) {
+      for (const net of nets[name]) {
+        // Skip over non-IPv4 and internal (i.e. 127.0.0.1) addresses
+        if (net.family === 'IPv4' && !net.internal) {
+          console.log(`🌐 Accès réseau (${name}) : http://${net.address}:${PORT}`);
+        }
+      }
+    }
   });
 }
+
+// Gestion globale des erreurs non capturées pour éviter les crashs (notamment gRPC)
+process.on('unhandledRejection', (reason, promise) => {
+  if (reason?.code === 14 || reason?.message?.includes('UNAVAILABLE')) {
+    console.warn('⚠️ ALERTE RÉSEAU : Connexion Firestore interrompue temporairement. Tentative de reconnexion automatique...');
+  } else {
+    console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  }
+});
 
 module.exports = app;
