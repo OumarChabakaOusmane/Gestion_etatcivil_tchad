@@ -91,10 +91,11 @@ exports.replyToContact = async (req, res) => {
             message: "Réponse envoyée avec succès"
         });
     } catch (error) {
-        console.error("Error in replyToContact:", error);
+        console.error("❌ Erreur détaillée dans replyToContact:", error);
         res.status(500).json({
             success: false,
-            message: "Erreur lors de l'envoi de la réponse"
+            message: "Erreur lors de l'envoi de la réponse",
+            error: error.message // Optionnel: renvoyer le message d'erreur pour aider au debug frontend
         });
     }
 };

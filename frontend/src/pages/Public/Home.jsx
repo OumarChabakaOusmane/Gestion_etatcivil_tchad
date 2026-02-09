@@ -17,7 +17,10 @@ function RecentNews() {
         const fetchNews = async () => {
             try {
                 const response = await articleService.getAllArticles({ limit: 3 });
-                setArticles(response.data?.slice(0, 3) || []);
+                // Sécurité : Vérifier si response.data est bien un tableau
+                const articlesData = Array.isArray(response.data) ? response.data :
+                    (Array.isArray(response) ? response : []);
+                setArticles(articlesData.slice(0, 3));
             } catch (error) {
                 console.error('Error fetching recent news:', error);
             } finally {

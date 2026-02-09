@@ -23,7 +23,7 @@ router.post('/', authMiddleware, createMariage);
 router.get(
   '/',
   authMiddleware,
-  roleMiddleware('admin'),
+  roleMiddleware('admin', 'agent'),
   getAllMariages
 );
 
@@ -35,7 +35,7 @@ router.get(
 router.get(
   '/:id',
   authMiddleware,
-  roleMiddleware('admin'),
+  roleMiddleware('admin', 'agent'),
   getMariageById
 );
 

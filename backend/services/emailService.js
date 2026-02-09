@@ -10,17 +10,30 @@ class EmailService {
         const useRealEmail = process.env.EMAIL_USER && process.env.EMAIL_PASS;
 
         if (useRealEmail) {
-            // Configuration Gmail (ou autre SMTP réel)
-            this.transporter = nodemailer.createTransport({
+            // Configuration Gmail (optimisée pour Nodemailer)
+            const smtpConfig = {
                 host: process.env.EMAIL_HOST || 'smtp.gmail.com',
                 port: parseInt(process.env.EMAIL_PORT) || 587,
-                secure: process.env.EMAIL_PORT == 465, // true pour 465, false pour autres ports
+                secure: process.env.EMAIL_PORT == 465,
                 auth: {
                     user: process.env.EMAIL_USER,
                     pass: process.env.EMAIL_PASS
+                },
+                tls: {
+                    rejectUnauthorized: false // Aide à éviter les erreurs de certificat sur certains réseaux
                 }
-            });
-            console.log('✅ Service Email configuré avec Gmail:', process.env.EMAIL_USER);
+            };
+
+            // Utiliser le service 'gmail' si l'hôte est gmail pour une meilleure compatibilité
+            if (smtpConfig.host.includes('gmail.com')) {
+                delete smtpConfig.host;
+                delete smtpConfig.port;
+                delete smtpConfig.secure;
+                smtpConfig.service = 'gmail';
+            }
+
+            this.transporter = nodemailer.createTransport(smtpConfig);
+            console.log('✅ Service Email configuré (Gmail):', process.env.EMAIL_USER);
         } else {
             // Fallback vers Ethereal (test)
             this.transporter = nodemailer.createTransport({
@@ -73,32 +86,23 @@ class EmailService {
      */
     async sendEmail(to, subject, html) {
         try {
-            // SIMULATION D'ENVOI D'EMAIL (Affiche le contenu dans la console)
-            console.log('=================================================');
-            console.log('📧 E-MAIL ENVOYÉ (SIMULATION)');
-            console.log(`À: ${to}`);
-            console.log(`SUJET: ${subject}`);
-            console.log('CONTENU (Aperçu):', html.replace(/<[^>]*>/g, ' ').substring(0, 100) + '...');
-            console.log('=================================================');
-
             const mailOptions = {
-                from: `"État Civil Tchad" <${process.env.EMAIL_FROM || 'noreply@etatcivil.td'}>`,
+                from: `"État Civil Tchad" <${process.env.EMAIL_USER || process.env.EMAIL_FROM || 'noreply@etatcivil.td'}>`,
                 to,
                 subject,
                 html
             };
 
             const info = await this.transporter.sendMail(mailOptions);
-            // console.log('✉️ Email envoyé : %s', info.messageId);
 
-            if (info.envelope && info.envelope.from === 'ethereal.user@ethereal.email' || info.host === 'smtp.ethereal.email') {
-                console.log('🔗 LIEN ETHEREAL (Pour voir l\'email complet) : %s', nodemailer.getTestMessageUrl(info));
+            if (info.envelope && (info.envelope.from === 'ethereal.user@ethereal.email' || info.host === 'smtp.ethereal.email')) {
+                console.log('🔗 LIEN ETHEREAL : %s', nodemailer.getTestMessageUrl(info));
             }
 
             return info;
         } catch (error) {
             console.error('❌ Erreur lors de l\'envoi de l\'email :', error);
-            return null;
+            throw error; // Rethrow to allow caller to handle failure
         }
     }
 

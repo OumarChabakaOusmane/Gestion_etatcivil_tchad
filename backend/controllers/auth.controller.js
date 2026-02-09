@@ -44,20 +44,23 @@ const register = async (req, res) => {
       otpExpires
     });
 
-    // ENVOI OTP PAR EMAIL ET SMS (Async non-bloquant)
+    // ENVOI OTP PAR EMAIL ET SMS (Awaited for reliability)
     try {
-      emailService.sendOTPEmail(email, `${prenom} ${nom}`, otpCode);
+      await emailService.sendOTPEmail(email, `${prenom} ${nom}`, otpCode);
       if (telephone) {
-        smsService.sendOtpSms(telephone, otpCode);
+        await smsService.sendOtpSms(telephone, otpCode);
       }
     } catch (mailSmsErr) {
       console.error('Échec envoi OTP (Email/SMS):', mailSmsErr);
+      // On informe l'utilisateur que l'email a échoué
+      return res.status(500).json({
+        success: false,
+        message: "L'inscription a réussi mais l'envoi de l'email de vérification a échoué. Veuillez vérifier votre configuration email.",
+        error: mailSmsErr.message
+      });
     }
 
-    // LOG OTP dans le terminal pour développement
-    console.log('=================================================');
-    console.log(`🔐 CODE OTP GÉNÉRÉ POUR ${email} : ${otpCode}`);
-    console.log('=================================================');
+    // LOG OTP supprimé pour sécurité en production
 
     // Réponse de succès (on demande la vérification)
     return res.status(201).json({

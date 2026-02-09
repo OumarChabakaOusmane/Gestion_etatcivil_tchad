@@ -45,7 +45,8 @@ const AdminMessages = () => {
                 setTimeout(() => setStatusMsg({ text: '', type: '' }), 3000);
             }
         } catch (error) {
-            setStatusMsg({ text: error.message || "Erreur lors de l'envoi", type: 'danger' });
+            const errorMsg = error.error ? `${error.message} (${error.error})` : error.message || "Erreur lors de l'envoi";
+            setStatusMsg({ text: errorMsg, type: 'danger' });
         } finally {
             setSendingReply(false);
         }

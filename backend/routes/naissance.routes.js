@@ -23,7 +23,7 @@ router.post('/', authMiddleware, createNaissance);
 router.get(
   '/',
   authMiddleware,
-  roleMiddleware('admin'),
+  roleMiddleware('admin', 'agent'),
   getAllNaissances
 );
 
@@ -35,7 +35,7 @@ router.get(
 router.get(
   '/:id',
   authMiddleware,
-  roleMiddleware('admin'),
+  roleMiddleware('admin', 'agent'),
   getNaissanceById
 );
 

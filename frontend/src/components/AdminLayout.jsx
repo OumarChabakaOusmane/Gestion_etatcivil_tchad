@@ -1,5 +1,5 @@
 import React from 'react';
-// Deployment Version: 1.2.0 - Force sync for new features (Mariage, Deces)
+// Deployment Version: 1.2.3 - Total OTP Security Fixes
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import authService from '../services/authService';
 import useCurrentUser from '../hooks/useCurrentUser';

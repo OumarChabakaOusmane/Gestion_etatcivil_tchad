@@ -18,11 +18,26 @@ export default function VerifyOtp() {
     const [resendLoading, setResendLoading] = useState(false);
     const [message, setMessage] = useState("");
 
+    // Utilisation de useEffect pour rediriger si l'email est manquant
+    // Cela évite les plantages au rendu initial sur certaines machines
+    useEffect(() => {
+        if (!email) {
+            const timer = setTimeout(() => {
+                navigate("/login");
+            }, 3000);
+            return () => clearTimeout(timer);
+        }
+    }, [email, navigate]);
+
     if (!email) {
         return (
-            <div className="container mt-5 text-center">
-                <h3>Erreur : Email manquant</h3>
-                <Link to="/login" className="btn btn-primary mt-3">Retour connexion</Link>
+            <div className="container min-vh-100 d-flex align-items-center justify-content-center">
+                <div className="text-center p-5 card shadow-sm border-0 rounded-4">
+                    <i className="bi bi-exclamation-triangle text-warning display-1 mb-3"></i>
+                    <h3 className="fw-bold">Session expirée</h3>
+                    <p className="text-muted">Veuillez retourner à la page de connexion pour renvoyer un code.</p>
+                    <Link to="/login" className="btn btn-primary rounded-pill px-4 mt-2">Retour connexion</Link>
+                </div>
             </div>
         );
     }

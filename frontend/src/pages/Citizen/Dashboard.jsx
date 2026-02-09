@@ -26,15 +26,25 @@ export default function Dashboard() {
     const loadUserData = () => {
         const userData = localStorage.getItem('user');
         if (userData) {
-            setUser(JSON.parse(userData));
+            try {
+                setUser(JSON.parse(userData));
+            } catch (e) {
+                console.error("Erreur parsing user data", e);
+            }
         }
     };
 
     const loadMyStats = async () => {
         try {
             const response = await demandeService.getMyDemandes();
-            const demandes = Array.isArray(response.data) ? response.data :
-                (Array.isArray(response) ? response : []);
+
+            // Sécurité : on s'assure d'avoir un tableau
+            let demandes = [];
+            if (response && response.data) {
+                demandes = Array.isArray(response.data) ? response.data : [];
+            } else if (Array.isArray(response)) {
+                demandes = response;
+            }
 
             const statsData = {
                 total: demandes.length,
@@ -90,7 +100,7 @@ export default function Dashboard() {
     }
 
     return (
-        <div className={`fade -in font - family - sans pb - 5 ${language === 'ar' ? 'rtl' : ''} `}>
+        <div className={`fade-in font-family-sans pb-5 ${language === 'ar' ? 'rtl' : ''}`}>
             {/* Header section with brand colors */}
             <div className="d-flex justify-content-between align-items-end mb-4">
                 <div>
@@ -240,8 +250,8 @@ export default function Dashboard() {
                                 <tr key={demande.id || demande._id}>
                                     <td className="px-4 py-3">
                                         <div className="d-flex align-items-center gap-3">
-                                            <div className={`rounded bg - opacity - 10 p - 2 bg - ${demande.type === 'naissance' ? 'primary' : demande.type === 'mariage' ? 'warning' : 'danger'} `}>
-                                                <i className={`bi bi - ${demande.type === 'naissance' ? 'person-badge' : demande.type === 'mariage' ? 'heart' : 'shield-shaded'} text - ${demande.type === 'naissance' ? 'primary' : demande.type === 'mariage' ? 'warning' : 'danger'} `}></i>
+                                            <div className={`rounded bg-opacity-10 p-2 bg-${demande.type === 'naissance' ? 'primary' : demande.type === 'mariage' ? 'warning' : 'danger'}`}>
+                                                <i className={`bi bi-${demande.type === 'naissance' ? 'person-badge' : demande.type === 'mariage' ? 'heart' : 'shield-shaded'} text-${demande.type === 'naissance' ? 'primary' : demande.type === 'mariage' ? 'warning' : 'danger'}`}></i>
                                             </div>
                                             <span className="fw-bold text-dark">
                                                 Acte de {demande.type}
@@ -295,27 +305,28 @@ export default function Dashboard() {
 
             <style dangerouslySetInnerHTML={{
                 __html: `
-    .hover - translate:hover {
-    transform: translateY(-5px);
-}
-                .hover - lift:hover {
-    transform: translateY(-8px);
-    box - shadow: 0 1rem 3rem rgba(0, 0, 0, .1)!important;
-}
-                .hover - lift: hover.bg - opacity - 10 {
-    background - opacity: 0.2!important;
-}
+                .hover-translate:hover {
+                    transform: translateY(-5px);
+                }
+                .hover-lift:hover {
+                    transform: translateY(-8px);
+                    box-shadow: 0 1rem 3rem rgba(0, 0, 0, .1)!important;
+                }
+                .hover-lift:hover .bg-opacity-10 {
+                    background-opacity: 0.2!important;
+                }
                 .dot {
-    width: 8px;
-    height: 8px;
-    border - radius: 50 %;
-    display: inline - block;
-}
-                .dot - warning { background - color: #ffc107; box - shadow: 0 0 8px #ffc107; }
-                .dot - success { background - color: #198754; box - shadow: 0 0 8px #198754; }
-                .dot - danger { background - color: #dc3545; box - shadow: 0 0 8px #dc3545; }
-                .transition - all { transition: all 0.3s ease; }
-`}} />
+                    width: 8px;
+                    height: 8px;
+                    border-radius: 50%;
+                    display: inline-block;
+                }
+                .dot-warning { background-color: #ffc107; box-shadow: 0 0 8px #ffc107; }
+                .dot-success { background-color: #198754; box-shadow: 0 0 8px #198754; }
+                .dot-danger { background-color: #dc3545; box-shadow: 0 0 8px #dc3545; }
+                .transition-all { transition: all 0.3s ease; }
+                `
+            }} />
         </div>
     );
 }

@@ -79,20 +79,18 @@ export default function Register() {
       }
 
       // Redirection vers OTP après inscription réussie
-      const response = await authService.register(userData);
-
-      // Récupérer l'OTP de la réponse (si disponible en développement)
-      const otpCode = response?.data?.otpCode;
+      await authService.register(userData);
 
       navigate("/verify-otp", {
         state: {
           email: formData.email,
-          otpCode: otpCode, // Passer l'OTP pour l'afficher
           justRegistered: true
         }
       });
     } catch (err) {
-      setError(err.message || "Erreur lors de l'inscription");
+      console.error("Détails de l'erreur d'inscription:", err);
+      const errorMessage = typeof err === 'string' ? err : (err.message || err.error || "Erreur lors de l'inscription");
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -108,7 +106,7 @@ export default function Register() {
             <div className="col-lg-6 d-none d-lg-block position-relative">
               <div className="position-absolute top-0 start-0 w-100 h-100">
                 <img
-                  src="/src/assets/auth-side.png"
+                  src="/assets/auth-side.png"
                   alt="Background"
                   className="w-100 h-100 object-fit-cover"
                   style={{ objectPosition: 'center' }}

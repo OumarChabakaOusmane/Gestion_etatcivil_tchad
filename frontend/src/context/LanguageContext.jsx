@@ -406,7 +406,14 @@ export const translations = {
 };
 
 export const LanguageProvider = ({ children }) => {
-    const [language, setLanguage] = useState(localStorage.getItem('lang') || 'fr');
+    // Sécurité : forcer 'fr' ou 'ar'
+    const getInitialLanguage = () => {
+        const saved = localStorage.getItem('lang');
+        if (saved === 'fr' || saved === 'ar') return saved;
+        return 'fr';
+    };
+
+    const [language, setLanguage] = useState(getInitialLanguage());
 
     useEffect(() => {
         localStorage.setItem('lang', language);
@@ -415,11 +422,27 @@ export const LanguageProvider = ({ children }) => {
     }, [language]);
 
     const t = (key, params = {}) => {
-        let text = translations[language][key] || key;
-        Object.keys(params).forEach(p => {
-            text = text.replace(`{${p}}`, params[p]);
-        });
-        return text;
+        try {
+            // Sécurité : s'assurer que translations[language] existe
+            if (!translations[language]) {
+                return translations['fr'][key] || key;
+            }
+
+            let text = translations[language][key] || key;
+
+            // Sécurité : s'assurer que text est une chaîne avant de faire replace
+            if (typeof text !== 'string') {
+                text = String(text);
+            }
+
+            Object.keys(params).forEach(p => {
+                text = text.replace(`{${p}}`, params[p]);
+            });
+            return text;
+        } catch (e) {
+            console.error("Erreur de traduction pour la clé:", key, e);
+            return key;
+        }
     };
 
     return (

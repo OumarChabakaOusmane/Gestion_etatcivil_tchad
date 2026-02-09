@@ -11,23 +11,25 @@ class SmsService {
      * @param {string} message - Contenu du message
      * @param {string} userId - ID de l'utilisateur (optionnel pour traçage)
      */
-    static async sendSms(phone, message, userId = null) {
+    static async sendSms(phone, message, userId = null, skipDb = false) {
         try {
+            // [LOG] SIMULATION DANS LE TERMINAL
             console.log(`\n📱 [SMS SIMULATION] To: ${phone}\n💬 Message: ${message}\n`);
 
-            // On enregistre le SMS dans Firestore pour que le frontend puisse le "recevoir"
-            const smsData = {
-                phone,
-                message,
-                userId,
-                status: 'delivered',
-                createdAt: Timestamp.now(),
-                read: false
-            };
+            // On n'enregistre PAS dans Firestore si c'est sensible (ex: OTP)
+            if (!skipDb) {
+                const smsData = {
+                    phone,
+                    message,
+                    userId,
+                    status: 'delivered',
+                    createdAt: Timestamp.now(),
+                    read: false
+                };
+                await db.collection('simulated_sms').add(smsData);
+            }
 
-            await db.collection('simulated_sms').add(smsData);
-
-            return { success: true, message: 'SMS envoyé (simulé)' };
+            return { success: true, message: 'SMS envoyé' };
         } catch (error) {
             console.error('Erreur lors de la simulation SMS:', error);
             return { success: false, error: error.message };
@@ -39,7 +41,8 @@ class SmsService {
      */
     static async sendOtpSms(phone, otp) {
         const message = `SIGEC TCHAD : Votre code de vérification est ${otp}. Il expire dans 10 minutes. Ne le partagez pas.`;
-        return this.sendSms(phone, message);
+        // skipDb = true pour la sécurité
+        return this.sendSms(phone, message, null, true);
     }
 
     /**

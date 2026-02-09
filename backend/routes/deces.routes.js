@@ -23,7 +23,7 @@ router.post('/', authMiddleware, createDeces);
 router.get(
     '/',
     authMiddleware,
-    roleMiddleware('admin'),
+    roleMiddleware('admin', 'agent'),
     getAllDeces
 );
 
@@ -35,7 +35,7 @@ router.get(
 router.get(
     '/:id',
     authMiddleware,
-    roleMiddleware('admin'),
+    roleMiddleware('admin', 'agent'),
     getDecesById
 );
 

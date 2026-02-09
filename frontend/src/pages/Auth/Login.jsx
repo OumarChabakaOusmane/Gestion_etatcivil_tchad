@@ -90,7 +90,7 @@ export default function Login() {
             <div className="col-lg-6 d-none d-lg-block position-relative">
               <div className="position-absolute top-0 start-0 w-100 h-100">
                 <img
-                  src="/src/assets/auth-side.png"
+                  src="/assets/auth-side.png"
                   alt="Background"
                   className="w-100 h-100 object-fit-cover"
                   style={{ objectPosition: 'center' }}
