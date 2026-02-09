@@ -10,9 +10,19 @@ class EmailService {
         const useRealEmail = process.env.EMAIL_USER && process.env.EMAIL_PASS;
 
         if (useRealEmail) {
-            // Configuration Gmail (optimisée pour Nodemailer)
-            const smtpConfig = {
-                host: process.env.EMAIL_HOST || 'smtp.gmail.com',
+            // Configuration Gmail robuste (Port 465 SSL)
+            const isGmail = (process.env.EMAIL_HOST || '').includes('gmail.com');
+
+            const smtpConfig = isGmail ? {
+                host: 'smtp.gmail.com',
+                port: 465,
+                secure: true, // SSL
+                auth: {
+                    user: process.env.EMAIL_USER,
+                    pass: process.env.EMAIL_PASS
+                }
+            } : {
+                host: process.env.EMAIL_HOST,
                 port: parseInt(process.env.EMAIL_PORT) || 587,
                 secure: process.env.EMAIL_PORT == 465,
                 auth: {
@@ -21,22 +31,16 @@ class EmailService {
                 },
                 tls: {
                     rejectUnauthorized: false
-                },
-                connectionTimeout: 10000, // 10 secondes max pour se connecter
-                greetingTimeout: 10000,   // 10 secondes max pour le HELLO
-                socketTimeout: 15000      // 15 secondes max d'inactivité
+                }
             };
 
-            // Utiliser le service 'gmail' si l'hôte est gmail pour une meilleure compatibilité
-            if (smtpConfig.host.includes('gmail.com')) {
-                delete smtpConfig.host;
-                delete smtpConfig.port;
-                delete smtpConfig.secure;
-                smtpConfig.service = 'gmail';
-            }
+            // Ajout des timeouts
+            smtpConfig.connectionTimeout = 10000;
+            smtpConfig.greetingTimeout = 10000;
+            smtpConfig.socketTimeout = 15000;
 
             this.transporter = nodemailer.createTransport(smtpConfig);
-            console.log('✅ Service Email configuré (Gmail):', process.env.EMAIL_USER);
+            console.log('✅ Service Email configuré (Gmail 465):', process.env.EMAIL_USER);
         } else {
             // Fallback vers Ethereal (test)
             this.transporter = nodemailer.createTransport({
