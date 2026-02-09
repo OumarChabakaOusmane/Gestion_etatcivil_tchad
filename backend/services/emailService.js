@@ -20,8 +20,11 @@ class EmailService {
                     pass: process.env.EMAIL_PASS
                 },
                 tls: {
-                    rejectUnauthorized: false // Aide à éviter les erreurs de certificat sur certains réseaux
-                }
+                    rejectUnauthorized: false
+                },
+                connectionTimeout: 10000, // 10 secondes max pour se connecter
+                greetingTimeout: 10000,   // 10 secondes max pour le HELLO
+                socketTimeout: 15000      // 15 secondes max d'inactivité
             };
 
             // Utiliser le service 'gmail' si l'hôte est gmail pour une meilleure compatibilité
