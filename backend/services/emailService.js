@@ -88,15 +88,24 @@ class EmailService {
      * Envoie un email générique
      */
     async sendEmail(to, subject, html) {
+        const fs = require('fs');
+        const path = require('path');
+        const logPath = path.join(__dirname, '../mail_debug.log');
+        const timestamp = new Date().toISOString();
+
         try {
             const mailOptions = {
-                from: `"État Civil Tchad" <${process.env.EMAIL_USER || process.env.EMAIL_FROM || 'noreply@etatcivil.td'}>`,
+                from: `"État Civil Tchad" <${process.env.EMAIL_USER}>`, // Gmail exige souvent que l'expéditeur soit l'utilisateur authentifié
                 to,
                 subject,
                 html
             };
 
+            fs.appendFileSync(logPath, `${timestamp} - Attempting send to: ${to} - Subject: ${subject}\n`);
+
             const info = await this.transporter.sendMail(mailOptions);
+
+            fs.appendFileSync(logPath, `${timestamp} - ✅ Success: ${to} - MessageId: ${info.messageId}\n`);
 
             if (info.envelope && (info.envelope.from === 'ethereal.user@ethereal.email' || info.host === 'smtp.ethereal.email')) {
                 console.log('🔗 LIEN ETHEREAL : %s', nodemailer.getTestMessageUrl(info));
@@ -105,7 +114,9 @@ class EmailService {
             return info;
         } catch (error) {
             console.error('❌ Erreur lors de l\'envoi de l\'email :', error);
-            throw error; // Rethrow to allow caller to handle failure
+            fs.appendFileSync(logPath, `${timestamp} - ❌ ERROR: ${to} - Message: ${error.message}\n`);
+            if (error.stack) fs.appendFileSync(logPath, `${error.stack}\n`);
+            throw error;
         }
     }
 
