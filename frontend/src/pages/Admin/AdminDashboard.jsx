@@ -26,6 +26,13 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const currentUser = useCurrentUser();
 
+    const formatName = (prenom, nom) => {
+        if (!prenom && !nom) return "-";
+        const p = prenom ? prenom.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : "";
+        const n = nom ? nom.trim().toUpperCase() : "";
+        return `${p} ${n}`.trim();
+    };
+
     const formatDate = (dateInput) => {
         if (!dateInput) return "-";
         let date;
@@ -34,83 +41,19 @@ export default function AdminDashboard() {
         } else {
             date = new Date(dateInput);
         }
-        return isNaN(date.getTime()) ? "-" : date.toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' });
+        if (isNaN(date.getTime())) return "-";
+
+        const day = date.getDate().toString().padStart(2, '0');
+        const months = ['janv.', 'févr.', 'mars', 'avr.', 'mai', 'juin', 'juil.', 'août', 'sept.', 'oct.', 'nov.', 'déc.'];
+        return `${day} ${months[date.getMonth()]}`;
     };
 
-    useEffect(() => {
-        loadAdminStats();
-        // Auto-reload every 30 seconds instead of 5 for better performance
-        const interval = setInterval(loadAdminStats, 30000);
-        return () => clearInterval(interval);
-    }, []);
-
-    const loadAdminStats = async () => {
-        try {
-            const [demandesRes, usersRes] = await Promise.all([
-                demandeService.getAllDemandes(),
-                userService.getAllUsers()
-            ]);
-
-            const demandes = Array.isArray(demandesRes.data) ? demandesRes.data :
-                (Array.isArray(demandesRes) ? demandesRes : []);
-
-            const allUsers = Array.isArray(usersRes.data) ? usersRes.data :
-                (Array.isArray(usersRes) ? usersRes : []);
-
-            const naissance = demandes.filter(d => d.type === 'naissance').length;
-            const mariage = demandes.filter(d => d.type === 'mariage').length;
-            const deces = demandes.filter(d => d.type === 'deces').length;
-
-            setStats({
-                total: demandes.length,
-                en_attente: demandes.filter(d => d.statut === 'en_attente').length,
-                acceptee: demandes.filter(d => d.statut === 'acceptee').length,
-                rejetee: demandes.filter(d => d.statut === 'rejetee').length,
-                totalUsers: allUsers.length,
-                countsByType: [
-                    { name: 'Naissance', value: naissance, color: '#001a41' },
-                    { name: 'Mariage', value: mariage, color: '#FECB00' },
-                    { name: 'Décès', value: deces, color: '#D21034' }
-                ]
-            });
-
-            // Process Trend Data (Group by last 7 days)
-            const days = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-            const trendMap = {};
-            const now = new Date();
-            for (let i = 6; i >= 0; i--) {
-                const d = new Date();
-                d.setDate(now.getDate() - i);
-                const dayLabel = days[d.getDay()];
-                trendMap[dayLabel] = 0;
-            }
-
-            demandes.forEach(d => {
-                const date = d.dateDemande?._seconds ? new Date(d.dateDemande._seconds * 1000) : new Date(d.dateDemande);
-                const diffDays = Math.floor((now - date) / (1000 * 60 * 60 * 24));
-                if (diffDays >= 0 && diffDays < 7) {
-                    const label = days[date.getDay()];
-                    if (trendMap[label] !== undefined) trendMap[label]++;
-                }
-            });
-
-            const finalTrend = Object.keys(trendMap).map(key => ({ name: key, value: trendMap[key] }));
-            setTrendData(finalTrend);
-
-            const sortedDemandes = [...demandes].sort((a, b) => {
-                const dateA = a.dateDemande?._seconds ? a.dateDemande._seconds * 1000 : new Date(a.dateDemande);
-                const dateB = b.dateDemande?._seconds ? b.dateDemande._seconds * 1000 : new Date(b.dateDemande);
-                return dateB - dateA;
-            });
-            setRecentDemandes(sortedDemandes.slice(0, 5));
-
-            const sortedUsers = [...allUsers].reverse();
-            setRecentUsers(sortedUsers.slice(0, 5));
-
-        } catch (error) {
-            console.error('Erreur stats admin:', error);
-        } finally {
-            setLoading(false);
+    const getBadgeStyle = (type) => {
+        switch (type?.toLowerCase()) {
+            case 'naissance': return { bg: '#e0f2fe', color: '#0369a1', icon: 'bi-baby' };
+            case 'mariage': return { bg: '#fef3c7', color: '#b45309', icon: 'bi-heart-fill' };
+            case 'deces': return { bg: '#fee2e2', color: '#b91c1c', icon: 'bi-incognito' };
+            default: return { bg: '#f3f4f6', color: '#4b5563', icon: 'bi-file-earmark' };
         }
     };
 
@@ -123,14 +66,15 @@ export default function AdminDashboard() {
     return (
         <div className="p-4 p-lg-5 animate__animated animate__fadeIn">
             {/* Header Dashboard */}
-            <div className="d-flex justify-content-between align-items-end mb-5">
+            <div className="d-flex flex-column flex-md-row justify-content-between align-items-md-end mb-5 gap-3">
                 <div>
                     <h1 className="fw-black text-dark mb-1 display-5">Tableau de Bord</h1>
-                    <p className="text-muted mb-0 fs-5">Bienvenue sur votre espace de gestion centralisé.</p>
+                    <p className="text-muted mb-0 fs-5 letter-spacing-tight">Gestion centralisée des services de l'état civil.</p>
                 </div>
-                <div className="d-none d-md-block">
-                    <div className="badge bg-white text-dark p-3 px-4 border rounded-pill shadow-sm fw-bold fs-6">
-                        <i className="bi bi-calendar3 me-2 text-primary fs-5"></i>
+                <div>
+                    <div className="badge border-0 p-3 px-4 rounded-4 fw-bold fs-6 d-flex align-items-center"
+                        style={{ backgroundColor: '#f8fafc', color: '#001a41', boxShadow: 'inset 0 0 0 1px #e2e8f0' }}>
+                        <i className="bi bi-calendar3 me-2 text-primary"></i>
                         {new Date().toLocaleDateString('fr-FR', { weekday: 'long', day: 'numeric', month: 'long' })}
                     </div>
                 </div>
@@ -147,7 +91,7 @@ export default function AdminDashboard() {
                             </div>
                             <div>
                                 <h2 className="m-0 fw-black display-6">{stats.en_attente}</h2>
-                                <span className="small fw-bold text-uppercase opacity-75 tracking-wider" style={{ fontSize: '0.8rem' }}>En Attente</span>
+                                <span className="small fw-bold text-uppercase opacity-75 tracking-wider" style={{ fontSize: '0.75rem' }}>En Attente</span>
                             </div>
                         </div>
                     </div>
@@ -161,7 +105,7 @@ export default function AdminDashboard() {
                             </div>
                             <div>
                                 <h2 className="m-0 fw-black display-6">{stats.acceptee}</h2>
-                                <span className="small fw-bold text-uppercase opacity-75 tracking-wider" style={{ fontSize: '0.8rem' }}>Approuvées</span>
+                                <span className="small fw-bold text-uppercase opacity-75 tracking-wider" style={{ fontSize: '0.75rem' }}>Approuvées</span>
                             </div>
                         </div>
                     </div>
@@ -175,7 +119,7 @@ export default function AdminDashboard() {
                             </div>
                             <div>
                                 <h2 className="m-0 fw-black display-6">{stats.rejetee}</h2>
-                                <span className="small fw-bold text-uppercase opacity-75 tracking-wider" style={{ fontSize: '0.8rem' }}>Rejetées</span>
+                                <span className="small fw-bold text-uppercase opacity-75 tracking-wider" style={{ fontSize: '0.75rem' }}>Rejetées</span>
                             </div>
                         </div>
                     </div>
@@ -190,7 +134,7 @@ export default function AdminDashboard() {
                                 </div>
                                 <div>
                                     <h2 className="m-0 fw-black display-6">{stats.totalUsers}</h2>
-                                    <span className="small fw-bold text-uppercase opacity-75 tracking-wider" style={{ fontSize: '0.8rem' }}>Utilisateurs</span>
+                                    <span className="small fw-bold text-uppercase opacity-75 tracking-wider" style={{ fontSize: '0.75rem' }}>Utilisateurs</span>
                                 </div>
                             </div>
                         </div>
@@ -201,15 +145,18 @@ export default function AdminDashboard() {
             <div className="row g-4 mb-5">
                 {/* Main Activity Chart */}
                 <div className="col-lg-8">
-                    <div className="card border-0 rounded-4 shadow-sm p-4" style={{ minHeight: '450px' }}>
+                    <div className="card border-0 rounded-4 shadow-sm p-4 h-100">
                         <div className="d-flex justify-content-between align-items-center mb-4">
-                            <h5 className="fw-bold text-dark m-0">Volume des Demandes</h5>
-                            <span className="badge bg-light text-muted rounded-pill px-3 py-2 fw-bold small shadow-none border">7 derniers jours</span>
+                            <div>
+                                <h5 className="fw-bold text-dark m-0">Volume des Demandes</h5>
+                                <p className="text-muted small m-0">Activité des 7 derniers jours</p>
+                            </div>
+                            <span className="badge bg-light text-muted rounded-pill px-3 py-2 fw-bold small shadow-none border">Série temporelle</span>
                         </div>
-                        <div style={{ height: '350px', width: '100%', minWidth: 0, minHeight: '350px' }}>
+                        <div style={{ height: '350px', width: '100%', minWidth: 0 }}>
                             {!loading ? (
                                 <SafeRechartsContainer>
-                                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                                    <ResponsiveContainer width="100%" height="100%">
                                         <AreaChart data={trendData}>
                                             <defs>
                                                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
@@ -239,12 +186,12 @@ export default function AdminDashboard() {
 
                 {/* Pie Chart Distribution */}
                 <div className="col-lg-4">
-                    <div className="card border-0 rounded-4 shadow-sm p-4" style={{ minHeight: '450px' }}>
+                    <div className="card border-0 rounded-4 shadow-sm p-4 h-100">
                         <h5 className="fw-bold text-dark mb-4 text-center">Répartition par Type</h5>
-                        <div style={{ height: '300px', width: '100%', position: 'relative', minWidth: 0, minHeight: '300px' }}>
+                        <div style={{ height: '300px', width: '100%', position: 'relative' }}>
                             {!loading ? (
                                 <SafeRechartsContainer>
-                                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                                    <ResponsiveContainer width="100%" height="100%">
                                         <PieChart>
                                             <Pie
                                                 data={stats.countsByType.some(c => c.value > 0) ? stats.countsByType : [{ name: 'Aucun', value: 1, color: '#f0f0f0' }]}
@@ -274,7 +221,7 @@ export default function AdminDashboard() {
                         </div>
                         <div className="mt-2">
                             {stats.countsByType.map((item, idx) => (
-                                <div key={idx} className="d-flex align-items-center justify-content-between mb-2 p-2 rounded-3 bg-light bg-opacity-50">
+                                <div key={idx} className="d-flex align-items-center justify-content-between mb-2 p-2 rounded-3 bg-light bg-opacity-50 border border-white">
                                     <div className="d-flex align-items-center gap-2">
                                         <div className="rounded-circle" style={{ width: '10px', height: '10px', backgroundColor: item.color }}></div>
                                         <span className="small text-muted fw-bold">{item.name}</span>
@@ -292,13 +239,16 @@ export default function AdminDashboard() {
                 <div className={currentUser?.role === 'admin' ? "col-lg-7" : "col-12"}>
                     <div className="card border-0 rounded-4 shadow-sm h-100 overflow-hidden">
                         <div className="card-header bg-white border-0 p-4 pb-0 d-flex justify-content-between align-items-center">
-                            <h5 className="fw-bold text-dark m-0">Demandes en Attente</h5>
+                            <div>
+                                <h5 className="fw-bold text-dark m-0">Demandes en Attente</h5>
+                                <p className="text-muted small m-0">Traitement prioritaire requis</p>
+                            </div>
                             <Link to="/admin/demandes?filter=en_attente" className="btn btn-dark-soft btn-sm rounded-pill px-3 fw-bold small tracking-wide">VOIR TOUT</Link>
                         </div>
                         <div className="card-body p-0 mt-3">
                             <div className="table-responsive">
                                 <table className="table table-hover align-middle mb-0">
-                                    <thead className="bg-light">
+                                    <thead style={{ backgroundColor: '#fcfcfc' }}>
                                         <tr>
                                             <th className="ps-4 border-0 small text-muted text-uppercase fw-bold py-3">ID</th>
                                             <th className="border-0 small text-muted text-uppercase fw-bold py-3">Type</th>
@@ -307,28 +257,46 @@ export default function AdminDashboard() {
                                         </tr>
                                     </thead>
                                     <tbody>
-                                        {recentDemandes.filter(d => d.statut === 'en_attente').slice(0, 5).map(d => (
-                                            <tr key={d.id || d._id} className="cursor-pointer border-bottom-faint" onClick={() => navigate('/admin/demandes?filter=en_attente')}>
-                                                <td className="ps-4 py-3 fw-bold text-primary small">#{(d.id || d._id).slice(-4).toUpperCase()}</td>
-                                                <td className="py-3">
-                                                    <span className={`badge ${d.type === 'naissance' ? 'bg-primary' : d.type === 'mariage' ? 'bg-warning text-dark' : 'bg-danger'} bg-opacity-10 ${d.type === 'naissance' ? 'text-primary' : d.type === 'mariage' ? 'text-warning' : 'text-danger'} text-uppercase px-2 rounded-pill x-small fw-bold`}>
-                                                        {d.type}
-                                                    </span>
-                                                </td>
-                                                <td className="py-3">
-                                                    <div className="fw-bold text-dark small">{d.userId?.prenom || "-"} {d.userId?.nom?.toUpperCase() || ""}</div>
-                                                    <div className="text-muted" style={{ fontSize: '0.7rem' }}>{formatDate(d.dateDemande)}</div>
-                                                </td>
-                                                <td className="pe-4 py-3 text-end">
-                                                    <button className="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold border-2 small">
-                                                        Examiner
-                                                    </button>
-                                                </td>
-                                            </tr>
-                                        ))}
+                                        {recentDemandes.filter(d => d.statut === 'en_attente').slice(0, 5).map(d => {
+                                            const bStyle = getBadgeStyle(d.type);
+                                            return (
+                                                <tr key={d.id || d._id} className="cursor-pointer border-bottom-faint" onClick={() => navigate('/admin/demandes?filter=en_attente')}>
+                                                    <td className="ps-4 py-4">
+                                                        <span className="badge bg-primary bg-opacity-10 text-primary rounded-3 px-2 py-1 small fw-bold">
+                                                            #{(d.id || d._id).slice(-4).toUpperCase()}
+                                                        </span>
+                                                    </td>
+                                                    <td className="py-4">
+                                                        <div className="d-flex align-items-center gap-2">
+                                                            <div className="rounded-circle d-flex align-items-center justify-content-center"
+                                                                style={{ width: '24px', height: '24px', backgroundColor: bStyle.bg, color: bStyle.color }}>
+                                                                <i className={`bi ${bStyle.icon}`} style={{ fontSize: '0.7rem' }}></i>
+                                                            </div>
+                                                            <span className="text-dark fw-bold small text-uppercase" style={{ letterSpacing: '0.3px' }}>
+                                                                {d.type === 'deces' ? 'Décès' : d.type}
+                                                            </span>
+                                                        </div>
+                                                    </td>
+                                                    <td className="py-4">
+                                                        <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
+                                                            {formatName(d.userId?.prenom, d.userId?.nom)}
+                                                        </div>
+                                                        <div className="text-muted" style={{ fontSize: '0.7rem' }}>{formatDate(d.dateDemande)}</div>
+                                                    </td>
+                                                    <td className="pe-4 py-4 text-end">
+                                                        <button className="btn btn-outline-primary btn-sm rounded-pill px-3 fw-bold border-2 small transition-all">
+                                                            Examiner
+                                                        </button>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })}
                                         {recentDemandes.filter(d => d.statut === 'en_attente').length === 0 && (
                                             <tr>
-                                                <td colSpan="4" className="text-center py-5 text-muted fst-italic">Aucune demande en attente</td>
+                                                <td colSpan="4" className="text-center py-5 text-muted fst-italic">
+                                                    <i className="bi bi-inbox fs-2 d-block mb-2 opacity-25"></i>
+                                                    Aucune demande en attente
+                                                </td>
                                             </tr>
                                         )}
                                     </tbody>
@@ -343,30 +311,40 @@ export default function AdminDashboard() {
                     <div className="col-lg-5">
                         <div className="card border-0 rounded-4 shadow-sm h-100 overflow-hidden">
                             <div className="card-header bg-white border-0 p-4 pb-0 d-flex justify-content-between align-items-center">
-                                <h5 className="fw-bold text-dark m-0">Inscriptions Récentes</h5>
+                                <div>
+                                    <h5 className="fw-bold text-dark m-0">Inscriptions</h5>
+                                    <p className="text-muted small m-0">Nouveaux citoyens sur la plateforme</p>
+                                </div>
                                 <Link to="/admin/utilisateurs" className="btn btn-dark-soft btn-sm rounded-pill px-3 fw-bold small tracking-wide">VOIR TOUT</Link>
                             </div>
                             <div className="card-body p-0 mt-3">
                                 <div className="table-responsive">
                                     <table className="table table-hover align-middle mb-0">
-                                        <thead className="bg-light">
+                                        <thead style={{ backgroundColor: '#fcfcfc' }}>
                                             <tr>
-                                                <th className="ps-4 border-0 small text-muted text-uppercase fw-bold py-3">Utilisateur</th>
+                                                <th className="ps-4 border-0 small text-muted text-uppercase fw-bold py-3">Citoyen</th>
                                                 <th className="pe-4 border-0 small text-muted text-uppercase fw-bold text-end py-3">Inscrit le</th>
                                             </tr>
                                         </thead>
                                         <tbody>
                                             {recentUsers.map((user, idx) => (
                                                 <tr key={user.id || user._id || idx} className="cursor-pointer border-bottom-faint" onClick={() => navigate('/admin/utilisateurs')}>
-                                                    <td className="ps-4 py-3">
-                                                        <div className="d-flex align-items-center gap-2">
-                                                            <div className="avatar-initial-sm bg-primary-soft text-primary">
+                                                    <td className="ps-4 py-4">
+                                                        <div className="d-flex align-items-center gap-3">
+                                                            <div className="avatar-initial-sm bg-primary text-white shadow-sm border-0" style={{ backgroundColor: '#001a41' }}>
                                                                 {user.prenom ? user.prenom[0] : (user.nom ? user.nom[0] : 'U')}
                                                             </div>
-                                                            <div className="fw-bold text-dark small">{user.prenom} {user.nom?.toUpperCase()}</div>
+                                                            <div>
+                                                                <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
+                                                                    {formatName(user.prenom, user.nom)}
+                                                                </div>
+                                                                <div className="text-muted" style={{ fontSize: '0.65rem' }}>{user.email}</div>
+                                                            </div>
                                                         </div>
                                                     </td>
-                                                    <td className="pe-4 py-3 text-end text-muted small">{formatDate(user.createdAt)}</td>
+                                                    <td className="pe-4 py-4 text-end text-muted fw-bold" style={{ fontSize: '0.75rem' }}>
+                                                        {formatDate(user.createdAt)}
+                                                    </td>
                                                 </tr>
                                             ))}
                                         </tbody>

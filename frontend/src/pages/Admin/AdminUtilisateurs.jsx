@@ -223,15 +223,18 @@ const AdminUtilisateurs = () => {
                                                     {user.photo ? (
                                                         <img src={user.photo} alt="Avatar" className="rounded-circle border border-2 border-white shadow-sm" style={{ width: '48px', height: '48px', objectFit: 'cover' }} />
                                                     ) : (
-                                                        <div className="bg-primary-soft text-primary rounded-circle d-flex align-items-center justify-content-center fw-bold shadow-sm" style={{ width: '48px', height: '48px' }}>
-                                                            {user.nom?.[0]}{user.prenom?.[0]}
+                                                        <div className="bg-primary-soft text-primary rounded-circle d-flex align-items-center justify-content-center fw-black shadow-sm" style={{ width: '48px', height: '48px', fontSize: '1.2rem' }}>
+                                                            {user.prenom?.[0]}{user.nom?.[0]}
                                                         </div>
                                                     )}
                                                     {isMe && <div className="position-absolute bottom-0 end-0 bg-success border border-2 border-white rounded-circle" style={{ width: '12px', height: '12px' }}></div>}
                                                 </div>
                                                 <div>
-                                                    <div className="fw-bold text-dark" style={{ fontSize: '1.1rem' }}>{formatName(user.nom)} {formatName(user.prenom)} {isMe && <span className="badge bg-secondary-soft text-secondary ms-1 small px-2">Vous</span>}</div>
-                                                    <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>ID: {userId?.slice(-8).toUpperCase()}</div>
+                                                    <div className="fw-black text-dark" style={{ fontSize: '1rem', letterSpacing: '-0.2px' }}>
+                                                        {formatName(user.prenom, user.nom)}
+                                                        {isMe && <span className="badge bg-secondary-soft text-secondary ms-2 small fw-bold px-2 py-1" style={{ fontSize: '0.65rem' }}>VOUS</span>}
+                                                    </div>
+                                                    <div className="text-muted font-monospace" style={{ fontSize: '0.75rem' }}>ID: {userId?.slice(-8).toUpperCase()}</div>
                                                 </div>
                                             </div>
                                         </td>

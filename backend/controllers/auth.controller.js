@@ -44,9 +44,14 @@ const register = async (req, res) => {
       otpExpires
     });
 
-    // ENVOI OTP PAR EMAIL ET SMS (Non-bloquant pour éviter les timeouts d'inscription)
-    emailService.sendOTPEmail(email, `${prenom} ${nom}`, otpCode)
-      .catch(err => console.error('Échec envoi Email OTP (Async):', err.message));
+    // ENVOI OTP PAR EMAIL (Bloquant avec timeout pour garantir la notification d'erreur)
+    try {
+      await emailService.sendOTPEmail(email, `${prenom} ${nom}`, otpCode);
+      console.log(`✅ Email OTP envoyé à ${email}`);
+    } catch (err) {
+      console.error('⚠️ Échec envoi Email OTP initial:', err.message);
+      // On ne bloque pas la création du compte, mais on log l'erreur
+    }
 
     if (telephone) {
       smsService.sendOtpSms(telephone, otpCode)
