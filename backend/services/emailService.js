@@ -17,14 +17,17 @@ class EmailService {
             let smtpConfig;
 
             if (isGmail) {
+                // Forcer le port 465 SSL car 587 est souvent bloqué en production (timeout)
                 smtpConfig = {
-                    service: 'gmail',
+                    host: 'smtp.gmail.com',
+                    port: 465,
+                    secure: true,
                     auth: {
                         user: process.env.EMAIL_USER,
                         pass: process.env.EMAIL_PASS
                     }
                 };
-                console.log('✅ Service Email configuré via GMAIL Service');
+                console.log('✅ Service Email configuré via GMAIL Direct (465 SSL)');
             } else {
                 smtpConfig = {
                     host: process.env.EMAIL_HOST,
@@ -41,13 +44,18 @@ class EmailService {
                 console.log('✅ Service Email configuré via HOST:', process.env.EMAIL_HOST);
             }
 
-            // Ajout des timeouts pour éviter les blocages
-            smtpConfig.connectionTimeout = 10000;
-            smtpConfig.greetingTimeout = 10000;
-            smtpConfig.socketTimeout = 15000;
+            // Augmentation massive des timeouts pour la production
+            smtpConfig.connectionTimeout = 30000; // 30s
+            smtpConfig.greetingTimeout = 30000;
+            smtpConfig.socketTimeout = 30000;
+            smtpConfig.pool = true; // Utiliser un pool pour plus de robustesse
 
             this.transporter = nodemailer.createTransport(smtpConfig);
         } else {
+            console.error('❌ CONFIGURATION EMAIL INCOMPLÈTE :', {
+                hasUser: !!process.env.EMAIL_USER,
+                hasPass: !!process.env.EMAIL_PASS
+            });
             // Fallback vers Ethereal (test)
             this.transporter = nodemailer.createTransport({
                 host: 'smtp.ethereal.email',
