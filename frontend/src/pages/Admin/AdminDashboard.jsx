@@ -26,12 +26,74 @@ export default function AdminDashboard() {
     const [loading, setLoading] = useState(true);
     const currentUser = useCurrentUser();
 
-    const formatName = (prenom, nom) => {
-        if (!prenom && !nom) return "-";
-        const p = prenom ? prenom.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : "";
+    const formatName = (nom, prenom) => {
+        if (!nom && !prenom) return "-";
         const n = nom ? nom.trim().toUpperCase() : "";
-        return `${p} ${n}`.trim();
+        const p = prenom ? prenom.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : "";
+        return `${n} ${p}`.trim();
     };
+
+    useEffect(() => {
+        const fetchDashboardData = async () => {
+            setLoading(true);
+            try {
+                // Fetch Statistics
+                const statsResponse = await demandeService.getStatistics();
+                if (statsResponse.success) {
+                    setStats(prev => ({
+                        ...prev,
+                        ...statsResponse.data,
+                        countsByType: [
+                            { name: 'Naissance', value: statsResponse.data.byType?.naissance || 0, color: '#001a41' },
+                            { name: 'Mariage', value: statsResponse.data.byType?.mariage || 0, color: '#FECB00' },
+                            { name: 'Décès', value: statsResponse.data.byType?.deces || 0, color: '#D21034' }
+                        ]
+                    }));
+                }
+
+                // Fetch Recent Demandes
+                const requestsResponse = await demandeService.getAllDemandes({ limit: 10 });
+                if (requestsResponse.success) {
+                    setRecentDemandes(requestsResponse.data);
+
+                    // Generate pseudo-trend data for the chart from existing data
+                    const last7Days = [...Array(7)].map((_, i) => {
+                        const d = new Date();
+                        d.setDate(d.getDate() - i);
+                        return d.toISOString().split('T')[0];
+                    }).reverse();
+
+                    const trend = last7Days.map(date => ({
+                        name: date.split('-').slice(1).reverse().join('/'),
+                        value: requestsResponse.data.filter(req => {
+                            const reqDate = req.dateDemande?._seconds ?
+                                new Date(req.dateDemande._seconds * 1000) :
+                                new Date(req.dateDemande);
+                            return reqDate.toISOString().split('T')[0] === date;
+                        }).length
+                    }));
+                    setTrendData(trend);
+                }
+
+                // Fetch Recent Users
+                const usersResponse = await userService.getAllUsers();
+                if (usersResponse.success) {
+                    const sortedUsers = usersResponse.data
+                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+                        .slice(0, 5);
+                    setRecentUsers(sortedUsers);
+                    setStats(prev => ({ ...prev, totalUsers: usersResponse.data.length }));
+                }
+
+            } catch (error) {
+                console.error("Dashboard Loading Error:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        fetchDashboardData();
+    }, []);
 
     const formatDate = (dateInput) => {
         if (!dateInput) return "-";
@@ -279,7 +341,7 @@ export default function AdminDashboard() {
                                                     </td>
                                                     <td className="py-4">
                                                         <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
-                                                            {formatName(d.userId?.prenom, d.userId?.nom)}
+                                                            {formatName(d.userId?.nom, d.userId?.prenom)}
                                                         </div>
                                                         <div className="text-muted" style={{ fontSize: '0.7rem' }}>{formatDate(d.dateDemande)}</div>
                                                     </td>
@@ -336,7 +398,7 @@ export default function AdminDashboard() {
                                                             </div>
                                                             <div>
                                                                 <div className="fw-bold text-dark" style={{ fontSize: '0.85rem' }}>
-                                                                    {formatName(user.prenom, user.nom)}
+                                                                    {formatName(user.nom, user.prenom)}
                                                                 </div>
                                                                 <div className="text-muted" style={{ fontSize: '0.65rem' }}>{user.email}</div>
                                                             </div>
