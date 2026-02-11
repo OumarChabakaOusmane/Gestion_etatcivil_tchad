@@ -94,9 +94,15 @@ export default function VerifyOtp() {
                         </div>
 
                         <h2 className="fw-bold mb-2"><span>Vérification de sécurité</span></h2>
-                        <p className="text-muted mb-4">
+                        <p className="text-muted mb-2">
                             <span>Un code à 6 chiffres a été envoyé à </span><strong><span>{email}</span></strong>
                         </p>
+                        <div className="alert alert-warning border-0 shadow-sm mb-4 d-flex align-items-start gap-2" style={{ fontSize: '0.9rem' }}>
+                            <i className="bi bi-exclamation-triangle-fill mt-1"></i>
+                            <div className="text-start">
+                                <strong>Important :</strong> Si vous ne voyez pas l'email, vérifiez votre dossier <strong>SPAM/COURRIER INDÉSIRABLE</strong>.
+                            </div>
+                        </div>
 
                         {/* OTP DISPLAY REMOVED FOR SECURITY */}
 
