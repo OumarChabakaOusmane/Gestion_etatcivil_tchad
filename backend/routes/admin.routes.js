@@ -1,10 +1,11 @@
 const express = require('express');
 const router = express.Router();
 const adminController = require('../controllers/admin.controller');
-const { protect, admin } = require('../middlewares/auth.middleware');
+const authMiddleware = require('../middlewares/auth.middleware');
+const roleMiddleware = require('../middlewares/role.middleware');
 
 // Routes administratives unifiées
-// Accessible aux admins et aux agents (protect vérifie l'auth, admin permet de filtrer si besoin)
-router.get('/dashboard-stats', protect, adminController.getDashboardStats);
+// Accessible aux admins et aux agents
+router.get('/dashboard-stats', authMiddleware, roleMiddleware('admin', 'agent'), adminController.getDashboardStats);
 
 module.exports = router;
