@@ -19,6 +19,7 @@ const contactRoutes = require("./routes/contact.routes");
 const searchRoutes = require('./routes/search.routes');
 const auditRoutes = require('./routes/audit.routes');
 const articleRoutes = require('./routes/article.routes');
+const adminRoutes = require('./routes/admin.routes');
 const { db } = require("./config/firebase");
 
 const app = express();
@@ -89,6 +90,7 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/logs', auditRoutes);
 app.use('/api/articles', articleRoutes);
+app.use('/api/admin', adminRoutes);
 
 // Routes des notifications (protégées)
 app.use("/api/notifications", notificationRoutes);

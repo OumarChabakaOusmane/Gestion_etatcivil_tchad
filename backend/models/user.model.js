@@ -82,6 +82,27 @@ class User {
     }
   }
 
+  static async countAll() {
+    try {
+      const snapshot = await db.collection(this.collectionName).count().get();
+      return snapshot.data().count;
+    } catch (error) {
+      throw error;
+    }
+  }
+
+  static async findRecent(limit = 5) {
+    try {
+      const snapshot = await db.collection(this.collectionName)
+        .orderBy('createdAt', 'desc')
+        .limit(limit)
+        .get();
+      return snapshot.docs.map(doc => ({ id: doc.id, ...doc.data(), password: undefined }));
+    } catch (error) {
+      throw error;
+    }
+  }
+
   static async findByRole(role) {
     try {
       const snapshot = await db.collection(this.collectionName).where('role', '==', role).get();

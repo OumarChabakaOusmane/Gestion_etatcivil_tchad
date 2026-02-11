@@ -3,6 +3,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import demandeService from '../../services/demandeService';
 import userService from '../../services/userService';
+import adminService from '../../services/adminService';
 import useCurrentUser from '../../hooks/useCurrentUser';
 import SafeRechartsContainer from '../../components/SafeRechartsContainer';
 
@@ -37,26 +38,29 @@ export default function AdminDashboard() {
         const fetchDashboardData = async () => {
             setLoading(true);
             try {
-                // Fetch Statistics
-                const statsResponse = await demandeService.getStatistics();
-                if (statsResponse.success) {
-                    setStats(prev => ({
-                        ...prev,
-                        ...statsResponse.data,
+                const response = await adminService.getDashboardStats();
+
+                if (response.success) {
+                    const { stats: dashboardStats, recentDemandes: demandes, recentUsers: users } = response.data;
+
+                    // Update Stats
+                    setStats({
+                        total: dashboardStats.total,
+                        en_attente: dashboardStats.en_attente,
+                        acceptee: dashboardStats.acceptee,
+                        rejetee: dashboardStats.rejetee,
+                        totalUsers: dashboardStats.totalUsers,
                         countsByType: [
-                            { name: 'Naissance', value: statsResponse.data.byType?.naissance || 0, color: '#001a41' },
-                            { name: 'Mariage', value: statsResponse.data.byType?.mariage || 0, color: '#FECB00' },
-                            { name: 'Décès', value: statsResponse.data.byType?.deces || 0, color: '#D21034' }
+                            { name: 'Naissance', value: dashboardStats.par_type?.naissance || 0, color: '#001a41' },
+                            { name: 'Mariage', value: dashboardStats.par_type?.mariage || 0, color: '#FECB00' },
+                            { name: 'Décès', value: dashboardStats.par_type?.deces || 0, color: '#D21034' }
                         ]
-                    }));
-                }
+                    });
 
-                // Fetch Recent Demandes
-                const requestsResponse = await demandeService.getAllDemandes({ limit: 10 });
-                if (requestsResponse.success) {
-                    setRecentDemandes(requestsResponse.data);
+                    // Update Recent Demandes
+                    setRecentDemandes(demandes);
 
-                    // Generate pseudo-trend data for the chart from existing data
+                    // Generate trend data from recent requests (simple last 7 days window)
                     const last7Days = [...Array(7)].map((_, i) => {
                         const d = new Date();
                         d.setDate(d.getDate() - i);
@@ -65,7 +69,7 @@ export default function AdminDashboard() {
 
                     const trend = last7Days.map(date => ({
                         name: date.split('-').slice(1).reverse().join('/'),
-                        value: requestsResponse.data.filter(req => {
+                        value: demandes.filter(req => {
                             const reqDate = req.dateDemande?._seconds ?
                                 new Date(req.dateDemande._seconds * 1000) :
                                 new Date(req.dateDemande);
@@ -73,18 +77,10 @@ export default function AdminDashboard() {
                         }).length
                     }));
                     setTrendData(trend);
-                }
 
-                // Fetch Recent Users
-                const usersResponse = await userService.getAllUsers();
-                if (usersResponse.success) {
-                    const sortedUsers = usersResponse.data
-                        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-                        .slice(0, 5);
-                    setRecentUsers(sortedUsers);
-                    setStats(prev => ({ ...prev, totalUsers: usersResponse.data.length }));
+                    // Update Recent Users
+                    setRecentUsers(users);
                 }
-
             } catch (error) {
                 console.error("Dashboard Loading Error:", error);
             } finally {

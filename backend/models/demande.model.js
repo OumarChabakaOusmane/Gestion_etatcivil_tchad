@@ -131,27 +131,27 @@ class Demande {
                 query = query.where('statut', '==', statut);
             }
 
-            const snapshot = await query.get();
-            let demandes = snapshot.docs.map(doc => ({
+            // Tri natif Firestore (nécessite un index si combiné avec .where)
+            // Si l'index n'existe pas, une erreur sera renvoyée avec un lien pour le créer
+            query = query.orderBy('createdAt', 'desc');
+
+            const totalSnapshot = await query.count().get();
+            const totalCount = totalSnapshot.data().count;
+
+            const snapshot = await query
+                .limit(limit)
+                .offset((page - 1) * limit)
+                .get();
+
+            const demandes = snapshot.docs.map(doc => ({
                 id: doc.id,
                 ...doc.data()
             }));
 
-            // Tri en mémoire
-            demandes.sort((a, b) => {
-                const dateA = a.createdAt?.toDate ? a.createdAt.toDate() : new Date(a.createdAt);
-                const dateB = b.createdAt?.toDate ? b.createdAt.toDate() : new Date(b.createdAt);
-                return dateB - dateA;
-            });
-
-            // Pagination
-            const totalCount = demandes.length;
             const totalPages = Math.ceil(totalCount / limit);
-            const startIndex = (page - 1) * limit;
-            const paginatedDemandes = demandes.slice(startIndex, startIndex + limit);
 
             return {
-                demandes: paginatedDemandes,
+                demandes,
                 pagination: {
                     totalCount,
                     totalPages,
@@ -265,22 +265,29 @@ class Demande {
      */
     static async getStatistics() {
         try {
-            const snapshot = await db.collection('demandes').get();
-            const demandes = snapshot.docs.map(doc => doc.data());
+            const collection = db.collection('demandes');
 
-            const stats = {
-                total: demandes.length,
-                en_attente: demandes.filter(d => d.statut === 'en_attente').length,
-                acceptee: demandes.filter(d => d.statut === 'acceptee').length,
-                rejetee: demandes.filter(d => d.statut === 'rejetee').length,
+            // Utilisation groupée de .count() pour éviter de charger les docs
+            const totalSnap = await collection.count().get();
+            const attenteSnap = await collection.where('statut', '==', 'en_attente').count().get();
+            const accepteeSnap = await collection.where('statut', '==', 'acceptee').count().get();
+            const rejeteeSnap = await collection.where('statut', '==', 'rejetee').count().get();
+
+            const naissanceSnap = await collection.where('type', '==', 'naissance').count().get();
+            const mariageSnap = await collection.where('type', '==', 'mariage').count().get();
+            const decesSnap = await collection.where('type', '==', 'deces').count().get();
+
+            return {
+                total: totalSnap.data().count,
+                en_attente: attenteSnap.data().count,
+                acceptee: accepteeSnap.data().count,
+                rejetee: rejeteeSnap.data().count,
                 par_type: {
-                    naissance: demandes.filter(d => d.type === 'naissance').length,
-                    mariage: demandes.filter(d => d.type === 'mariage').length,
-                    deces: demandes.filter(d => d.type === 'deces').length
+                    naissance: naissanceSnap.data().count,
+                    mariage: mariageSnap.data().count,
+                    deces: decesSnap.data().count
                 }
             };
-
-            return stats;
         } catch (error) {
             console.error('Erreur lors de la récupération des statistiques:', error);
             throw error;
