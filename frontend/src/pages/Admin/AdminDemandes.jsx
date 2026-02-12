@@ -32,8 +32,9 @@ export default function AdminDemandes() {
 
     const formatName = (nom, prenom) => {
         if (!nom && !prenom) return "-";
-        const n = nom ? nom.trim().toUpperCase() : "";
-        const p = prenom ? prenom.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : "";
+        const formatStr = (str) => str ? str.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : "";
+        const n = formatStr(nom);
+        const p = formatStr(prenom);
         return `${n} ${p}`.trim();
     };
 
@@ -160,39 +161,39 @@ export default function AdminDemandes() {
 
         const renderContent = d => {
             const row = (labelFr, labelAr, value) => `
-                <div style="display: flex; border-bottom: 1px solid #f2f2f2; padding: 2px 0; font-size: 10px; align-items: center; min-height: 22px;">
+                <div style="display: flex; border-bottom: 1px solid #f2f2f2; padding: 4px 0; font-size: 10px; align-items: center; min-height: 28px;">
                     <div style="width: 25%; text-align: left; padding-left: 5px;">
-                        <span style="font-weight: bold; color: #555; font-size: 9px; text-transform: uppercase; line-height: 1;">${labelFr}</span>
+                        <span style="font-weight: bold; color: #555; font-size: 10px; text-transform: uppercase; line-height: 1.2;">${labelFr}</span>
                     </div>
-                    <div style="width: 50%; text-align: center; font-weight: 700; color: #000; font-size: 11px; line-height: 1.1;">
+                    <div style="width: 50%; text-align: center; font-weight: 700; color: #000; font-size: 13px; line-height: 1.3;">
                         ${normalizeText(value) || '-'}
                     </div>
                     <div style="width: 25%; text-align: right; padding-right: 8px;">
-                        <span style="font-weight: bold; color: #555; font-size: 12px; line-height: 1;">${labelAr}</span>
+                        <span style="font-weight: bold; color: #555; font-size: 14px; line-height: 1.2;">${labelAr}</span>
                     </div>
                 </div>
             `;
 
             const sectionTitle = (fr, ar) => `
-                <div style="margin: 6px 0 3px 0; border-bottom: 2px solid ${themeColor(d)}; padding-bottom: 2px; display: flex; justify-content: space-between; align-items: center;">
-                    <span style="font-weight: bold; color: ${themeColor(d)}; font-size: 10px; letter-spacing: 0.5px;">${fr.toUpperCase()}</span>
-                    <span style="font-weight: bold; color: ${themeColor(d)}; font-size: 14px;">${ar}</span>
+                <div style="margin: 8px 0 4px 0; border-bottom: 2px solid ${themeColor(d)}; padding-bottom: 3px; display: flex; justify-content: space-between; align-items: center;">
+                    <span style="font-weight: bold; color: ${themeColor(d)}; font-size: 11px; letter-spacing: 0.5px;">${fr.toUpperCase()}</span>
+                    <span style="font-weight: bold; color: ${themeColor(d)}; font-size: 16px;">${ar}</span>
                 </div>
             `;
 
             if (d.type === 'naissance') {
                 return `
                     ${sectionTitle("Informations de l'Enfant", "معلومات الطفل")}
-                    ${row("NOM", "اللقب", d.donnees.nomEnfant.toUpperCase())}
-                    ${row("PRÉNOMS", "الاسم", d.donnees.prenomEnfant.toUpperCase())}
+                    ${row("NOM", "اللقب", formatName(d.donnees.nomEnfant))}
+                    ${row("PRÉNOMS", "الاسم", formatName(d.donnees.prenomEnfant))}
                     ${row("SEXE", "الجنس", d.donnees.sexeEnfant === 'M' ? 'Masculin / ذكر' : 'Féminin / أنثى')}
                     ${row("DATE DE NAISSANCE", "تاريخ الميلاد", new Date(d.donnees.dateNaissanceEnfant).toLocaleDateString('fr-FR'))}
                     ${row("HEURE DE NAISSANCE", "ساعة الميلاد", d.donnees.heureNaissanceEnfant || '-')}
                     ${row("LIEU DE NAISSANCE", "مكان الميلاد", d.donnees.lieuNaissanceEnfant)}
                     
                     ${sectionTitle("Informations du Père", "معلومات الأب")}
-                    ${row("NOM", "اللقب", d.donnees.nomPere.toUpperCase())}
-                    ${row("PRÉNOMS", "الاسم", d.donnees.prenomPere.toUpperCase())}
+                    ${row("NOM", "اللقب", formatName(d.donnees.nomPere))}
+                    ${row("PRÉNOMS", "الاسم", formatName(d.donnees.prenomPere))}
                     ${row("NNI", "الرقم الوطني", d.donnees.nniPere || '-')}
                     ${row("NÉ LE", "ولد في", d.donnees.dateNaissancePere ? new Date(d.donnees.dateNaissancePere).toLocaleDateString('fr-FR') : '-')}
                     ${row("À", "في", d.donnees.lieuNaissancePere)}
@@ -201,8 +202,8 @@ export default function AdminDemandes() {
                     ${row("DOMICILE", "السكن", d.donnees.domicilePere)}
                     
                     ${sectionTitle("Informations de la Mère", "معلومات الأم")}
-                    ${row("NOM", "اللقب", d.donnees.nomMere.toUpperCase())}
-                    ${row("PRÉNOMS", "الاسم", d.donnees.prenomMere.toUpperCase())}
+                    ${row("NOM", "اللقب", formatName(d.donnees.nomMere))}
+                    ${row("PRÉNOMS", "الاسم", formatName(d.donnees.prenomMere))}
                     ${row("NNI", "الرقم الوطني", d.donnees.nniMere || '-')}
                     ${row("NÉE LE", "ولدت في", d.donnees.dateNaissanceMere ? new Date(d.donnees.dateNaissanceMere).toLocaleDateString('fr-FR') : '-')}
                     ${row("À", "في", d.donnees.lieuNaissanceMere)}
@@ -214,8 +215,8 @@ export default function AdminDemandes() {
             if (d.type === 'mariage') {
                 return `
                     ${sectionTitle("Informations de l'Époux", "معلومات الزوج")}
-                    ${row("NOM", "اللقب", d.donnees.nomEpoux.toUpperCase())}
-                    ${row("PRÉNOMS", "الاسم", d.donnees.prenomEpoux.toUpperCase())}
+                    ${row("NOM", "اللقب", formatName(d.donnees.nomEpoux))}
+                    ${row("PRÉNOMS", "الاسم", formatName(d.donnees.prenomEpoux))}
                     ${row("NE LE", "تاريخ الميلاد", `${d.donnees.dateNaissanceEpoux ? new Date(d.donnees.dateNaissanceEpoux).toLocaleDateString('fr-FR') : '-'} à ${d.donnees.lieuNaissanceEpoux || '-'}`)}
                     ${row("PREMIER TÉMOIN", "الشاهد الأول", d.donnees.temoin1Epoux || '-')}
                     ${row("DEUXIÈME TÉMOIN", "الشاهد الثاني", d.donnees.temoin2Epoux || '-')}
@@ -224,8 +225,8 @@ export default function AdminDemandes() {
                     ${row("DOMICILE", "السكن", d.donnees.domicileEpoux)}
                     
                     ${sectionTitle("Informations de l'Épouse", "معلومات الزوجة")}
-                    ${row("NOM", "اللقب", d.donnees.nomEpouse.toUpperCase())}
-                    ${row("PRÉNOMS", "الاسم", d.donnees.prenomEpouse.toUpperCase())}
+                    ${row("NOM", "اللقب", formatName(d.donnees.nomEpouse))}
+                    ${row("PRÉNOMS", "الاسم", formatName(d.donnees.prenomEpouse))}
                     ${row("NEE LE", "تاريخ الميلاد", `${d.donnees.dateNaissanceEpouse ? new Date(d.donnees.dateNaissanceEpouse).toLocaleDateString('fr-FR') : '-'} à ${d.donnees.lieuNaissanceEpouse || '-'}`)}
                     ${row("PREMIER TÉMOIN", "الشاهد الأول", d.donnees.temoin1Epouse || '-')}
                     ${row("DEUXIÈME TÉMOIN", "الشاهد الثاني", d.donnees.temoin2Epouse || '-')}
@@ -242,8 +243,8 @@ export default function AdminDemandes() {
             if (d.type === 'deces') {
                 return `
                     ${sectionTitle("Informations sur le Défunt", "معلومات عن المتوفى")}
-                    ${row("NOM", "اللقب", d.donnees.nomDefunt.toUpperCase())}
-                    ${row("PRÉNOMS", "الاسم", d.donnees.prenomDefunt.toUpperCase())}
+                    ${row("NOM", "اللقب", formatName(d.donnees.nomDefunt))}
+                    ${row("PRÉNOMS", "الاسم", formatName(d.donnees.prenomDefunt))}
                     ${row("SEXE", "الجنس", d.donnees.sexeDefunt === 'M' ? 'Masculin / ذكر' : 'Féminin / أنثى')}
                     ${row("REFERENCE NNI", "الرقم الوطني", d.donnees.nniDefunt)}
                     ${row("PROFESSION", "المهنة", d.donnees.professionDefunt || '-')}
@@ -255,7 +256,7 @@ export default function AdminDemandes() {
                     ${row("CAUSE", "سبب الوفاة", d.donnees.causeDeces || 'Non spécifiée')}
                     
                     ${sectionTitle("Informations sur le Déclarant", "معلومات عن المبلغ")}
-                    ${row("NOM COMPLET", "الاسم بالكامل", `${d.donnees.nomDeclarant.toUpperCase()} ${d.donnees.prenomDeclarant}`)}
+                    ${row("NOM COMPLET", "الاسم بالكامل", formatName(d.donnees.nomDeclarant, d.donnees.prenomDeclarant))}
                     ${row("LIEN / DOMICILE", "القرابة / السكن", `${d.donnees.lienParente} / ${d.donnees.domicileDeclarant}`)}
                 `;
             }
@@ -588,7 +589,7 @@ export default function AdminDemandes() {
                                             <div className="mb-2">
                                                 <span className="text-muted small d-block">Nom complet</span>
                                                 <span className="fw-bold fs-5 text-dark">
-                                                    {selectedDemande.userId?.nom ? `${selectedDemande.userId.nom.toUpperCase()} ${selectedDemande.userId.prenom}` : "Admin (Guichet)"}
+                                                    {selectedDemande.userId?.nom ? formatName(selectedDemande.userId.nom, selectedDemande.userId.prenom) : "Admin (Guichet)"}
                                                 </span>
                                             </div>
 
@@ -623,7 +624,7 @@ export default function AdminDemandes() {
                                                 <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-person-fill me-2"></i>L'Enfant</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomEnfant?.toUpperCase()}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomEnfant)}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomEnfant}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Sexe</span>: <span className="fw-bold">{selectedDemande.donnees.sexeEnfant}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date de Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissanceEnfant)}</span></div>
@@ -634,7 +635,7 @@ export default function AdminDemandes() {
                                                 <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-gender-male me-2"></i>Le Père</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomPere?.toUpperCase()}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomPere)}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomPere}</span></div>
                                                         <div className="col-md-12 border-bottom py-2"><span className="text-muted">NNI</span>: <span className="fw-bold">{selectedDemande.donnees.pere?.nni || "Non renseigné"}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissancePere)}</span></div>
@@ -647,7 +648,7 @@ export default function AdminDemandes() {
                                                 <div className="bg-light p-4 rounded-4 shadow-inner">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-gender-female me-2"></i>La Mère</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomMere?.toUpperCase()}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomMere)}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomMere}</span></div>
                                                         <div className="col-md-12 border-bottom py-2"><span className="text-muted">NNI</span>: <span className="fw-bold">{selectedDemande.donnees.mere?.nni || "Non renseigné"}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissanceMere)}</span></div>
@@ -675,7 +676,7 @@ export default function AdminDemandes() {
                                                 <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-gender-male me-2"></i>L'Époux</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomEpoux?.toUpperCase()}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomEpoux)}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomEpoux}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Premier Témoin</span>: <span className="fw-bold">{selectedDemande.donnees.temoin1Epoux}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Deuxième Témoin</span>: <span className="fw-bold">{selectedDemande.donnees.temoin2Epoux}</span></div>
@@ -689,7 +690,7 @@ export default function AdminDemandes() {
                                                 <div className="bg-light p-4 rounded-4 shadow-inner">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-gender-female me-2"></i>L'Épouse</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomEpouse?.toUpperCase()}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomEpouse)}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomEpouse}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Premier Témoin</span>: <span className="fw-bold">{selectedDemande.donnees.temoin1Epouse}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Deuxième Témoin</span>: <span className="fw-bold">{selectedDemande.donnees.temoin2Epouse}</span></div>
@@ -708,7 +709,7 @@ export default function AdminDemandes() {
                                                 <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-person-x-fill me-2"></i>Le Défunt</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomDefunt?.toUpperCase()}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomDefunt)}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomDefunt}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Sexe</span>: <span className="fw-bold">{selectedDemande.donnees.sexeDefunt}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">NNI</span>: <span className="fw-bold">{selectedDemande.donnees.nniDefunt || "Non renseigné"}</span></div>
@@ -731,7 +732,7 @@ export default function AdminDemandes() {
                                                 <div className="bg-light p-4 rounded-4 shadow-inner">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-person-fill me-2"></i>Le Déclarant</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{selectedDemande.donnees.nomDeclarant?.toUpperCase()}</span></div>
+                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomDeclarant)}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomDeclarant}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lien parenté</span>: <span className="fw-bold">{selectedDemande.donnees.lienParente}</span></div>
                                                         <div className="col-md-6 border-bottom py-2"><span className="text-muted">Domicile</span>: <span className="fw-bold">{selectedDemande.donnees.domicileDeclarant}</span></div>

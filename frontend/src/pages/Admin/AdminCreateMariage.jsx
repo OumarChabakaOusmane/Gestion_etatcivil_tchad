@@ -273,14 +273,14 @@ export default function AdminCreateMariage() {
                             <h5 className="fw-bold mb-3 text-dark">Résumé de l'union (Mode GUICHET)</h5>
                             <div className="row g-2">
                                 <div className="col-6 text-muted">Époux:</div>
-                                <div className="col-6 fw-bold">{formData.nomEpoux?.toUpperCase()} {formatName(formData.prenomEpoux)}</div>
+                                <div className="col-6 fw-bold">{formatName(formData.nomEpoux)} {formatName(formData.prenomEpoux)}</div>
                                 <div className="col-6 text-muted ps-3 small italic">Témoin 1:</div>
                                 <div className="col-6 small fw-bold">{formData.temoin1Epoux || "-"}</div>
                                 <div className="col-6 text-muted ps-3 small italic">Témoin 2:</div>
                                 <div className="col-6 small fw-bold">{formData.temoin2Epoux || "-"}</div>
 
                                 <div className="col-6 text-muted mt-2">Épouse:</div>
-                                <div className="col-6 fw-bold mt-2">{formData.nomEpouse?.toUpperCase()} {formatName(formData.prenomEpouse)}</div>
+                                <div className="col-6 fw-bold mt-2">{formatName(formData.nomEpouse)} {formatName(formData.prenomEpouse)}</div>
                                 <div className="col-6 text-muted ps-3 small italic">Témoin 1:</div>
                                 <div className="col-6 small fw-bold">{formData.temoin1Epouse || "-"}</div>
                                 <div className="col-6 text-muted ps-3 small italic">Témoin 2:</div>

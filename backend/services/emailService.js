@@ -99,11 +99,6 @@ class EmailService {
      * Envoie un email générique
      */
     async sendEmail(to, subject, html, text = "") {
-        const fs = require('fs');
-        const path = require('path');
-        const logPath = path.join(__dirname, '../mail.log');
-        const timestamp = new Date().toISOString();
-
         try {
             const mailOptions = {
                 from: `"État Civil Tchad" <${process.env.EMAIL_USER}>`,
@@ -119,15 +114,15 @@ class EmailService {
                 }
             };
 
-            fs.appendFileSync(logPath, `${timestamp} - Tentative d'envoi à: ${to} - Sujet: ${subject}\n`);
+            console.log(`📧 [EMAIL] Tentative d'envoi à: ${to} - Sujet: ${subject}`);
 
             const info = await this.transporter.sendMail(mailOptions);
 
-            fs.appendFileSync(logPath, `${timestamp} - ✅ Succès : ${to} - MessageId: ${info.messageId}\n`);
+            console.log(`✅ [EMAIL] Succès : ${to} - MessageId: ${info.messageId}`);
             return info;
         } catch (error) {
-            console.error('❌ Erreur lors de l\'envoi de l\'email :', error);
-            fs.appendFileSync(logPath, `${timestamp} - ❌ ERREUR : ${to} - Message: ${error.message}\n`);
+            console.error(`❌ [EMAIL] Erreur lors de l'envoi à ${to}:`, error.message);
+            console.error(`❌ [EMAIL] Stack:`, error.stack);
             throw error;
         }
     }

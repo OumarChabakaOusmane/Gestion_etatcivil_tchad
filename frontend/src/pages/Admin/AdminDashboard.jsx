@@ -29,8 +29,9 @@ export default function AdminDashboard() {
 
     const formatName = (nom, prenom) => {
         if (!nom && !prenom) return "-";
-        const n = nom ? nom.trim().toUpperCase() : "";
-        const p = prenom ? prenom.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : "";
+        const formatStr = (str) => str ? str.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : "";
+        const n = formatStr(nom);
+        const p = formatStr(prenom);
         return `${n} ${p}`.trim();
     };
 

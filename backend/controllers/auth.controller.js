@@ -44,13 +44,23 @@ const register = async (req, res) => {
       otpExpires
     });
 
-    // ENVOI OTP PAR EMAIL (Bloquant avec timeout pour garantir la notification d'erreur)
+    console.log('='.repeat(60));
+    console.log(`🔐 [OTP] Nouveau compte créé pour: ${email}`);
+    if (process.env.NODE_ENV === 'development') {
+      console.log(`🔐 [OTP] CODE DE VÉRIFICATION: ${otpCode}`);
+      console.log(`🔐 [OTP] Expire dans 10 minutes`);
+    }
+    console.log('='.repeat(60));
+
+    // ENVOI OTP PAR EMAIL
+    let emailSent = false;
     try {
       await emailService.sendOTPEmail(email, `${prenom} ${nom}`, otpCode);
-      console.log(`✅ Email OTP envoyé à ${email}`);
+      emailSent = true;
+      console.log(`✅ [OTP] Email OTP envoyé avec succès à ${email}`);
     } catch (err) {
-      console.error('⚠️ Échec envoi Email OTP initial:', err.message);
-      // On ne bloque pas la création du compte, mais on log l'erreur
+      console.error('❌ [OTP] ÉCHEC envoi Email OTP:', err.message);
+      console.error('❌ [OTP] Stack:', err.stack);
     }
 
     if (telephone) {
@@ -58,14 +68,17 @@ const register = async (req, res) => {
         .catch(err => console.error('Échec envoi SMS OTP (Async):', err.message));
     }
 
-    // LOG OTP supprimé pour sécurité en production
-
     // Réponse de succès (on demande la vérification)
     return res.status(201).json({
       success: true,
-      message: 'Compte créé. Veuillez vérifier votre email pour le code OTP.',
+      message: emailSent
+        ? 'Compte créé avec succès ! Vérifiez votre email (et le dossier spam) pour le code OTP.'
+        : 'Compte créé. ATTENTION: L\'email OTP n\'a pas pu être envoyé. Utilisez "Renvoyer le code" sur la page de vérification.',
       requireVerification: true,
-      email: user.email
+      email: user.email,
+      emailSent: emailSent,
+      // En développement, renvoyer l'OTP pour faciliter les tests
+      ...(process.env.NODE_ENV === 'development' && { otpCode })
     });
 
   } catch (error) {
@@ -197,18 +210,25 @@ const resendOtp = async (req, res) => {
     await User.update(user.id, { otpCode, otpExpires });
 
     // ENVOI EMAIL RÉEL
+    let emailSent = false;
     try {
       await emailService.sendOTPEmail(email, `${user.prenom} ${user.nom}`, otpCode);
+      emailSent = true;
       console.log('=================================================');
       console.log(`🔄 RENVOI OTP POUR ${email} : ${otpCode}`);
       console.log('=================================================');
     } catch (emailError) {
-      console.error('Erreur envoi email OTP:', emailError);
+      console.error('❌ [RESEND OTP] Erreur envoi email:', emailError.message);
+      console.error('❌ [RESEND OTP] Stack:', emailError.stack);
     }
 
     return res.json({
       success: true,
-      message: 'Nouveau code OTP envoyé'
+      message: emailSent
+        ? 'Nouveau code OTP envoyé ! Vérifiez votre email (et le dossier spam).'
+        : 'ATTENTION: L\'email n\'a pas pu être envoyé. Contactez le support.',
+      emailSent: emailSent,
+      ...(process.env.NODE_ENV === 'development' && { otpCode })
     });
 
   } catch (error) {

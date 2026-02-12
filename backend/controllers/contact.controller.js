@@ -3,16 +3,22 @@ const emailService = require("../services/emailService");
 
 exports.submitContact = async (req, res) => {
     try {
+        console.log("📩 [CONTACT] Nouvelle demande de contact reçue");
+        console.log("📩 [CONTACT] Body:", JSON.stringify(req.body, null, 2));
+
         const { nom, email, sujet, message } = req.body;
 
         if (!nom || !email || !sujet || !message) {
+            console.log("❌ [CONTACT] Champs manquants:", { nom: !!nom, email: !!email, sujet: !!sujet, message: !!message });
             return res.status(400).json({
                 success: false,
                 message: "Tous les champs sont obligatoires"
             });
         }
 
+        console.log("✅ [CONTACT] Tous les champs présents, création du contact...");
         const newContact = await Contact.create({ nom, email, sujet, message });
+        console.log("✅ [CONTACT] Contact créé avec succès:", newContact.id);
 
         res.status(201).json({
             success: true,
@@ -20,10 +26,12 @@ exports.submitContact = async (req, res) => {
             data: newContact
         });
     } catch (error) {
-        console.error("Error in submitContact:", error);
+        console.error("❌ [CONTACT] Error in submitContact:", error);
+        console.error("❌ [CONTACT] Error stack:", error.stack);
         res.status(500).json({
             success: false,
-            message: "Erreur lors de l'envoi du message"
+            message: "Erreur lors de l'envoi du message",
+            error: error.message
         });
     }
 };

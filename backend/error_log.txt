@@ -1,1 +1,4 @@
-2026-01-06T19:54:15.022Z - FirebaseError: Missing or insufficient permissions.
+2026-02-12T07:27:10.183Z - Error: Un utilisateur avec cet email existe déjà
+    at User.create (C:\Users\Chaba\Desktop\Gestion_etatcivil_tchad\backend\models\user.model.js:14:15)
+    at process.processTicksAndRejections (node:internal/process/task_queues:103:5)
+    at async register (C:\Users\Chaba\Desktop\Gestion_etatcivil_tchad\backend\controllers\auth.controller.js:35:18)

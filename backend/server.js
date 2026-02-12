@@ -24,25 +24,6 @@ const testRoutes = require('./routes/test.routes'); // Route de diagnostic
 const { db } = require("./config/firebase");
 
 const app = express();
-const fs = require('fs');
-const path = require('path');
-
-// Logger ultra-agressif pour le debug mobile
-const logPath = 'C:\\Users\\Chaba\\Desktop\\Gestion_etatcivil_tchad\\backend\\access_log.txt';
-app.use((req, res, next) => {
-  const log = `${new Date().toISOString()} - [INCOMING] ${req.method} ${req.url} from ${req.ip}\n`;
-  try {
-    fs.appendFileSync(logPath, log);
-  } catch (e) { console.error('Log error:', e); }
-
-  res.on('finish', () => {
-    const logFinish = `${new Date().toISOString()} - [FINISHED] ${req.method} ${req.url} - Status: ${res.statusCode} from ${req.ip}\n`;
-    try {
-      fs.appendFileSync(logPath, logFinish);
-    } catch (e) { console.error('Log error (finish):', e); }
-  });
-  next();
-});
 
 // Configuration CORS
 app.use(cors({

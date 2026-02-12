@@ -39,11 +39,19 @@ export default function VerifyCertificate() {
 
     const getTypeLabel = (type) => {
         switch (type) {
-            case 'naissance': return { fr: 'Acte de Naissance', ar: 'شهادة ميلاد' };
+            case 'naissance': return { fr: 'Acte de Naissance', ar: 'شهادة ميلad' };
             case 'mariage': return { fr: 'Acte de Mariage', ar: 'شهادة زواج' };
             case 'deces': return { fr: 'Acte de Décès', ar: 'شهادة وفاة' };
             default: return { fr: 'Document', ar: 'وثيقة' };
         }
+    };
+
+    const formatName = (nom, prenom) => {
+        if (!nom && !prenom) return "-";
+        const formatStr = (str) => str ? str.trim().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' ') : "";
+        const n = formatStr(nom);
+        const p = formatStr(prenom);
+        return `${n} ${p}`.trim();
     };
 
 
@@ -129,40 +137,40 @@ export default function VerifyCertificate() {
                                         <div className="bg-white bg-opacity-40 rounded-4 p-3 mb-4 border border-white">
                                             {acte.type === 'naissance' && (
                                                 <div className="space-y-3">
-                                                    <VerifyRow labelFr="Enfant" labelAr="الطفل" value={`${acte.donnees.nomEnfant?.toUpperCase()} ${acte.donnees.prenomEnfant}`} isMain />
+                                                    <VerifyRow labelFr="Enfant" labelAr="الطفل" value={formatName(acte.donnees.nomEnfant, acte.donnees.prenomEnfant)} isMain />
                                                     <VerifyRow labelFr="Né(e) le" labelAr="تاريخ الميلاد" value={`${new Date(acte.donnees.dateNaissanceEnfant).toLocaleDateString('fr-FR')} à ${acte.donnees.heureNaissanceEnfant || '-'}`} />
                                                     <VerifyRow labelFr="Lieu" labelAr="في" value={acte.donnees.lieuNaissanceEnfant} />
                                                     <hr className="my-2 opacity-10" />
-                                                    <VerifyRow labelFr="Père" labelAr="الأب" value={`${acte.donnees.nomPere?.toUpperCase()} ${acte.donnees.prenomPere}`} />
+                                                    <VerifyRow labelFr="Père" labelAr="الأب" value={formatName(acte.donnees.nomPere, acte.donnees.prenomPere)} />
                                                     <VerifyRow labelFr="NNI Père" labelAr="الرقم الوطني للأب" value={acte.donnees.nniPere || "-"} />
-                                                    <VerifyRow labelFr="Mère" labelAr="الأم" value={`${acte.donnees.nomMere?.toUpperCase()} ${acte.donnees.prenomMere}`} />
+                                                    <VerifyRow labelFr="Mère" labelAr="الأm" value={formatName(acte.donnees.nomMere, acte.donnees.prenomMere)} />
                                                     <VerifyRow labelFr="NNI Mère" labelAr="الالرقم الوطني للأم" value={acte.donnees.nniMere || "-"} />
                                                 </div>
                                             )}
 
                                             {acte.type === 'mariage' && (
                                                 <div className="space-y-3">
-                                                    <VerifyRow labelFr="Époux" labelAr="الزوج" value={`${acte.donnees.nomEpoux?.toUpperCase()} ${acte.donnees.prenomEpoux}`} isMain />
-                                                    <VerifyRow labelFr="Épouse" labelAr="الزوجة" value={`${acte.donnees.nomEpouse?.toUpperCase()} ${acte.donnees.prenomEpouse}`} isMain />
+                                                    <VerifyRow labelFr="Époux" labelAr="الزوج" value={formatName(acte.donnees.nomEpoux, acte.donnees.prenomEpoux)} isMain />
+                                                    <VerifyRow labelFr="Épouse" labelAr="الزوجة" value={formatName(acte.donnees.nomEpouse, acte.donnees.prenomEpouse)} isMain />
                                                     <hr className="my-2 opacity-10" />
                                                     <VerifyRow labelFr="Mariage le" labelAr="تاريخ الزواج" value={new Date(acte.donnees.dateMariage).toLocaleDateString('fr-FR')} />
                                                     <VerifyRow labelFr="Lieu" labelAr="المكان" value={acte.donnees.lieuMariage} />
                                                     <VerifyRow labelFr="Dot" labelAr="المهر" value={acte.donnees.dotMontant} />
                                                     <hr className="my-2 opacity-10" />
-                                                    <VerifyRow labelFr="Témoins Époux" labelAr="شهود الزوج" value={`${acte.donnees.temoin1Epoux || '-'} & ${acte.donnees.temoin2Epoux || '-'}`} />
-                                                    <VerifyRow labelFr="Témoins Épouse" labelAr="شهود الزوجة" value={`${acte.donnees.temoin1Epouse || '-'} & ${acte.donnees.temoin2Epouse || '-'}`} />
+                                                    <VerifyRow labelFr="Témoins Époux" labelAr="شهود الزوج" value={`${formatName(acte.donnees.nomTemoin1Epoux, acte.donnees.prenomTemoin1Epoux)} & ${formatName(acte.donnees.nomTemoin2Epoux, acte.donnees.prenomTemoin2Epoux)}`} />
+                                                    <VerifyRow labelFr="Témoins Épouse" labelAr="شهود الزوجة" value={`${formatName(acte.donnees.nomTemoin1Epouse, acte.donnees.prenomTemoin1Epouse)} & ${formatName(acte.donnees.nomTemoin2Epouse, acte.donnees.prenomTemoin2Epouse)}`} />
                                                 </div>
                                             )}
 
                                             {acte.type === 'deces' && (
                                                 <div className="space-y-3">
-                                                    <VerifyRow labelFr="Défunt" labelAr="المتوفى" value={`${acte.donnees.nomDefunt?.toUpperCase()} ${acte.donnees.prenomDefunt}`} isMain />
+                                                    <VerifyRow labelFr="Défunt" labelAr="المتوفى" value={formatName(acte.donnees.nomDefunt, acte.donnees.prenomDefunt)} isMain />
                                                     <VerifyRow labelFr="NNI Défunt" labelAr="الرقم الوطني" value={acte.donnees.nniDefunt || "-"} />
                                                     <VerifyRow labelFr="Décédé le" labelAr="تاريخ الوفاة" value={new Date(acte.donnees.dateDeces).toLocaleDateString('fr-FR')} />
                                                     <VerifyRow labelFr="Lieu" labelAr="مكان الوفاة" value={acte.donnees.lieuDeces} />
                                                     <hr className="my-2 opacity-10" />
-                                                    <VerifyRow labelFr="Père" labelAr="الأب" value={acte.donnees.pereDefunt || "-"} />
-                                                    <VerifyRow labelFr="Mère" labelAr="الأم" value={acte.donnees.mereDefunt || "-"} />
+                                                    <VerifyRow labelFr="Père" labelAr="الأب" value={acte.donnees.nomPereDefunt ? formatName(acte.donnees.nomPereDefunt, acte.donnees.prenomPereDefunt) : acte.donnees.pereDefunt || "-"} />
+                                                    <VerifyRow labelFr="Mère" labelAr="الأم" value={acte.donnees.nomMereDefunt ? formatName(acte.donnees.nomMereDefunt, acte.donnees.prenomMereDefunt) : acte.donnees.mereDefunt || "-"} />
                                                     <VerifyRow labelFr="Profession" labelAr="المهنة" value={acte.donnees.professionDefunt || "-"} />
                                                     <VerifyRow labelFr="Cause" labelAr="السبب" value={acte.donnees.causeDeces || "Non spécifiée"} />
                                                 </div>
