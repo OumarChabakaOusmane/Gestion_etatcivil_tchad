@@ -7,7 +7,8 @@ class EmailService {
     constructor() {
         // Configuration du transporteur email
         // Utilise les variables d'environnement ou Ethereal par défaut
-        const useRealEmail = process.env.EMAIL_USER && process.env.EMAIL_PASS;
+        // FORCE ETHEREAL sur production pour diag si EMAIL_FORCE_TEST est présent
+        const useRealEmail = process.env.EMAIL_USER && process.env.EMAIL_PASS && !process.env.EMAIL_FORCE_TEST;
 
         if (useRealEmail) {
             // Configuration prioritair Gmail pour la robustesse
