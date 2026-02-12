@@ -17,19 +17,17 @@ class EmailService {
             let smtpConfig;
 
             if (isGmail) {
-                // Forcer le port 465 SSL car 587 est souvent bloqué en production (timeout)
-                // MAIS permettre le fallback ou le changement via variable
-                const port = parseInt(process.env.EMAIL_PORT) || 465;
+                // Utiliser 587 par défaut car 465 SSL est souvent bloqué par certains hébergeurs
+                const port = parseInt(process.env.EMAIL_PORT) || 587;
                 smtpConfig = {
                     host: 'smtp.gmail.com',
                     port: port,
-                    secure: port === 465, // SSL/TLS pour 465, STARTTLS pour les autres
+                    secure: port === 465, // SSL pour 465, STARTTLS pour 587
                     auth: {
                         user: process.env.EMAIL_USER,
                         pass: process.env.EMAIL_PASS
                     },
                     tls: {
-                        // Crucial pour les connexions depuis certains centres de données
                         rejectUnauthorized: false
                     }
                 };
