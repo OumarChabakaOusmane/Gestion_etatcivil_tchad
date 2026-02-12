@@ -73,12 +73,12 @@ const register = async (req, res) => {
       success: true,
       message: emailSent
         ? 'Compte créé avec succès ! Vérifiez votre email (et le dossier spam) pour le code OTP.'
-        : 'Compte créé. ATTENTION: L\'email OTP n\'a pas pu être envoyé. Utilisez "Renvoyer le code" sur la page de vérification.',
+        : 'Compte créé. ATTENTION: L\'email OTP n\'a pas pu être envoyé. Utilisez le code affiché ci-dessous pour valider votre compte.',
       requireVerification: true,
       email: user.email,
       emailSent: emailSent,
-      // En développement, renvoyer l'OTP pour faciliter les tests
-      ...(process.env.NODE_ENV === 'development' && { otpCode })
+      // SOLUTION DE SECOURS : On renvoie toujours l'OTP pour l'afficher à l'écran si l'email ne passe pas
+      otpCode: otpCode
     });
 
   } catch (error) {
@@ -226,9 +226,10 @@ const resendOtp = async (req, res) => {
       success: true,
       message: emailSent
         ? 'Nouveau code OTP envoyé ! Vérifiez votre email (et le dossier spam).'
-        : 'ATTENTION: L\'email n\'a pas pu être envoyé. Contactez le support.',
+        : 'ATTENTION: L\'email n\'a pas pu être envoyé. Utilisez le code affiché ci-dessous pour valider votre compte.',
       emailSent: emailSent,
-      ...(process.env.NODE_ENV === 'development' && { otpCode })
+      // SOLUTION DE SECOURS : On renvoie toujours l'OTP 
+      otpCode: otpCode
     });
 
   } catch (error) {

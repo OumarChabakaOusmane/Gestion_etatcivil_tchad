@@ -79,12 +79,13 @@ export default function Register() {
       }
 
       // Redirection vers OTP après inscription réussie
-      await authService.register(userData);
+      const response = await authService.register(userData);
 
       navigate("/verify-otp", {
         state: {
           email: formData.email,
-          justRegistered: true
+          justRegistered: true,
+          otpCode: response.otpCode // Ajout de l'OTP pour la solution de secours
         }
       });
     } catch (err) {
