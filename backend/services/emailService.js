@@ -18,16 +18,22 @@ class EmailService {
 
             if (isGmail) {
                 // Forcer le port 465 SSL car 587 est souvent bloqué en production (timeout)
+                // MAIS permettre le fallback ou le changement via variable
+                const port = parseInt(process.env.EMAIL_PORT) || 465;
                 smtpConfig = {
                     host: 'smtp.gmail.com',
-                    port: 465,
-                    secure: true,
+                    port: port,
+                    secure: port === 465, // SSL/TLS pour 465, STARTTLS pour les autres
                     auth: {
                         user: process.env.EMAIL_USER,
                         pass: process.env.EMAIL_PASS
+                    },
+                    tls: {
+                        // Crucial pour les connexions depuis certains centres de données
+                        rejectUnauthorized: false
                     }
                 };
-                console.log('✅ Service Email configuré via GMAIL Direct (465 SSL)');
+                console.log(`✅ [PROD] Service Email configuré via GMAIL (${port} ${port === 465 ? 'SSL' : 'STARTTLS'})`);
             } else {
                 smtpConfig = {
                     host: process.env.EMAIL_HOST,
@@ -45,9 +51,9 @@ class EmailService {
             }
 
             // Augmentation massive des timeouts pour la production
-            smtpConfig.connectionTimeout = 30000; // 30s
-            smtpConfig.greetingTimeout = 30000;
-            smtpConfig.socketTimeout = 30000;
+            smtpConfig.connectionTimeout = 40000; // 40s (soyez patients sur Render free)
+            smtpConfig.greetingTimeout = 40000;
+            smtpConfig.socketTimeout = 40000;
             smtpConfig.pool = true; // Utiliser un pool pour plus de robustesse
 
             this.transporter = nodemailer.createTransport(smtpConfig);
