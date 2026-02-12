@@ -102,37 +102,73 @@ class EmailService {
     /**
      * Envoie un email générique
      */
+    /**
+     * Envoie un email générique avec mécanisme de repli automatique (fallback) pour les ports bloqués
+     */
     async sendEmail(to, subject, html, text = "") {
+        const mailOptions = {
+            from: `"État Civil Tchad" <${process.env.EMAIL_USER}>`,
+            to,
+            replyTo: process.env.EMAIL_USER,
+            subject,
+            html,
+            text: text || "Veuillez ouvrir cet email avec un client supportant le HTML.",
+            headers: {
+                'X-Application': 'SIGEC-Tchad',
+                'X-Priority': '1 (Highest)',
+                'Importance': 'high'
+            }
+        };
+
         try {
-            const mailOptions = {
-                from: `"État Civil Tchad" <${process.env.EMAIL_USER}>`,
-                to,
-                replyTo: process.env.EMAIL_USER,
-                subject,
-                html,
-                text: text || "Veuillez ouvrir cet email avec un client supportant le HTML.",
-                headers: {
-                    'X-Application': 'SIGEC-Tchad',
-                    'X-Priority': '1 (Highest)',
-                    'Importance': 'high'
-                }
-            };
-
-            console.log(`📧 [EMAIL] Tentative d'envoi à: ${to} - Sujet: ${subject}`);
-
+            console.log(`📧 [EMAIL] Tentative d'envoi à: ${to} - Sujet: ${subject} (Port: ${this.transporter.options.port})`);
             const info = await this.transporter.sendMail(mailOptions);
-
             console.log(`✅ [EMAIL] Succès : ${to} - MessageId: ${info.messageId}`);
             return info;
         } catch (error) {
-            console.error(`❌ [EMAIL] Erreur lors de l'envoi à ${to}:`, error.message);
-            console.error(`❌ [EMAIL] Stack:`, error.stack);
+            console.warn(`⚠️ [EMAIL] Échec sur port ${this.transporter.options.port}: ${error.message}`);
+
+            // Si l'erreur ressemble à un blocage de port (timeout ou connexion refusée)
+            const isConnectionError = error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED' || error.message.includes('timeout');
+            const currentPort = this.transporter.options.port;
+
+            if (isConnectionError && (currentPort === 465 || currentPort === 587)) {
+                const fallbackPort = currentPort === 465 ? 587 : 465;
+                console.log(`🔄 [EMAIL] Tentative de repli (fallback) sur le port ${fallbackPort}...`);
+
+                try {
+                    // Créer un transporteur temporaire pour le repli
+                    const fallbackConfig = {
+                        ...this.transporter.options,
+                        port: fallbackPort,
+                        secure: fallbackPort === 465,
+                        // Augmenter encore le timeout pour le retry
+                        connectionTimeout: 50000,
+                        greetingTimeout: 50000
+                    };
+                    const fallbackTransporter = nodemailer.createTransport(fallbackConfig);
+
+                    const info = await fallbackTransporter.sendMail(mailOptions);
+                    console.log(`✅ [EMAIL] Succès via FALLBACK port ${fallbackPort} : ${to}`);
+                    return info;
+                } catch (fallbackError) {
+                    console.error(`❌ [EMAIL] Échec définitif même après repli sur ${fallbackPort}:`, fallbackError.message);
+                }
+            }
+
+            console.error(`❌ [EMAIL] Erreur finale lors de l'envoi à ${to}:`, error.message);
             throw error;
         }
     }
 
     async verifyConnection() {
-        return this.transporter.verify();
+        try {
+            return await this.transporter.verify();
+        } catch (error) {
+            console.warn(`⚠️ [VERIFY] Échec connexion initiale: ${error.message}`);
+            // Ne pas lever d'erreur ici pour permettre au fallback de sendEmail de fonctionner
+            return false;
+        }
     }
 
     /**
