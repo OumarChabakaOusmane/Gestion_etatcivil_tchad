@@ -71,9 +71,12 @@ export default function AdminDashboard() {
                     const trend = last7Days.map(date => ({
                         name: date.split('-').slice(1).reverse().join('/'),
                         value: demandes.filter(req => {
+                            if (!req?.dateDemande) return false;
                             const reqDate = req.dateDemande?._seconds ?
                                 new Date(req.dateDemande._seconds * 1000) :
                                 new Date(req.dateDemande);
+
+                            if (isNaN(reqDate.getTime())) return false;
                             return reqDate.toISOString().split('T')[0] === date;
                         }).length
                     }));
@@ -215,7 +218,7 @@ export default function AdminDashboard() {
                         <div style={{ height: '350px', width: '100%', minWidth: 0 }}>
                             {!loading ? (
                                 <SafeRechartsContainer>
-                                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
+                                    <ResponsiveContainer width="99%" height="100%" debounce={100}>
                                         <AreaChart data={trendData}>
                                             <defs>
                                                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
@@ -250,7 +253,7 @@ export default function AdminDashboard() {
                         <div style={{ height: '300px', width: '100%', position: 'relative' }}>
                             {!loading ? (
                                 <SafeRechartsContainer>
-                                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
+                                    <ResponsiveContainer width="99%" height="100%" debounce={100}>
                                         <PieChart>
                                             <Pie
                                                 data={stats.countsByType.some(c => c.value > 0) ? stats.countsByType : [{ name: 'Aucun', value: 1, color: '#f0f0f0' }]}
@@ -322,7 +325,7 @@ export default function AdminDashboard() {
                                                 <tr key={d.id || d._id} className="cursor-pointer border-bottom-faint" onClick={() => navigate('/admin/demandes?filter=en_attente')}>
                                                     <td className="ps-4 py-4">
                                                         <span className="badge bg-primary bg-opacity-10 text-primary rounded-3 px-2 py-1 small fw-bold">
-                                                            #{(d.id || d._id).slice(-4).toUpperCase()}
+                                                            #{(d.id || d._id || '0000').slice(-4).toUpperCase()}
                                                         </span>
                                                     </td>
                                                     <td className="py-4">

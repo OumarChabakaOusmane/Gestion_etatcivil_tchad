@@ -41,10 +41,16 @@ export default function Login() {
       const response = await authService.login(formData.email, formData.password);
       console.log("Réponse de connexion:", response);
 
-      const user = response.data?.user || response.data;
+      // Extraction correcte : authService.login retourne déjà response.data
+      // La structure attendue est { success: true, data: { user, token } }
+      const user = response.data?.user || response.user || response;
 
       console.log("Utilisateur connecté:", user);
-      console.log("Rôle détecté:", user.role);
+      console.log("Rôle détecté:", user?.role);
+
+      if (!user || !user.role) {
+        throw new Error("Impossible de récupérer les informations de l'utilisateur après connexion.");
+      }
 
       // Forcer un rechargement complet pour garantir l'initialisation du state
       if (user.role === 'admin' || user.role === 'agent') {

@@ -154,7 +154,7 @@ export default function AdminDemandes() {
     const handleSaveEdit = async () => {
         try {
             setActionLoading(true);
-            await demandeService.updateDemande(selectedDemande.id || selectedDemande._id, editData);
+            await demandeService.updateDemande(selectedDemande?.id || selectedDemande?._id, editData);
             await loadData();
             setIsEditing(false);
             setSelectedDemande({ ...selectedDemande, donnees: editData });
@@ -163,6 +163,24 @@ export default function AdminDemandes() {
             showToast('Erreur: ' + error.message, 'error');
         } finally {
             setActionLoading(false);
+        }
+    };
+
+    const handleExport = () => {
+        try {
+            if (!filteredDemandes || filteredDemandes.length === 0) {
+                return showToast('Aucune donnée à exporter', 'info');
+            }
+            const dataToExport = exportHelper.formatDemandesForExport(filteredDemandes);
+            const success = exportHelper.exportToExcel(dataToExport, 'Demandes_SIGEC', 'Demandes');
+            if (success) {
+                showToast('Export réussi !', 'success');
+            } else {
+                showToast('Erreur lors de l\'export', 'error');
+            }
+        } catch (error) {
+            console.error('Export error:', error);
+            showToast('Erreur lors de l\'export', 'error');
         }
     };
 
@@ -665,10 +683,10 @@ export default function AdminDemandes() {
                                     <div className="col-md-6">
                                         <div className="p-3 bg-light rounded-4 h-100">
                                             <h6 className="text-primary fw-bold text-uppercase small mb-3">Métadonnées</h6>
-                                            <DetailRow label="Référence" value={selectedDemande.id.toUpperCase()} />
-                                            <DetailRow label="Type d'acte" value={selectedDemande.type.toUpperCase()} />
-                                            <DetailRow label="Date de demande" value={formatDate(selectedDemande.dateDemande)} />
-                                            <DetailRow label="Statut actuel" value={selectedDemande.statut.replace('_', ' ')} />
+                                            <DetailRow label="Référence" value={(selectedDemande?.id || selectedDemande?._id)?.toUpperCase() || '-'} />
+                                            <DetailRow label="Type d'acte" value={selectedDemande?.type?.toUpperCase() || '-'} />
+                                            <DetailRow label="Date de demande" value={formatDate(selectedDemande?.dateDemande)} />
+                                            <DetailRow label="Statut actuel" value={selectedDemande?.statut ? selectedDemande.statut.replace('_', ' ') : '-'} />
                                         </div>
                                     </div>
                                     <div className="col-md-6">

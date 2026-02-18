@@ -381,7 +381,7 @@ export default function MesDemandes() {
                                     <h4 className="fw-bold m-0 text-dark">
                                         {isEditing ? 'Modification du dossier' : 'Détails de la demande'}
                                     </h4>
-                                    <span className="text-muted small fw-bold text-uppercase">Réf: {selectedDemande.id.substring(0, 8).toUpperCase()}</span>
+                                    <span className="text-muted small fw-bold text-uppercase">Réf: {(selectedDemande?.id || selectedDemande?._id || '').substring(0, 8).toUpperCase()}</span>
                                 </div>
                             </div>
                             <button className="btn-close shadow-none p-2 bg-light rounded-circle" onClick={() => setSelectedDemande(null)}></button>
