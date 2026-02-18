@@ -84,6 +84,7 @@ export default function Register() {
       navigate("/verify-otp", {
         state: {
           email: formData.email,
+          telephone: formData.telephone,
           justRegistered: true
         }
       });

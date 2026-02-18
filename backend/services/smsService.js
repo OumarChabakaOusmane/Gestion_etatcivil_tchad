@@ -13,8 +13,23 @@ class SmsService {
      */
     static async sendSms(phone, message, userId = null, skipDb = false) {
         try {
-            // [LOG] SIMULATION DANS LE TERMINAL
-            console.log(`\n📱 [SMS SIMULATION] To: ${phone}\n💬 Message: ${message}\n`);
+            const useTwilio = process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER;
+
+            if (useTwilio) {
+                const twilio = require('twilio');
+                const client = new twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+
+                // Envoi SMS Réel
+                const result = await client.messages.create({
+                    body: message,
+                    to: phone,
+                    from: process.env.TWILIO_PHONE_NUMBER
+                });
+                console.log(`✅ [TWILIO] SMS envoyé à ${phone}. SID: ${result.sid}`);
+            } else {
+                // [LOG] SIMULATION DANS LE TERMINAL
+                console.log(`\n📱 [SMS SIMULATION] To: ${phone}\n💬 Message: ${message}\n`);
+            }
 
             // On n'enregistre PAS dans Firestore si c'est sensible (ex: OTP)
             if (!skipDb) {
@@ -31,7 +46,7 @@ class SmsService {
 
             return { success: true, message: 'SMS envoyé' };
         } catch (error) {
-            console.error('Erreur lors de la simulation SMS:', error);
+            console.error('Erreur lors de l\'envoi SMS:', error);
             return { success: false, error: error.message };
         }
     }

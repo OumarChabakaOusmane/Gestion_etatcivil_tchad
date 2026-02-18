@@ -9,9 +9,7 @@ export default function VerifyOtp() {
     const navigate = useNavigate();
     const location = useLocation();
     const email = location.state?.email || "";
-    // const otpCodeFromRegistration = location.state?.otpCode; // REMOVED
-    // const justRegistered = location.state?.justRegistered; // REMOVED
-
+    const telephone = location.state?.telephone || "";
     const [otp, setOtp] = useState("");
     const [otpFromState, setOtpFromState] = useState(location.state?.otpCode || "");
     const [error, setError] = useState("");
@@ -144,6 +142,18 @@ export default function VerifyOtp() {
                             >
                                 {resendLoading ? "Envoi en cours..." : "Renvoyer le code par email"}
                             </button>
+
+                            <div className="mt-2">
+                                <a
+                                    href={`https://wa.me/${formData?.telephone?.replace('+', '')}?text=${encodeURIComponent("SIGEC TCHAD : Votre code de vérification est " + otp + ". Il expire dans 10 minutes.")}`}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="btn btn-outline-success btn-sm rounded-pill"
+                                >
+                                    <i className="bi bi-whatsapp me-1"></i>
+                                    Démontrer l'envoi WhatsApp
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
