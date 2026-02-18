@@ -84,8 +84,7 @@ export default function Register() {
       navigate("/verify-otp", {
         state: {
           email: formData.email,
-          justRegistered: true,
-          otpCode: response.otpCode // Ajout de l'OTP pour la solution de secours
+          justRegistered: true
         }
       });
     } catch (err) {

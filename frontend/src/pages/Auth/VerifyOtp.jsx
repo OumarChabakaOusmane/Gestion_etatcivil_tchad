@@ -104,25 +104,9 @@ export default function VerifyOtp() {
                         <div className="alert alert-warning border-0 shadow-sm mb-4 d-flex align-items-start gap-2" style={{ fontSize: '0.9rem' }}>
                             <i className="bi bi-exclamation-triangle-fill mt-1"></i>
                             <div className="text-start">
-                                <strong>Important :</strong> Si vous ne voyez pas l'email, vérifiez votre dossier <strong>SPAM</strong> ou utilisez le code affiché ci-dessous.
+                                <strong>Important :</strong> Si vous ne voyez pas l'email, vérifiez votre dossier <strong>SPAM</strong>. Vous pouvez également demander un nouveau code ci-dessous.
                             </div>
                         </div>
-
-                        {/* SOLUTION DE SECOURS : AFFICHAGE DIRECT DE L'OTP */}
-                        {otpFromState && (
-                            <div className="alert alert-info border-0 shadow-sm mb-4 py-3">
-                                <div className="d-flex align-items-center justify-content-center gap-2 mb-2">
-                                    <i className="bi bi-info-circle-fill text-info"></i>
-                                    <span className="fw-bold text-info small text-uppercase">Code de secours</span>
-                                </div>
-                                <div className="display-5 fw-bold text-dark mb-1" style={{ letterSpacing: '5px' }}>
-                                    {otpFromState}
-                                </div>
-                                <div className="small text-muted">
-                                    Recopiez ce code ci-dessous pour valider votre compte.
-                                </div>
-                            </div>
-                        )}
 
                         {error && <div key="otp-error-alert" translate="no" className="alert alert-danger py-2 mb-3 small"><span>{error}</span></div>}
                         {message && <div key="otp-success-message" translate="no" className="alert alert-success py-2 mb-3 small"><span>{message}</span></div>}

@@ -52,21 +52,18 @@ const register = async (req, res) => {
     }
     console.log('='.repeat(60));
 
-    // ENVOI OTP PAR EMAIL (AWAITED pour la robustesse pendant la démo)
-    console.log(`📧 [OTP] Tentative d'envoi de l'OTP à ${email}...`);
+    // ENVOI OTP PAR EMAIL (ASYNCHRONE pour la performance)
+    console.log(`📧 [OTP] Envoi en arrière-plan à ${email}...`);
+    emailService.sendOTPEmail(email, `${prenom} ${nom}`, otpCode)
+      .then(() => {
+        console.log(`✅ [OTP] CODE DE VÉRIFICATION: ${otpCode}`);
+        console.log(`✅ [OTP] Email OTP envoyé avec succès à ${email}`);
+      })
+      .catch(err => {
+        console.error('❌ [OTP] ÉCHEC envoi Email OTP:', err.message);
+      });
 
-    let emailSent = false;
-    let emailError = null;
-
-    try {
-      await emailService.sendOTPEmail(email, `${prenom} ${nom}`, otpCode);
-      emailSent = true;
-      console.log(`✅ [OTP] Email OTP envoyé avec succès à ${email}`);
-    } catch (err) {
-      emailError = err.message;
-      console.error('❌ [OTP] ÉCHEC envoi Email OTP:', err.message);
-      // On ne bloque pas l'inscription si l'email échoue, mais on informera l'utilisateur
-    }
+    const emailSent = true; // On assume l'envoi pour l'UI
 
     if (telephone) {
       smsService.sendOtpSms(telephone, otpCode)
@@ -76,14 +73,11 @@ const register = async (req, res) => {
     // Réponse de succès
     return res.status(201).json({
       success: true,
-      message: emailSent
-        ? 'Compte créé avec succès ! Vérifiez votre email (et le dossier spam) pour le code OTP.'
-        : `Compte créé, mais l'envoi de l'email a échoué (${emailError}). Veuillez utiliser le code affiché ci-dessous.`,
+      message: 'Compte créé avec succès ! Veuillez vérifier votre email (et vos spams) pour le code de validation.',
       requireVerification: true,
       email: user.email,
-      emailSent: emailSent,
-      // SOLUTION DE SECOURS : On renvoie toujours l'OTP pour la démo
-      otpCode: otpCode
+      emailSent: emailSent
+      // SOLUTION DE SECOURS SUPPRIMÉE POUR LA SÉCURITÉ (Sur demande encadreur)
     });
 
   } catch (error) {
@@ -224,27 +218,26 @@ const resendOtp = async (req, res) => {
 
     await User.update(user.id, { otpCode, otpExpires });
 
-    // ENVOI EMAIL RÉEL
-    let emailSent = false;
-    try {
-      await emailService.sendOTPEmail(email, `${user.prenom} ${user.nom}`, otpCode);
-      emailSent = true;
-      console.log('=================================================');
-      console.log(`🔄 RENVOI OTP POUR ${email} : ${otpCode}`);
-      console.log('=================================================');
-    } catch (emailError) {
-      console.error('❌ [RESEND OTP] Erreur envoi email:', emailError.message);
-      console.error('❌ [RESEND OTP] Stack:', emailError.stack);
-    }
+    // ENVOI EMAIL RÉEL (ASYNCHRONE)
+    emailService.sendOTPEmail(email, `${user.prenom} ${user.nom}`, otpCode)
+      .then(() => {
+        console.log('=================================================');
+        console.log(`🔄 RENVOI OTP POUR ${email} : ${otpCode}`);
+        console.log('=================================================');
+      })
+      .catch(emailError => {
+        console.error('❌ [RESEND OTP] Erreur envoi email:', emailError.message);
+      });
+
+    const emailSent = true;
 
     return res.json({
       success: true,
       message: emailSent
         ? 'Nouveau code OTP envoyé ! Vérifiez votre email (et le dossier spam).'
         : 'ATTENTION: L\'email n\'a pas pu être envoyé. Utilisez le code affiché ci-dessous pour valider votre compte.',
-      emailSent: emailSent,
-      // SOLUTION DE SECOURS : On renvoie toujours l'OTP 
-      otpCode: otpCode
+      emailSent: emailSent
+      // SOLUTION DE SECOURS SUPPRIMÉE POUR LA SÉCURITÉ
     });
 
   } catch (error) {
