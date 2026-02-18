@@ -20,7 +20,7 @@ export default function RegisterScreen({ navigation }) {
         prenom: '',
         email: '',
         password: '',
-        telephone: '66'
+        telephone: ''
     });
     const [loading, setLoading] = useState(false);
 
@@ -37,7 +37,7 @@ export default function RegisterScreen({ navigation }) {
             if (result.success) {
                 Alert.alert(
                     'Compte créé',
-                    'Veuillez vérifier votre email pour le code OTP.',
+                    result.message || 'Veuillez vérifier votre email pour le code OTP.',
                     [{ text: 'OK', onPress: () => navigation.navigate('VerifyOtp', { email }) }]
                 );
             }
@@ -69,7 +69,7 @@ export default function RegisterScreen({ navigation }) {
                                 style={styles.input}
                                 value={formData.nom}
                                 onChangeText={(text) => setFormData({ ...formData, nom: text })}
-                                placeholder="Ex: Alkhali"
+                                placeholder="Entrez votre nom"
                                 autoComplete="name-family"
                                 textContentType="familyName"
                             />
@@ -80,7 +80,7 @@ export default function RegisterScreen({ navigation }) {
                                 style={styles.input}
                                 value={formData.prenom}
                                 onChangeText={(text) => setFormData({ ...formData, prenom: text })}
-                                placeholder="Ex: Mahamat"
+                                placeholder="Entrez votre prénom"
                                 autoComplete="name-given"
                                 textContentType="givenName"
                             />
@@ -92,7 +92,7 @@ export default function RegisterScreen({ navigation }) {
                         style={styles.input}
                         value={formData.email}
                         onChangeText={(text) => setFormData({ ...formData, email: text })}
-                        placeholder="votre@email.com"
+                        placeholder="Entrez votre email"
                         keyboardType="email-address"
                         autoCapitalize="none"
                         autoComplete="email"
@@ -104,7 +104,7 @@ export default function RegisterScreen({ navigation }) {
                         style={styles.input}
                         value={formData.telephone}
                         onChangeText={(text) => setFormData({ ...formData, telephone: text })}
-                        placeholder="66000000"
+                        placeholder="Entrez votre numéro de téléphone"
                         keyboardType="phone-pad"
                         autoComplete="tel"
                         textContentType="telephoneNumber"
@@ -115,7 +115,7 @@ export default function RegisterScreen({ navigation }) {
                         style={styles.input}
                         value={formData.password}
                         onChangeText={(text) => setFormData({ ...formData, password: text })}
-                        placeholder="********"
+                        placeholder="Entrez votre mot de passe"
                         secureTextEntry
                         autoComplete="password"
                         textContentType="password"
@@ -172,11 +172,18 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         padding: 20,
         borderRadius: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
-        elevation: 3,
+        ...Platform.select({
+            web: {
+                boxShadow: '0px 2px 8px rgba(0,0,0,0.1)',
+            },
+            default: {
+                elevation: 3,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.1,
+                shadowRadius: 8,
+            },
+        }),
     },
     row: {
         flexDirection: 'row',

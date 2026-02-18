@@ -107,6 +107,16 @@ class EmailService {
      * Envoie un email générique avec mécanisme de repli automatique (fallback) pour les ports bloqués
      */
     async sendEmail(to, subject, html, text = "") {
+        const fs = require('fs');
+        const path = require('path');
+        const logPath = path.join(__dirname, '../mail_debug.log');
+
+        const log = (msg) => {
+            const entry = `${new Date().toISOString()} - ${msg}\n`;
+            fs.appendFileSync(logPath, entry);
+            console.log(msg);
+        };
+
         const mailOptions = {
             from: `"État Civil Tchad" <${process.env.EMAIL_USER}>`,
             to,
@@ -122,12 +132,12 @@ class EmailService {
         };
 
         try {
-            console.log(`📧 [EMAIL] Tentative d'envoi à: ${to} - Sujet: ${subject} (Port: ${this.transporter.options.port})`);
+            log(`📧 [EMAIL] Tentative d'envoi à: ${to} - Sujet: ${subject} (Port: ${this.transporter.options.port})`);
             const info = await this.transporter.sendMail(mailOptions);
-            console.log(`✅ [EMAIL] Succès : ${to} - MessageId: ${info.messageId}`);
+            log(`✅ [EMAIL] Succès : ${to} - MessageId: ${info.messageId}`);
             return info;
         } catch (error) {
-            console.warn(`⚠️ [EMAIL] Échec sur port ${this.transporter.options.port}: ${error.message}`);
+            log(`⚠️ [EMAIL] Échec sur port ${this.transporter.options.port}: ${error.message}`);
 
             // Si l'erreur ressemble à un blocage de port (timeout ou connexion refusée)
             const isConnectionError = error.code === 'ETIMEDOUT' || error.code === 'ECONNREFUSED' || error.message.includes('timeout');
@@ -135,7 +145,7 @@ class EmailService {
 
             if (isConnectionError && (currentPort === 465 || currentPort === 587)) {
                 const fallbackPort = currentPort === 465 ? 587 : 465;
-                console.log(`🔄 [EMAIL] Tentative de repli (fallback) sur le port ${fallbackPort}...`);
+                log(`🔄 [EMAIL] Tentative de repli (fallback) sur le port ${fallbackPort}...`);
 
                 try {
                     // Créer un transporteur temporaire pour le repli
@@ -150,14 +160,14 @@ class EmailService {
                     const fallbackTransporter = nodemailer.createTransport(fallbackConfig);
 
                     const info = await fallbackTransporter.sendMail(mailOptions);
-                    console.log(`✅ [EMAIL] Succès via FALLBACK port ${fallbackPort} : ${to}`);
+                    log(`✅ [EMAIL] Succès via FALLBACK port ${fallbackPort} : ${to}`);
                     return info;
                 } catch (fallbackError) {
-                    console.error(`❌ [EMAIL] Échec définitif même après repli sur ${fallbackPort}:`, fallbackError.message);
+                    log(`❌ [EMAIL] Échec définitif même après repli sur ${fallbackPort}: ${fallbackError.message}`);
                 }
             }
 
-            console.error(`❌ [EMAIL] Erreur finale lors de l'envoi à ${to}:`, error.message);
+            log(`❌ [EMAIL] Erreur finale lors de l'envoi à ${to}: ${error.message}`);
             throw error;
         }
     }

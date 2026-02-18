@@ -23,6 +23,8 @@ export default function AdminDemandes() {
     const [motifRejet, setMotifRejet] = useState("");
     const [actionLoading, setActionLoading] = useState(false);
     const [showDetailsModal, setShowDetailsModal] = useState(false);
+    const [isEditing, setIsEditing] = useState(false);
+    const [editData, setEditData] = useState({});
     const [notification, setNotification] = useState(null);
 
     const showToast = (message, type = 'success') => {
@@ -144,7 +146,84 @@ export default function AdminDemandes() {
 
     const handleDetails = (demande) => {
         setSelectedDemande(demande);
+        setEditData({ ...demande.donnees });
+        setIsEditing(false);
         setShowDetailsModal(true);
+    };
+
+    const handleSaveEdit = async () => {
+        try {
+            setActionLoading(true);
+            await demandeService.updateDemande(selectedDemande.id || selectedDemande._id, editData);
+            await loadData();
+            setIsEditing(false);
+            setSelectedDemande({ ...selectedDemande, donnees: editData });
+            showToast('Modifications enregistrées !', 'success');
+        } catch (error) {
+            showToast('Erreur: ' + error.message, 'error');
+        } finally {
+            setActionLoading(false);
+        }
+    };
+
+    const renderField = (label, value, key) => {
+        const isDate = key.toLowerCase().includes('date');
+        const isTime = key.toLowerCase().includes('heure');
+        const isSexe = key.toLowerCase().includes('sexe');
+        const isNationalite = key.toLowerCase().includes('nationalite');
+        const isRegime = key === 'regimeMatrimonial';
+
+        // Stabiliser la valeur pour éviter les nœuds texte orphelins
+        const displayValue = value || "-";
+
+        return (
+            <div className="col-md-6 border-bottom py-3 d-flex align-items-center" key={key}>
+                <span className="text-muted fw-bold" style={{ minWidth: '130px' }}>{label}</span>
+                <span className="mx-2">:</span>
+                <div className="flex-grow-1 d-flex">
+                    {isEditing ? (
+                        isSexe ? (
+                            <select
+                                className="form-select form-select-sm border-primary shadow-none"
+                                value={editData[key] || ''}
+                                onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
+                            >
+                                <option value="M">Masculin (M)</option>
+                                <option value="F">Féminin (F)</option>
+                            </select>
+                        ) : isNationalite ? (
+                            <select
+                                className="form-select form-select-sm border-primary shadow-none"
+                                value={editData[key] || ''}
+                                onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
+                            >
+                                <option value="TCHADIENNE">TCHADIENNE</option>
+                                <option value="AUTRE">AUTRE</option>
+                            </select>
+                        ) : isRegime ? (
+                            <select
+                                className="form-select form-select-sm border-primary shadow-none"
+                                value={editData[key] || ''}
+                                onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
+                            >
+                                <option value="monogamie">Monogamie</option>
+                                <option value="polygamie">Polygamie</option>
+                            </select>
+                        ) : (
+                            <input
+                                type={isDate ? "date" : (isTime ? "time" : "text")}
+                                className="form-control form-control-sm border-primary shadow-none"
+                                value={editData[key] || ''}
+                                onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
+                                placeholder={isDate ? "JJ/MM/AAAA" : ""}
+                            />
+                        )
+                    ) : (
+                        <span className="fw-bold text-dark">{displayValue}</span>
+                    )}
+                </div>
+            </div>
+        );
     };
 
     const handleDownloadPDF = (demande) => {
@@ -361,22 +440,24 @@ export default function AdminDemandes() {
     };
 
 
-    const handleExport = () => {
-        const formattedData = exportHelper.formatDemandesForExport(filteredDemandes);
-        const success = exportHelper.exportToExcel(formattedData, 'Demandes_SIGEC', 'Demandes');
-        if (success) showToast('Export réussi !', 'success');
-        else showToast('Erreur lors de l\'export', 'error');
+    const isRequestIncomplete = (type, donnees) => {
+        if (!donnees) return true;
+        if (type === 'naissance') {
+            const req = ['nomEnfant', 'prenomEnfant', 'dateNaissanceEnfant', 'lieuNaissanceEnfant', 'nomPere', 'prenomPere', 'nomMere', 'prenomMere'];
+            return req.some(f => !donnees[f]);
+        }
+        if (type === 'mariage') {
+            const req = ['nomEpoux', 'prenomEpoux', 'nomEpouse', 'prenomEpouse', 'dateMariage', 'lieuMariage'];
+            return req.some(f => !donnees[f]);
+        }
+        if (type === 'deces') {
+            const req = ['nomDefunt', 'prenomDefunt', 'dateDeces', 'lieuDeces', 'nomDeclarant', 'prenomDeclarant'];
+            return req.some(f => !donnees[f]);
+        }
+        return false;
     };
 
-    // Helper pour formater les dates YYYY-MM-DD en DD/MM/YYYY
-    const formatDateString = (dateStr) => {
-        if (!dateStr) return "Non renseignée";
-        try {
-            return new Date(dateStr).toLocaleDateString('fr-FR');
-        } catch (e) {
-            return dateStr;
-        }
-    };
+    const isIncomplete = selectedDemande ? isRequestIncomplete(selectedDemande.type, selectedDemande.donnees) : false;
 
     return (
         <div className="p-4 p-lg-5 animate__animated animate__fadeIn">
@@ -566,7 +647,18 @@ export default function AdminDemandes() {
                         <div className="modal-content border-0 shadow-lg rounded-4 overflow-hidden">
                             <div className="modal-header border-bottom p-4 bg-light">
                                 <h4 className="fw-bold m-0 text-primary">Extrait de Demande</h4>
-                                <button type="button" className="btn-close" onClick={() => setShowDetailsModal(false)}></button>
+                                <div className="ms-auto d-flex gap-2">
+                                    {(['en_attente', 'en attente'].includes(selectedDemande.statut?.toLowerCase())) && (
+                                        <button
+                                            className={`btn btn-sm ${isEditing ? 'btn-danger' : 'btn-outline-primary'} rounded-pill px-3 fw-bold`}
+                                            onClick={() => setIsEditing(!isEditing)}
+                                        >
+                                            <i className={`bi ${isEditing ? 'bi-x-lg' : 'bi-pencil-fill'} me-2`}></i>
+                                            {isEditing ? 'Annuler' : 'Modifier'}
+                                        </button>
+                                    )}
+                                    <button type="button" className="btn-close" onClick={() => setShowDetailsModal(false)}></button>
+                                </div>
                             </div>
                             <div className="modal-body p-4" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
                                 <div className="row g-4">
@@ -616,46 +708,109 @@ export default function AdminDemandes() {
                                             </div>
                                         </div>
                                     </div>
+
+                                    {/* Barre d'Actions Principale */}
+                                    <div className="col-12">
+                                        <div className="card-body bg-light rounded-4 p-4 mt-1 border-0 shadow-sm">
+                                            <div className="row align-items-center">
+                                                <div className="col-md-6">
+                                                    <div className="d-flex align-items-center gap-3">
+                                                        <div className="bg-white p-2 rounded-circle shadow-sm">
+                                                            <i className={`bi bi-circle-fill fs-4 ${(selectedDemande.statut === 'acceptee' || selectedDemande.statut === 'acceptee') ? 'text-success' :
+                                                                (selectedDemande.statut === 'rejetee' || selectedDemande.statut === 'rejetee') ? 'text-danger' : 'text-warning'
+                                                                }`}></i>
+                                                        </div>
+                                                        <div>
+                                                            <div className="text-muted small text-uppercase fw-bold mb-0">Statut de Traitement</div>
+                                                            <span className="fw-black fs-5 text-dark">
+                                                                {(selectedDemande.statut === 'en_attente' || selectedDemande.statut === 'en attente') ? 'En attente de validation' :
+                                                                    (selectedDemande.statut === 'acceptee' || selectedDemande.statut === 'acceptee') ? 'Demande Acceptée' : 'Demande Rejetée'}
+                                                            </span>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                <div className="col-md-6">
+                                                    <div className="p-3 d-flex justify-content-center">
+                                                        {(['en_attente', 'en attente'].includes(selectedDemande.statut?.toLowerCase())) ? (
+                                                            <div className="d-flex gap-3">
+                                                                <button
+                                                                    className="btn btn-success rounded-pill px-4 fw-bold shadow-sm"
+                                                                    onClick={() => handleApprove(selectedDemande)}
+                                                                    disabled={isIncomplete || actionLoading}
+                                                                    title={isIncomplete ? "Impossible d'accepter une demande incomplète" : ""}
+                                                                >
+                                                                    {actionLoading ? <span className="spinner-border spinner-border-sm me-2"></span> : <i className="bi bi-check-circle-fill me-2"></i>}
+                                                                    Accepter
+                                                                </button>
+                                                                <button className="btn btn-danger rounded-pill px-4 fw-bold shadow-sm" onClick={() => openRejetModal(selectedDemande)} disabled={actionLoading}>
+                                                                    <i className="bi bi-x-circle-fill me-2"></i>Rejeter
+                                                                </button>
+                                                                <button className="btn btn-primary rounded-pill px-4 fw-bold shadow-sm" onClick={() => setIsEditing(true)}>
+                                                                    <i className="bi bi-pencil-square me-2"></i>Modifier
+                                                                </button>
+                                                            </div>
+                                                        ) : (
+                                                            (selectedDemande.statut === 'acceptee' || selectedDemande.statut === 'acceptee') && (
+                                                                <button className="btn btn-outline-primary rounded-pill px-4 fw-bold" onClick={() => handleDownloadPDF(selectedDemande)}>
+                                                                    <i className="bi bi-download me-2"></i>Télécharger le Certificat Officiel
+                                                                </button>
+                                                            )
+                                                        )}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                            {isIncomplete && (selectedDemande.statut === 'en_attente' || selectedDemande.statut === 'en attente') && (
+                                                <div className="alert alert-danger mx-0 mt-3 mb-0 rounded-4 d-flex align-items-center animate__animated animate__shakeX border-0 shadow-sm">
+                                                    <i className="bi bi-exclamation-triangle-fill fs-4 me-3"></i>
+                                                    <div>
+                                                        <div className="fw-bold">Demande Incomplète !</div>
+                                                        <div className="small">Cette demande contient des champs obligatoires vides. Cliquez sur <strong>Modifier</strong> pour les remplir.</div>
+                                                    </div>
+                                                </div>
+                                            )}
+                                        </div>
+                                    </div>
+
                                     <div className="col-12">
                                         <h6 className="text-primary fw-bold text-uppercase small mb-3">Détails de l'acte</h6>
 
                                         {selectedDemande.type === 'naissance' && (
                                             <>
                                                 <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
-                                                    <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-person-fill me-2"></i>L'Enfant</h6>
+                                                    <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-person-plus-fill me-2"></i>L'Enfant</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomEnfant)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomEnfant}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Sexe</span>: <span className="fw-bold">{selectedDemande.donnees.sexeEnfant}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date de Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissanceEnfant)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Heure</span>: <span className="fw-bold">{selectedDemande.donnees.heureNaissanceEnfant || "Non renseignée"}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu</span>: <span className="fw-bold">{selectedDemande.donnees.lieuNaissanceEnfant}</span></div>
+                                                        {renderField('Nom', selectedDemande.donnees.nomEnfant, 'nomEnfant')}
+                                                        {renderField('Prénoms', selectedDemande.donnees.prenomEnfant, 'prenomEnfant')}
+                                                        {renderField('Sexe', selectedDemande.donnees.sexeEnfant, 'sexeEnfant')}
+                                                        {renderField('Date Naissance', formatDate(selectedDemande.donnees.dateNaissanceEnfant), 'dateNaissanceEnfant')}
+                                                        {renderField('Heure Naissance', selectedDemande.donnees.heureNaissanceEnfant, 'heureNaissanceEnfant')}
+                                                        {renderField('Lieu Naissance', selectedDemande.donnees.lieuNaissanceEnfant, 'lieuNaissanceEnfant')}
                                                     </div>
                                                 </div>
                                                 <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-gender-male me-2"></i>Le Père</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomPere)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomPere}</span></div>
-                                                        <div className="col-md-12 border-bottom py-2"><span className="text-muted">NNI</span>: <span className="fw-bold">{selectedDemande.donnees.pere?.nni || "Non renseigné"}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissancePere)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu Naissance</span>: <span className="fw-bold">{selectedDemande.donnees.lieuNaissancePere}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nationalité</span>: <span className="fw-bold">{selectedDemande.donnees.nationalitePere}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Profession</span>: <span className="fw-bold">{selectedDemande.donnees.professionPere}</span></div>
-                                                        <div className="col-12 border-bottom py-2"><span className="text-muted">Domicile</span>: <span className="fw-bold">{selectedDemande.donnees.domicilePere}</span></div>
+                                                        {renderField('Nom', selectedDemande.donnees.nomPere, 'nomPere')}
+                                                        {renderField('Prénoms', selectedDemande.donnees.prenomPere, 'prenomPere')}
+                                                        {renderField('NNI', selectedDemande.donnees.nniPere, 'nniPere')}
+                                                        {renderField('Date Naissance', formatDate(selectedDemande.donnees.dateNaissancePere), 'dateNaissancePere')}
+                                                        {renderField('Lieu Naissance', selectedDemande.donnees.lieuNaissancePere, 'lieuNaissancePere')}
+                                                        {renderField('Nationalité', selectedDemande.donnees.nationalitePere, 'nationalitePere')}
+                                                        {renderField('Profession', selectedDemande.donnees.professionPere, 'professionPere')}
+                                                        {renderField('Domicile', selectedDemande.donnees.domicilePere, 'domicilePere')}
                                                     </div>
                                                 </div>
                                                 <div className="bg-light p-4 rounded-4 shadow-inner">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-gender-female me-2"></i>La Mère</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomMere)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomMere}</span></div>
-                                                        <div className="col-md-12 border-bottom py-2"><span className="text-muted">NNI</span>: <span className="fw-bold">{selectedDemande.donnees.mere?.nni || "Non renseigné"}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissanceMere)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu Naissance</span>: <span className="fw-bold">{selectedDemande.donnees.lieuNaissanceMere}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nationalité</span>: <span className="fw-bold">{selectedDemande.donnees.nationaliteMere}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Profession</span>: <span className="fw-bold">{selectedDemande.donnees.professionMere}</span></div>
-                                                        <div className="col-12 border-bottom py-2"><span className="text-muted">Domicile</span>: <span className="fw-bold">{selectedDemande.donnees.domicileMere}</span></div>
+                                                        {renderField('Nom', selectedDemande.donnees.nomMere, 'nomMere')}
+                                                        {renderField('Prénoms', selectedDemande.donnees.prenomMere, 'prenomMere')}
+                                                        {renderField('NNI', selectedDemande.donnees.nniMere, 'nniMere')}
+                                                        {renderField('Date Naissance', formatDate(selectedDemande.donnees.dateNaissanceMere), 'dateNaissanceMere')}
+                                                        {renderField('Lieu Naissance', selectedDemande.donnees.lieuNaissanceMere, 'lieuNaissanceMere')}
+                                                        {renderField('Nationalité', selectedDemande.donnees.nationaliteMere, 'nationaliteMere')}
+                                                        {renderField('Profession', selectedDemande.donnees.professionMere, 'professionMere')}
+                                                        {renderField('Domicile', selectedDemande.donnees.domicileMere, 'domicileMere')}
                                                     </div>
                                                 </div>
                                             </>
@@ -666,39 +821,39 @@ export default function AdminDemandes() {
                                                 <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-calendar-heart me-2"></i>Détails du Mariage & Dot</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateMariage)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu</span>: <span className="fw-bold">{selectedDemande.donnees.lieuMariage}</span></div>
-                                                        <div className="col-12 border-bottom py-2"><span className="text-muted">Régime Matrimonial</span>: <span className="fw-bold text-capitalize">{selectedDemande.donnees.regimeMatrimonial?.replace('_', ' ')}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2 text-success fw-bold"><span className="text-muted">Montant Dot</span>: {selectedDemande.donnees.dotMontant}</div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Conditions Dot</span>: {selectedDemande.donnees.dotConditions || "-"}</div>
+                                                        {renderField('Date', formatDate(selectedDemande.donnees.dateMariage), 'dateMariage')}
+                                                        {renderField('Lieu', selectedDemande.donnees.lieuMariage, 'lieuMariage')}
+                                                        {renderField('Régime Matrimonial', selectedDemande.donnees.regimeMatrimonial, 'regimeMatrimonial')}
+                                                        {renderField('Montant Dot', selectedDemande.donnees.dotMontant, 'dotMontant')}
+                                                        {renderField('Conditions Dot', selectedDemande.donnees.dotConditions, 'dotConditions')}
                                                     </div>
                                                 </div>
                                                 <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-gender-male me-2"></i>L'Époux</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomEpoux)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomEpoux}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Premier Témoin</span>: <span className="fw-bold">{selectedDemande.donnees.temoin1Epoux}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Deuxième Témoin</span>: <span className="fw-bold">{selectedDemande.donnees.temoin2Epoux}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissanceEpoux)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu Naissance</span>: <span className="fw-bold">{selectedDemande.donnees.lieuNaissanceEpoux}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nationalité</span>: <span className="fw-bold">{selectedDemande.donnees.nationaliteEpoux}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Profession</span>: <span className="fw-bold">{selectedDemande.donnees.professionEpoux}</span></div>
-                                                        <div className="col-12 border-bottom py-2"><span className="text-muted">Domicile</span>: <span className="fw-bold">{selectedDemande.donnees.domicileEpoux}</span></div>
+                                                        {renderField('Nom', selectedDemande.donnees.nomEpoux, 'nomEpoux')}
+                                                        {renderField('Prénoms', selectedDemande.donnees.prenomEpoux, 'prenomEpoux')}
+                                                        {renderField('Premier Témoin', selectedDemande.donnees.temoin1Epoux, 'temoin1Epoux')}
+                                                        {renderField('Deuxième Témoin', selectedDemande.donnees.temoin2Epoux, 'temoin2Epoux')}
+                                                        {renderField('Date Naissance', formatDate(selectedDemande.donnees.dateNaissanceEpoux), 'dateNaissanceEpoux')}
+                                                        {renderField('Lieu Naissance', selectedDemande.donnees.lieuNaissanceEpoux, 'lieuNaissanceEpoux')}
+                                                        {renderField('Nationalité', selectedDemande.donnees.nationaliteEpoux, 'nationaliteEpoux')}
+                                                        {renderField('Profession', selectedDemande.donnees.professionEpoux, 'professionEpoux')}
+                                                        {renderField('Domicile', selectedDemande.donnees.domicileEpoux, 'domicileEpoux')}
                                                     </div>
                                                 </div>
                                                 <div className="bg-light p-4 rounded-4 shadow-inner">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-gender-female me-2"></i>L'Épouse</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomEpouse)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomEpouse}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Premier Témoin</span>: <span className="fw-bold">{selectedDemande.donnees.temoin1Epouse}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Deuxième Témoin</span>: <span className="fw-bold">{selectedDemande.donnees.temoin2Epouse}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissanceEpouse)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu Naissance</span>: <span className="fw-bold">{selectedDemande.donnees.lieuNaissanceEpouse}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nationalité</span>: <span className="fw-bold">{selectedDemande.donnees.nationaliteEpouse}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Profession</span>: <span className="fw-bold">{selectedDemande.donnees.professionEpouse}</span></div>
-                                                        <div className="col-12 border-bottom py-2"><span className="text-muted">Domicile</span>: <span className="fw-bold">{selectedDemande.donnees.domicileEpouse}</span></div>
+                                                        {renderField('Nom', selectedDemande.donnees.nomEpouse, 'nomEpouse')}
+                                                        {renderField('Prénoms', selectedDemande.donnees.prenomEpouse, 'prenomEpouse')}
+                                                        {renderField('Premier Témoin', selectedDemande.donnees.temoin1Epouse, 'temoin1Epouse')}
+                                                        {renderField('Deuxième Témoin', selectedDemande.donnees.temoin2Epouse, 'temoin2Epouse')}
+                                                        {renderField('Date Naissance', formatDate(selectedDemande.donnees.dateNaissanceEpouse), 'dateNaissanceEpouse')}
+                                                        {renderField('Lieu Naissance', selectedDemande.donnees.lieuNaissanceEpouse, 'lieuNaissanceEpouse')}
+                                                        {renderField('Nationalité', selectedDemande.donnees.nationaliteEpouse, 'nationaliteEpouse')}
+                                                        {renderField('Profession', selectedDemande.donnees.professionEpouse, 'professionEpouse')}
+                                                        {renderField('Domicile', selectedDemande.donnees.domicileEpouse, 'domicileEpouse')}
                                                     </div>
                                                 </div>
                                             </>
@@ -709,33 +864,33 @@ export default function AdminDemandes() {
                                                 <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-person-x-fill me-2"></i>Le Défunt</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomDefunt)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomDefunt}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Sexe</span>: <span className="fw-bold">{selectedDemande.donnees.sexeDefunt}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">NNI</span>: <span className="fw-bold">{selectedDemande.donnees.nniDefunt || "Non renseigné"}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date Naissance</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateNaissanceDefunt)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu Naissance</span>: <span className="fw-bold">{selectedDemande.donnees.lieuNaissanceDefunt}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Fils de (Père)</span>: <span className="fw-bold">{selectedDemande.donnees.pereDefunt}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Et de (Mère)</span>: <span className="fw-bold">{selectedDemande.donnees.mereDefunt}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nationalité</span>: <span className="fw-bold">{selectedDemande.donnees.nationaliteDefunt}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Profession</span>: <span className="fw-bold">{selectedDemande.donnees.professionDefunt || "Non renseignée"}</span></div>
+                                                        {renderField('Nom', selectedDemande.donnees.nomDefunt, 'nomDefunt')}
+                                                        {renderField('Prénoms', selectedDemande.donnees.prenomDefunt, 'prenomDefunt')}
+                                                        {renderField('Sexe', selectedDemande.donnees.sexeDefunt, 'sexeDefunt')}
+                                                        {renderField('NNI', selectedDemande.donnees.nniDefunt, 'nniDefunt')}
+                                                        {renderField('Date Naissance', formatDate(selectedDemande.donnees.dateNaissanceDefunt), 'dateNaissanceDefunt')}
+                                                        {renderField('Lieu Naissance', selectedDemande.donnees.lieuNaissanceDefunt, 'lieuNaissanceDefunt')}
+                                                        {renderField('Père', selectedDemande.donnees.pereDefunt, 'pereDefunt')}
+                                                        {renderField('Mère', selectedDemande.donnees.mereDefunt, 'mereDefunt')}
+                                                        {renderField('Nationalité', selectedDemande.donnees.nationaliteDefunt, 'nationaliteDefunt')}
+                                                        {renderField('Profession', selectedDemande.donnees.professionDefunt, 'professionDefunt')}
                                                     </div>
                                                 </div>
                                                 <div className="bg-light p-4 rounded-4 shadow-inner mb-3">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-info-circle-fill me-2"></i>Détails du Décès</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Date</span>: <span className="fw-bold">{formatDateString(selectedDemande.donnees.dateDeces)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lieu</span>: <span className="fw-bold">{selectedDemande.donnees.lieuDeces}</span></div>
-                                                        <div className="col-12 border-bottom py-2"><span className="text-muted">Cause</span>: <span className="fw-bold">{selectedDemande.donnees.causeDeces}</span></div>
+                                                        {renderField('Date', formatDate(selectedDemande.donnees.dateDeces), 'dateDeces')}
+                                                        {renderField('Lieu', selectedDemande.donnees.lieuDeces, 'lieuDeces')}
+                                                        {renderField('Cause', selectedDemande.donnees.causeDeces, 'causeDeces')}
                                                     </div>
                                                 </div>
                                                 <div className="bg-light p-4 rounded-4 shadow-inner">
                                                     <h6 className="fw-bold text-dark border-bottom pb-2 mb-3"><i className="bi bi-person-fill me-2"></i>Le Déclarant</h6>
                                                     <div className="row g-3">
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Nom</span>: <span className="fw-bold">{formatName(selectedDemande.donnees.nomDeclarant)}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Prénoms</span>: <span className="fw-bold">{selectedDemande.donnees.prenomDeclarant}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Lien parenté</span>: <span className="fw-bold">{selectedDemande.donnees.lienParente}</span></div>
-                                                        <div className="col-md-6 border-bottom py-2"><span className="text-muted">Domicile</span>: <span className="fw-bold">{selectedDemande.donnees.domicileDeclarant}</span></div>
+                                                        {renderField('Nom', selectedDemande.donnees.nomDeclarant, 'nomDeclarant')}
+                                                        {renderField('Prénoms', selectedDemande.donnees.prenomDeclarant, 'prenomDeclarant')}
+                                                        {renderField('Lien parenté', selectedDemande.donnees.lienParente, 'lienParente')}
+                                                        {renderField('Domicile', selectedDemande.donnees.domicileDeclarant, 'domicileDeclarant')}
                                                     </div>
                                                 </div>
                                                 {selectedDemande.donnees.piecesJointes && selectedDemande.donnees.piecesJointes.length > 0 && (
@@ -765,7 +920,22 @@ export default function AdminDemandes() {
                                 </div>
                             </div>
                             <div className="modal-footer border-0 p-4 bg-light">
-                                <button className="btn btn-primary rounded-pill px-5 fw-bold" onClick={() => setShowDetailsModal(false)}>Fermer</button>
+                                {isEditing ? (
+                                    <button
+                                        className="btn btn-success rounded-pill px-5 fw-bold shadow-sm"
+                                        onClick={handleSaveEdit}
+                                        disabled={actionLoading}
+                                    >
+                                        {actionLoading ? (
+                                            <>
+                                                <span className="spinner-border spinner-border-sm me-2"></span>
+                                                Enregistrement...
+                                            </>
+                                        ) : 'Enregistrer les modifications'}
+                                    </button>
+                                ) : (
+                                    <button className="btn btn-primary rounded-pill px-5 fw-bold" onClick={() => setShowDetailsModal(false)}>Fermer</button>
+                                )}
                             </div>
                         </div>
                     </div>

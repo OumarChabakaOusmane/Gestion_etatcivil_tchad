@@ -42,7 +42,11 @@ const TEXT_NORMALIZATION_MAP = {
  * @returns {string}
  */
 export const normalizeText = (text) => {
-    if (!text || typeof text !== 'string') return text || "";
+    if (!text) return "";
+    if (typeof text !== 'string') {
+        if (typeof text === 'object') return "[Données complexes]";
+        return String(text);
+    }
 
     let normalized = text.trim();
     const words = normalized.split(/\s+/);

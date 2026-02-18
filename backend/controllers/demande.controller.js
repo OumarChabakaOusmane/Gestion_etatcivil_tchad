@@ -10,6 +10,33 @@ const { sendPushNotification } = require('../services/expoPushService');
 const logAction = require('../utils/auditLogger');
 
 /**
+ * Helper pou valider les données selon le type
+ */
+const validateRequestData = (type, donnees) => {
+    const errors = [];
+    if (!donnees) return ["Données absentes"];
+
+    if (type === 'naissance') {
+        const required = ['nomEnfant', 'prenomEnfant', 'dateNaissanceEnfant', 'lieuNaissanceEnfant', 'nomPere', 'prenomPere', 'nomMere', 'prenomMere'];
+        required.forEach(field => {
+            if (!donnees[field]) errors.push(`Champ ${field} requis`);
+        });
+    } else if (type === 'mariage') {
+        const required = ['nomEpoux', 'prenomEpoux', 'nomEpouse', 'prenomEpouse', 'dateMariage', 'lieuMariage'];
+        required.forEach(field => {
+            if (!donnees[field]) errors.push(`Champ ${field} requis`);
+        });
+    } else if (type === 'deces') {
+        const required = ['nomDefunt', 'prenomDefunt', 'dateDeces', 'lieuDeces', 'nomDeclarant', 'prenomDeclarant'];
+        required.forEach(field => {
+            if (!donnees[field]) errors.push(`Champ ${field} requis`);
+        });
+    }
+
+    return errors;
+};
+
+/**
  * Crée une nouvelle demande
  * @route POST /api/demandes
  * @access Privé (Utilisateur authentifié)
@@ -38,6 +65,15 @@ const createDemande = async (req, res) => {
             return res.status(400).json({
                 success: false,
                 message: 'Les données de la demande sont requises.'
+            });
+        }
+
+        const validationErrors = validateRequestData(type, donnees);
+        if (validationErrors.length > 0) {
+            return res.status(400).json({
+                success: false,
+                message: 'Données incomplètes',
+                errors: validationErrors
             });
         }
 
@@ -281,6 +317,16 @@ const updateDemandeStatut = async (req, res) => {
 
         // Si la demande est acceptée, créer l'acte correspondant
         if (statut === 'acceptee') {
+            // Validation finale avant acceptation (Sécurité)
+            const validationErrors = validateRequestData(demande.type, demande.donnees);
+            if (validationErrors.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Impossible d'accepter une demande incomplète. Veuillez d'abord la modifier pour remplir les champs obligatoires.",
+                    errors: validationErrors
+                });
+            }
+
             try {
                 let acte;
                 // On génère un numéro d'acte temporaire si non fourni
@@ -506,13 +552,27 @@ const updateDemande = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Demande non trouvée' });
         }
 
-        // Sécurité : propriétaire et statut 'en_attente'
-        if (demande.userId !== req.user.id) {
+        // Sécurité : propriétaire OU admin/agent
+        const isOwner = demande.userId === req.user.id;
+        const isAdminOrAgent = ['admin', 'agent'].includes(req.user.role);
+
+        if (!isOwner && !isAdminOrAgent) {
             return res.status(403).json({ success: false, message: 'Non autorisé' });
         }
 
         if (demande.statut !== 'en_attente') {
             return res.status(400).json({ success: false, message: 'Seules les demandes en attente peuvent être modifiées' });
+        }
+
+        if (donnees) {
+            const validationErrors = validateRequestData(demande.type, donnees);
+            if (validationErrors.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: 'Données de mise à jour incomplètes',
+                    errors: validationErrors
+                });
+            }
         }
 
         const updatedDemande = await Demande.update(req.params.id, { donnees });

@@ -27,7 +27,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "apiUrl": "https://api.etatciviltd.com/api",
+      "apiUrl": "https://gestion-etatcivil-backend.onrender.com/api",
       "eas": {
         "projectId": "d02b3136-a1c2-4396-bdde-629e12dfc92d"
       }

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { StyleSheet, View, Text, FlatList, ActivityIndicator, RefreshControl, Platform } from 'react-native';
+import { StyleSheet, View, Text, FlatList, ActivityIndicator, RefreshControl, Platform, TouchableOpacity } from 'react-native';
 import { demandeService } from '../api/demandeService';
-import { Clock, CheckCircle, XCircle } from 'lucide-react-native';
+import { Clock, CheckCircle, XCircle, Edit2 } from 'lucide-react-native';
 
 const StatusBadge = ({ status }) => {
     let config = {
@@ -34,8 +34,13 @@ export default function MesDemandesScreen() {
 
     const fetchDemandes = async () => {
         try {
-            const data = await demandeService.getMyDemandes();
-            setDemandes(data);
+            const result = await demandeService.getMyDemandes();
+            // L'API retourne { success: true, data: [...] }
+            if (result && result.data) {
+                setDemandes(result.data);
+            } else if (Array.isArray(result)) {
+                setDemandes(result);
+            }
         } catch (error) {
             console.error(error);
         } finally {
@@ -53,14 +58,40 @@ export default function MesDemandesScreen() {
         fetchDemandes();
     };
 
+    const formatDate = (dateValue) => {
+        if (!dateValue) return 'Date inconnue';
+        try {
+            // Gérer les Timestamps Firestore ( {seconds, nanoseconds} )
+            if (dateValue.seconds) {
+                return new Date(dateValue.seconds * 1000).toLocaleDateString();
+            }
+            // Gérer les dates JS classiques ou ISO strings
+            return new Date(dateValue).toLocaleDateString();
+        } catch (e) {
+            return 'Date invalide';
+        }
+    };
+
     const renderItem = ({ item }) => (
         <View style={styles.demandeItem}>
             <View style={styles.itemHeader}>
-                <Text style={styles.itemType}>{item.type.charAt(0) + item.type.slice(1).toLowerCase()}</Text>
+                <Text style={styles.itemType}>{item.type.charAt(0).toUpperCase() + item.type.slice(1).toLowerCase()}</Text>
                 <StatusBadge status={item.statut} />
             </View>
-            <Text style={styles.itemDate}>Demandé le : {new Date(item.createdAt).toLocaleDateString()}</Text>
+            <Text style={styles.itemDate}>Demandé le : {formatDate(item.createdAt || item.dateDemande)}</Text>
             <Text style={styles.itemRef}>Réf: {item.id.substring(0, 8).toUpperCase()}</Text>
+
+            {item.statut === 'en_attente' && (
+                <View style={styles.itemActions}>
+                    <TouchableOpacity
+                        style={styles.editButton}
+                        onPress={() => navigation.navigate('CreateDemande', { editingDemande: item })}
+                    >
+                        <Edit2 size={14} color="#004aad" />
+                        <Text style={styles.editButtonText}>Modifier</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
         </View>
     );
 
@@ -74,11 +105,6 @@ export default function MesDemandesScreen() {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>Mes Demandes</Text>
-                <Text style={styles.subtitle}>Suivez l'état de vos dossiers en temps réel</Text>
-            </View>
-
             <FlatList
                 data={demandes}
                 renderItem={renderItem}
@@ -125,10 +151,7 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 12,
         marginBottom: 12,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
+        boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
         elevation: 2,
     },
     itemHeader: {
@@ -175,5 +198,27 @@ const styles = StyleSheet.create({
     emptyText: {
         color: '#6c757d',
         fontSize: 16,
+    },
+    itemActions: {
+        marginTop: 12,
+        paddingTop: 12,
+        borderTopWidth: 1,
+        borderTopColor: '#f1f3f5',
+        flexDirection: 'row',
+        justifyContent: 'flex-end',
+    },
+    editButton: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 8,
+        backgroundColor: '#f0f4ff',
+    },
+    editButtonText: {
+        marginLeft: 6,
+        fontSize: 13,
+        fontWeight: 'bold',
+        color: '#004aad',
     },
 });

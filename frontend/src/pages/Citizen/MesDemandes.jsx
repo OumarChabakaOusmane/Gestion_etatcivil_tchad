@@ -420,8 +420,8 @@ export default function MesDemandes() {
                                     <div className="row g-4">
                                         {(() => {
                                             const labelMap = {
-                                                nomEnfant: "Nom de l'enfant", prenomEnfant: "Prénoms l'enfant", sexeEnfant: "Sexe l'enfant",
-                                                dateNaissanceEnfant: "Date naissance", lieuNaissanceEnfant: "Lieu naissance",
+                                                nomEnfant: "Nom de l'enfant", prenomEnfant: "Prénoms de l'enfant", sexeEnfant: "Sexe de l'enfant",
+                                                dateNaissanceEnfant: "Date naissance", heureNaissanceEnfant: "Heure naissance", lieuNaissanceEnfant: "Lieu naissance",
                                                 nomPere: "Nom du Père", prenomPere: "Prénom du Père", professionPere: "Profession Père",
                                                 nomMere: "Nom de la Mère", prenomMere: "Prénom de la Mère", professionMere: "Profession Mère",
                                                 nomEpoux: "Nom Époux", prenomEpoux: "Prénom Époux", nomEpouse: "Nom Épouse",
@@ -433,13 +433,14 @@ export default function MesDemandes() {
                                                 const value = editData[key];
                                                 if (value === undefined) return null;
                                                 const isDate = key.toLowerCase().includes('date');
+                                                const isTime = key.toLowerCase().includes('heure');
                                                 const label = labelMap[key] || key.replace(/([A-Z])/g, ' $1').toUpperCase();
 
                                                 return (
                                                     <div className="col-md-6" key={key}>
                                                         <label className="form-label small fw-bold text-muted text-uppercase">{label}</label>
                                                         <input
-                                                            type={isDate ? "date" : "text"}
+                                                            type={isDate ? "date" : (isTime ? "time" : "text")}
                                                             className="form-control bg-light border-0 py-2 px-3 fw-bold"
                                                             value={value || ''}
                                                             onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
@@ -461,7 +462,7 @@ export default function MesDemandes() {
                                             if (selectedDemande.type === 'naissance') {
                                                 return (
                                                     <>
-                                                        {renderSection("Identité de l'enfant", ["nomEnfant", "prenomEnfant", "sexeEnfant", "dateNaissanceEnfant"])}
+                                                        {renderSection("Identité de l'enfant", ["nomEnfant", "prenomEnfant", "sexeEnfant", "dateNaissanceEnfant", "heureNaissanceEnfant", "lieuNaissanceEnfant"])}
                                                         {renderSection("Filiation", ["nomPere", "prenomPere", "nomMere", "prenomMere"])}
                                                     </>
                                                 );
@@ -483,7 +484,7 @@ export default function MesDemandes() {
                                 <div className="details-view animate__animated animate__fadeIn">
                                     {/* Action Bar */}
                                     <div className="d-flex flex-wrap gap-3 mb-4 p-3 bg-white rounded-4 shadow-sm align-items-center">
-                                        {selectedDemande.statut === 'en_attente' && (
+                                        {(['en_attente', 'en attente'].includes(selectedDemande.statut?.toLowerCase())) && (
                                             <button className="btn btn-outline-primary border-2 rounded-pill px-4 fw-bold" onClick={startEditing}>
                                                 <i className="bi bi-pencil-square me-2"></i>Modifier
                                             </button>
@@ -491,7 +492,7 @@ export default function MesDemandes() {
                                         <button className="btn btn-outline-secondary border-2 rounded-pill px-4 fw-bold" onClick={() => window.print()}>
                                             <i className="bi bi-printer me-2"></i>Imprimer
                                         </button>
-                                        {selectedDemande.statut === 'en_attente' && (
+                                        {(['en_attente', 'en attente'].includes(selectedDemande.statut?.toLowerCase())) && (
                                             <button className="btn btn-outline-danger border-2 rounded-pill px-4 fw-bold ms-auto" onClick={() => handleDelete(selectedDemande.id)}>
                                                 <i className="bi bi-trash-fill"></i>
                                             </button>
@@ -519,6 +520,12 @@ export default function MesDemandes() {
                                                     nomDefunt: "Défunt", prenomDefunt: "Prénom Défunt", dateDeces: "Date Décès", lieuDeces: "Lieu Décès"
                                                 };
                                                 const label = labelMap[key] || key;
+
+                                                // Sécurité : Ne pas tenter de rendre des objets imbriqués comme enfants React
+                                                if (value && typeof value === 'object' && !value._seconds) {
+                                                    return null;
+                                                }
+
                                                 return (
                                                     <div className="col-md-6" key={key}>
                                                         <div className="p-3 bg-light rounded-3 border-start border-4 border-primary">

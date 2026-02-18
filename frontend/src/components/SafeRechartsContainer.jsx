@@ -14,21 +14,19 @@ class SafeRechartsContainer extends Component {
     }
 
     static getDerivedStateFromError(error) {
-        // Vérifier si c'est une erreur removeChild de Recharts
-        if (error && error.message && error.message.includes('removeChild')) {
-            // Ignorer silencieusement cette erreur spécifique
+        // Vérifier si c'est une erreur connue de Recharts (removeChild, dimensions)
+        const msg = error?.message || '';
+        if (msg.includes('removeChild') || msg.includes('width') || msg.includes('height')) {
             return { hasError: false };
         }
-        // Propager les autres erreurs
         throw error;
     }
 
-    componentDidCatch(error, errorInfo) {
-        // Log uniquement en développement
-        if (process.env.NODE_ENV === 'development') {
-            if (error && error.message && error.message.includes('removeChild')) {
-                console.warn('Recharts removeChild error suppressed (known bug):', error);
-            }
+    componentDidCatch(error) {
+        const msg = error?.message || '';
+        if (msg.includes('removeChild') || msg.includes('width') || msg.includes('height')) {
+            console.warn('SafeRechartsContainer: Erreur graphique Recharts gérée gracieusement');
+            return;
         }
     }
 

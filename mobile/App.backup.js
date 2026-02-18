@@ -10,11 +10,8 @@ export default function App() {
   const notificationListener = useRef();
   const responseListener = useRef();
 
-  console.log('📱 App: Rendering App Component');
-
   useEffect(() => {
-    console.log('📱 App: useEffect mounted');
-    notificationService.registerForPushNotificationsAsync().then(() => console.log('📱 App: Push registered'));
+    notificationService.registerForPushNotificationsAsync();
 
     notificationListener.current = notificationService.addNotificationReceivedListener(notification => {
       console.log('🔔 Notification reçue!', notification);

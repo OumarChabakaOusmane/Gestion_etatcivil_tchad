@@ -48,12 +48,7 @@ export default function ServicesScreen({ navigation }) {
 
     return (
         <ScrollView style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.title}>Services État Civil</Text>
-                <Text style={styles.subtitle}>Sélectionnez le type d'acte dont vous avez besoin</Text>
-            </View>
-
-            <View style={styles.grid}>
+            <View style={styles.section}>
                 {services.map((service, index) => (
                     <ServiceCard
                         key={index}
@@ -96,10 +91,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         marginBottom: 16,
         alignItems: 'center',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
+        boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
         elevation: 2,
     },
     iconContainer: {

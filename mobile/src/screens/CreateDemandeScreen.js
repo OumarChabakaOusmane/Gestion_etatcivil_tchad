@@ -17,33 +17,39 @@ import { useAuth } from '../context/AuthContext';
 
 export default function CreateDemandeScreen({ route, navigation }) {
     const { isLoggedIn } = useAuth();
-    const type = route.params?.type || 'naissance';
+    const editingDemande = route.params?.editingDemande;
+    const type = editingDemande?.type || route.params?.type || 'naissance';
     const [loading, setLoading] = useState(false);
     const [currentStep, setCurrentStep] = useState(1);
 
     // Initial State based on type
     const getInitialData = () => {
+        if (editingDemande) return editingDemande.donnees;
         if (type === 'naissance') {
             return {
                 prenomEnfant: '', nomEnfant: '', sexeEnfant: 'M', dateNaissanceEnfant: '',
                 heureNaissanceEnfant: '', lieuNaissanceEnfant: '',
                 prenomPere: '', nomPere: '', dateNaissancePere: '', lieuNaissancePere: '',
-                nationalitePere: 'TCHADIENNE', professionPere: '', domicilePere: '',
+                nationalitePere: 'TCHADIENNE', professionPere: '', domicilePere: '', nniPere: '',
                 prenomMere: '', nomMere: '', dateNaissanceMere: '', lieuNaissanceMere: '',
-                nationaliteMere: 'TCHADIENNE', professionMere: '', domicileMere: ''
+                nationaliteMere: 'TCHADIENNE', professionMere: '', domicileMere: '', nniMere: ''
             };
         } else if (type === 'mariage') {
             return {
                 nomEpoux: '', prenomEpoux: '', dateNaissanceEpoux: '', lieuNaissanceEpoux: '',
                 nationaliteEpoux: 'TCHADIENNE', professionEpoux: '', domicileEpoux: '',
+                temoin1Epoux: '', temoin2Epoux: '',
                 nomEpouse: '', prenomEpouse: '', dateNaissanceEpouse: '', lieuNaissanceEpouse: '',
                 nationaliteEpouse: 'TCHADIENNE', professionEpouse: '', domicileEpouse: '',
-                dateMariage: '', lieuMariage: '', regimeMatrimonial: 'monogamie'
+                temoin1Epouse: '', temoin2Epouse: '',
+                dateMariage: '', lieuMariage: '', regimeMatrimonial: 'monogamie',
+                dotMontant: '', dotConditions: ''
             };
         } else if (type === 'deces') {
             return {
-                nomDefunt: '', prenomDefunt: '', dateDeces: '', lieuDeces: '', causeDeces: '',
+                nomDefunt: '', prenomDefunt: '', sexeDefunt: 'M', dateDeces: '', lieuDeces: '', causeDeces: '',
                 dateNaissanceDefunt: '', lieuNaissanceDefunt: '', nationaliteDefunt: 'TCHADIENNE',
+                professionDefunt: '', nniDefunt: '', pereDefunt: '', mereDefunt: '',
                 nomDeclarant: '', prenomDeclarant: '', lienParente: '', domicileDeclarant: ''
             };
         }
@@ -95,8 +101,8 @@ export default function CreateDemandeScreen({ route, navigation }) {
                     return false;
                 }
             } else if (currentStep === 3) {
-                if (!formData.dateMariage || !formData.lieuMariage) {
-                    Alert.alert('Champs requis', 'Veuillez indiquer la date et le lieu du mariage.');
+                if (!formData.dateMariage || !formData.lieuMariage || !formData.dotMontant) {
+                    Alert.alert('Champs requis', 'Veuillez indiquer la date, le lieu et le montant de la dot.');
                     return false;
                 }
             }
@@ -107,8 +113,8 @@ export default function CreateDemandeScreen({ route, navigation }) {
                     return false;
                 }
             } else if (currentStep === 2) {
-                if (!formData.nomDeclarant || !formData.prenomDeclarant || !formData.lienParente) {
-                    Alert.alert('Champs requis', 'Veuillez remplir les informations sur le déclarant.');
+                if (!formData.nomDeclarant || !formData.prenomDeclarant || !formData.lienParente || !formData.domicileDeclarant) {
+                    Alert.alert('Champs requis', 'Veuillez remplir les informations obligatoires sur le déclarant.');
                     return false;
                 }
             }
@@ -122,17 +128,67 @@ export default function CreateDemandeScreen({ route, navigation }) {
         }
     };
 
+    const formatDate = (text) => {
+        // Remove any non-numeric characters
+        const cleaned = text.replace(/\D/g, '');
+
+        // Apply formatting
+        let formatted = cleaned;
+        if (cleaned.length > 2) {
+            formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2)}`;
+        }
+        if (cleaned.length > 4) {
+            formatted = `${cleaned.slice(0, 2)}/${cleaned.slice(2, 4)}/${cleaned.slice(4, 8)}`;
+        }
+
+        return formatted.slice(0, 10); // Limit to JJ/MM/AAAA
+    };
+
     const updateField = (key, value) => {
-        setFormData({ ...formData, [key]: value });
+        let finalValue = value;
+
+        // Apply date formatting for relevant fields
+        if (key.toLowerCase().includes('date')) {
+            finalValue = formatDate(value);
+        }
+
+        setFormData({ ...formData, [key]: finalValue });
     };
 
     const handleSubmit = async () => {
+        // Validation finale globale
+        if (type === 'naissance') {
+            if (!formData.nomEnfant || !formData.prenomEnfant || !formData.dateNaissanceEnfant || !formData.lieuNaissanceEnfant ||
+                !formData.nomPere || !formData.prenomPere || !formData.nomMere || !formData.prenomMere) {
+                Alert.alert('Formulaire incomplet', 'Veuillez remplir tous les champs obligatoires pour l\'enfant et ses parents.');
+                return;
+            }
+        } else if (type === 'mariage') {
+            if (!formData.nomEpoux || !formData.prenomEpoux || !formData.nomEpouse || !formData.prenomEpouse ||
+                !formData.dateMariage || !formData.lieuMariage) {
+                Alert.alert('Formulaire incomplet', 'Veuillez remplir les informations obligatoires sur les deux époux et le mariage.');
+                return;
+            }
+        } else if (type === 'deces') {
+            if (!formData.nomDefunt || !formData.prenomDefunt || !formData.dateDeces || !formData.lieuDeces ||
+                !formData.nomDeclarant || !formData.prenomDeclarant) {
+                Alert.alert('Formulaire incomplet', 'Veuillez remplir les informations obligatoires sur le défunt et le déclarant.');
+                return;
+            }
+        }
+
         setLoading(true);
         try {
-            const result = await demandeService.createDemande(type, formData);
+            let result;
+            if (editingDemande) {
+                result = await demandeService.updateDemande(editingDemande.id, { donnees: formData });
+            } else {
+                result = await demandeService.createDemande(type, formData);
+            }
+
             if (result.success) {
-                Alert.alert('Succès', 'Votre demande a été soumise avec succès !', [
-                    { text: 'OK', onPress: () => navigation.navigate('MainTabs', { screen: 'Mes dem...' }) }
+                Alert.alert('Succès', editingDemande ? 'Votre demande a été mise à jour !' : 'Votre demande a été soumise avec succès !', [
+                    { text: 'OK', onPress: () => navigation.navigate('MainDrawer', { screen: 'Mes Demandes' }) }
                 ]);
             }
         } catch (error) {
@@ -150,8 +206,28 @@ export default function CreateDemandeScreen({ route, navigation }) {
                 value={formData[key]}
                 onChangeText={(v) => updateField(key, v)}
                 placeholder={placeholder}
-                keyboardType={keyboardType}
+                keyboardType={keyboardType === 'default' && key.toLowerCase().includes('date') ? 'numeric' : keyboardType}
+                maxLength={key.toLowerCase().includes('date') ? 10 : undefined}
             />
+        </View>
+    );
+
+    const renderPicker = (label, key, options) => (
+        <View style={styles.inputGroup}>
+            <Text style={styles.label}>{label}</Text>
+            <View style={styles.pickerColumn}>
+                {options.map((opt) => (
+                    <TouchableOpacity
+                        key={opt.value}
+                        style={[styles.rBtn, formData[key] === opt.value && styles.rBtnActive]}
+                        onPress={() => updateField(key, opt.value)}
+                    >
+                        <Text style={[styles.rText, formData[key] === opt.value && styles.rTextActive]}>
+                            {opt.label}
+                        </Text>
+                    </TouchableOpacity>
+                ))}
+            </View>
         </View>
     );
 
@@ -200,8 +276,13 @@ export default function CreateDemandeScreen({ route, navigation }) {
                         </View>
                         {renderInput('Date de Naissance', 'dateNaissancePere', 'JJ/MM/AAAA')}
                         {renderInput('Lieu de Naissance', 'lieuNaissancePere', 'Ville')}
+                        {renderPicker('Nationalité', 'nationalitePere', [
+                            { label: 'TCHADIENNE', value: 'TCHADIENNE' },
+                            { label: 'ÉTRANGER', value: 'ETRANGER' }
+                        ])}
                         {renderInput('Profession', 'professionPere', 'Sa profession')}
                         {renderInput('Domicile', 'domicilePere', 'Adresse')}
+                        {renderInput('NNI (Optionnel)', 'nniPere', 'Numéro National d\'Identité')}
                     </View>
                 );
             }
@@ -215,8 +296,13 @@ export default function CreateDemandeScreen({ route, navigation }) {
                         </View>
                         {renderInput('Date de Naissance', 'dateNaissanceMere', 'JJ/MM/AAAA')}
                         {renderInput('Lieu de Naissance', 'lieuNaissanceMere', 'Ville')}
+                        {renderPicker('Nationalité', 'nationaliteMere', [
+                            { label: 'TCHADIENNE', value: 'TCHADIENNE' },
+                            { label: 'ÉTRANGER', value: 'ETRANGER' }
+                        ])}
                         {renderInput('Profession', 'professionMere', 'Sa profession')}
                         {renderInput('Domicile', 'domicileMere', 'Adresse')}
+                        {renderInput('NNI (Optionnel)', 'nniMere', 'Numéro National d\'Identité')}
                     </View>
                 );
             }
@@ -232,6 +318,10 @@ export default function CreateDemandeScreen({ route, navigation }) {
                         {renderInput('Date de Naissance', 'dateNaissanceEpoux', 'JJ/MM/AAAA')}
                         {renderInput('Profession', 'professionEpoux', 'Profession')}
                         {renderInput('Domicile', 'domicileEpoux', 'Adresse')}
+                        <View style={styles.row}>
+                            <View style={{ flex: 1, marginRight: 8 }}>{renderInput('Témoin 1', 'temoin1Epoux', 'Nom complet')}</View>
+                            <View style={{ flex: 1, marginLeft: 8 }}>{renderInput('Témoin 2', 'temoin2Epoux', 'Nom complet')}</View>
+                        </View>
                     </View>
                 );
             }
@@ -244,6 +334,10 @@ export default function CreateDemandeScreen({ route, navigation }) {
                         {renderInput('Date de Naissance', 'dateNaissanceEpouse', 'JJ/MM/AAAA')}
                         {renderInput('Profession', 'professionEpouse', 'Profession')}
                         {renderInput('Domicile', 'domicileEpouse', 'Adresse')}
+                        <View style={styles.row}>
+                            <View style={{ flex: 1, marginRight: 8 }}>{renderInput('Témoin 1', 'temoin1Epouse', 'Nom complet')}</View>
+                            <View style={{ flex: 1, marginLeft: 8 }}>{renderInput('Témoin 2', 'temoin2Epouse', 'Nom complet')}</View>
+                        </View>
                     </View>
                 );
             }
@@ -253,20 +347,14 @@ export default function CreateDemandeScreen({ route, navigation }) {
                         <Text style={styles.sectionTitle}>Le Mariage</Text>
                         {renderInput('Date du mariage', 'dateMariage', 'JJ/MM/AAAA')}
                         {renderInput('Lieu du mariage', 'lieuMariage', 'Ville/Commune')}
-                        <Text style={styles.label}>Régime Matrimonial</Text>
-                        <View style={styles.pickerColumn}>
-                            {['monogamie', 'polygamie', 'communaute_biens'].map((r) => (
-                                <TouchableOpacity
-                                    key={r}
-                                    style={[styles.rBtn, formData.regimeMatrimonial === r && styles.rBtnActive]}
-                                    onPress={() => updateField('regimeMatrimonial', r)}
-                                >
-                                    <Text style={[styles.rText, formData.regimeMatrimonial === r && styles.rTextActive]}>
-                                        {r.replace('_', ' ').charAt(0).toUpperCase() + r.replace('_', ' ').slice(1)}
-                                    </Text>
-                                </TouchableOpacity>
-                            ))}
-                        </View>
+                        {renderPicker('Régime Matrimonial', 'regimeMatrimonial', [
+                            { label: 'Monogamie / زوجة واحدة', value: 'monogamie' },
+                            { label: 'Polygamie / تعدد الزوجات', value: 'polygamie' },
+                            { label: 'Communauté de biens / اشتراك الأموال', value: 'communaute_biens' },
+                            { label: 'Séparation de biens / فصل الأموال', value: 'separation_biens' }
+                        ])}
+                        {renderInput('Montant de la Dot', 'dotMontant', 'Ex: 250.000 FCFA')}
+                        {renderInput('Conditions de la Dot', 'dotConditions', 'Ex: Versée en totalité')}
                     </View>
                 );
             }
@@ -279,8 +367,41 @@ export default function CreateDemandeScreen({ route, navigation }) {
                         <Text style={styles.sectionTitle}>Le Défunt</Text>
                         {renderInput('Nom', 'nomDefunt', 'Nom')}
                         {renderInput('Prénom', 'prenomDefunt', 'Prénom')}
-                        {renderInput('Date de décès', 'dateDeces', 'JJ/MM/AAAA')}
-                        {renderInput('Lieu de décès', 'lieuDeces', 'Ville')}
+                        <View style={styles.row}>
+                            <View style={{ flex: 1, marginRight: 8 }}>
+                                <Text style={styles.label}>Sexe</Text>
+                                <View style={styles.pickerRow}>
+                                    <TouchableOpacity
+                                        style={[styles.pickerBtn, formData.sexeDefunt === 'M' && styles.pickerBtnActive]}
+                                        onPress={() => updateField('sexeDefunt', 'M')}
+                                    >
+                                        <Text style={[styles.pickerBtnText, formData.sexeDefunt === 'M' && styles.pickerBtnTextActive]}>M</Text>
+                                    </TouchableOpacity>
+                                    <TouchableOpacity
+                                        style={[styles.pickerBtn, formData.sexeDefunt === 'F' && styles.pickerBtnActive]}
+                                        onPress={() => updateField('sexeDefunt', 'F')}
+                                    >
+                                        <Text style={[styles.pickerBtnText, formData.sexeDefunt === 'F' && styles.pickerBtnTextActive]}>F</Text>
+                                    </TouchableOpacity>
+                                </View>
+                            </View>
+                            <View style={{ flex: 1, marginLeft: 8 }}>
+                                {renderInput('NNI (Optionnel)', 'nniDefunt', 'NNI')}
+                            </View>
+                        </View>
+                        {renderInput('Profession', 'professionDefunt', 'Profession')}
+                        {renderInput('Date de naissance', 'dateNaissanceDefunt', 'JJ/MM/AAAA')}
+                        {renderInput('Lieu de naissance', 'lieuNaissanceDefunt', 'Ville')}
+                        {renderInput('Père du défunt', 'pereDefunt', 'Nom du père')}
+                        {renderInput('Mère du défunt', 'mereDefunt', 'Nom de la mère')}
+                        <View style={styles.row}>
+                            <View style={{ flex: 1, marginRight: 8 }}>
+                                {renderInput('Date de décès', 'dateDeces', 'JJ/MM/AAAA')}
+                            </View>
+                            <View style={{ flex: 1, marginLeft: 8 }}>
+                                {renderInput('Lieu de décès', 'lieuDeces', 'Ville')}
+                            </View>
+                        </View>
                         {renderInput('Cause (si connue)', 'causeDeces', 'Ex: Maladie')}
                     </View>
                 );
@@ -291,7 +412,14 @@ export default function CreateDemandeScreen({ route, navigation }) {
                         <Text style={styles.sectionTitle}>Le Déclarant</Text>
                         {renderInput('Nom du déclarant', 'nomDeclarant', 'Nom')}
                         {renderInput('Prénom du déclarant', 'prenomDeclarant', 'Prénom')}
-                        {renderInput('Lien de parenté', 'lienParente', 'Ex: Fils, Père...')}
+                        {renderPicker('Lien de parenté', 'lienParente', [
+                            { label: 'Père', value: 'Pere' },
+                            { label: 'Mère', value: 'Mere' },
+                            { label: 'Conjoint(e)', value: 'Conjoint' },
+                            { label: 'Enfant', value: 'Enfant' },
+                            { label: 'Frère / Sœur', value: 'Frere/Soeur' },
+                            { label: 'Autre', value: 'Autre' }
+                        ])}
                         {renderInput('Domicile', 'domicileDeclarant', 'Adresse')}
                     </View>
                 );
@@ -306,30 +434,35 @@ export default function CreateDemandeScreen({ route, navigation }) {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()}>
+                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backHeaderBtn}>
                     <ChevronLeft size={28} color="#003399" />
                 </TouchableOpacity>
-                <Text style={styles.headerTitle}>Demande: {type.toUpperCase()}</Text>
+                <Text style={styles.headerTitle}>Demande : {type.toUpperCase()}</Text>
                 <View style={styles.stepIndicator}>
                     <Text style={styles.stepText}>{currentStep}/{maxSteps}</Text>
                 </View>
             </View>
 
             <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-                <ScrollView contentContainerStyle={styles.scroll}>
+                <ScrollView
+                    contentContainerStyle={styles.scroll}
+                    showsVerticalScrollIndicator={false}
+                >
                     <View style={styles.infoBox}>
                         <Info size={18} color="#003399" />
-                        <Text style={styles.infoText}>Étape {currentStep}: Remplissez les informations avec précision.</Text>
+                        <Text style={styles.infoText}>Étape {currentStep} : Remplissez les informations avec précision.</Text>
                     </View>
 
                     {renderStep()}
 
                     <View style={styles.footer}>
-                        {currentStep > 1 && (
+                        {currentStep > 1 ? (
                             <TouchableOpacity style={styles.backBtn} onPress={() => setCurrentStep(prev => prev - 1)}>
-                                <ArrowLeft size={20} color="#003399" />
+                                <ArrowLeft size={20} color="#495057" />
                                 <Text style={styles.backBtnText}>Précédent</Text>
                             </TouchableOpacity>
+                        ) : (
+                            <View style={{ flex: 1 }} />
                         )}
 
                         {currentStep < maxSteps ? (
@@ -348,6 +481,7 @@ export default function CreateDemandeScreen({ route, navigation }) {
                             </TouchableOpacity>
                         )}
                     </View>
+                    <View style={{ height: 40 }} />
                 </ScrollView>
             </KeyboardAvoidingView>
         </View>
@@ -360,46 +494,145 @@ const styles = StyleSheet.create({
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingTop: 60,
+        paddingTop: Platform.OS === 'ios' ? 60 : 40,
         paddingHorizontal: 24,
         paddingBottom: 20,
         backgroundColor: '#FFFFFF',
         borderBottomWidth: 1,
-        borderBottomColor: '#E9ECEF'
+        borderBottomColor: '#E9ECEF',
+        ...Platform.select({
+            web: {
+                boxShadow: '0px 2px 10px rgba(0,0,0,0.05)'
+            },
+            default: {
+                elevation: 2,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 2 },
+                shadowOpacity: 0.05,
+                shadowRadius: 10,
+            }
+        })
     },
-    headerTitle: { fontSize: 16, fontWeight: 'bold', color: '#003399' },
-    stepIndicator: { backgroundColor: '#E7F5FF', paddingHorizontal: 10, paddingVertical: 4, borderRadius: 12 },
-    stepText: { color: '#003399', fontWeight: 'bold', fontSize: 12 },
-    scroll: { padding: 24 },
+    backHeaderBtn: { padding: 4, marginLeft: -8 },
+    headerTitle: { fontSize: 17, fontWeight: '800', color: '#003399', letterSpacing: 0.5 },
+    stepIndicator: { backgroundColor: '#E7F5FF', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 20 },
+    stepText: { color: '#003399', fontWeight: '800', fontSize: 13 },
+    scroll: { padding: 24, paddingBottom: 40 },
     infoBox: {
         flexDirection: 'row',
         backgroundColor: '#E7F5FF',
-        padding: 12,
-        borderRadius: 12,
+        padding: 16,
+        borderRadius: 16,
         alignItems: 'center',
-        marginBottom: 24
+        marginBottom: 32,
+        borderWidth: 1,
+        borderColor: 'rgba(0, 51, 153, 0.1)'
     },
-    infoText: { marginLeft: 10, color: '#003399', fontSize: 13 },
-    sectionTitle: { fontSize: 18, fontWeight: 'bold', color: '#001a41', marginBottom: 20 },
-    inputGroup: { marginBottom: 16 },
-    label: { fontSize: 13, fontWeight: '600', color: '#495057', marginBottom: 8 },
-    input: { backgroundColor: '#FFFFFF', borderWidth: 1, borderColor: '#DEE2E6', borderRadius: 10, padding: 12, fontSize: 15 },
+    infoText: { marginLeft: 12, color: '#003399', fontSize: 14, fontWeight: '500' },
+    sectionTitle: { fontSize: 22, fontWeight: '800', color: '#1A1A1A', marginBottom: 24 },
+    inputGroup: { marginBottom: 20 },
+    label: { fontSize: 14, fontWeight: '700', color: '#495057', marginBottom: 10, marginLeft: 4 },
+    input: {
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1.5,
+        borderColor: '#E9ECEF',
+        borderRadius: 14,
+        padding: 16,
+        fontSize: 16,
+        color: '#1A1A1A',
+        ...Platform.select({
+            web: {
+                boxShadow: '0px 1px 5px rgba(0,0,0,0.02)'
+            },
+            default: {
+                elevation: 1,
+                shadowColor: '#000',
+                shadowOffset: { width: 0, height: 1 },
+                shadowOpacity: 0.02,
+                shadowRadius: 5,
+            }
+        })
+    },
     row: { flexDirection: 'row', gap: 0 },
-    pickerRow: { flexDirection: 'row', gap: 8 },
-    pickerBtn: { flex: 1, padding: 12, borderWidth: 1, borderColor: '#DEE2E6', borderRadius: 10, alignItems: 'center', backgroundColor: '#FFF' },
+    pickerRow: { flexDirection: 'row', gap: 12 },
+    pickerBtn: {
+        flex: 1,
+        padding: 16,
+        borderWidth: 1.5,
+        borderColor: '#E9ECEF',
+        borderRadius: 14,
+        alignItems: 'center',
+        backgroundColor: '#FFF'
+    },
     pickerBtnActive: { backgroundColor: '#003399', borderColor: '#003399' },
-    pickerBtnText: { color: '#495057', fontWeight: 'bold' },
+    pickerBtnText: { color: '#495057', fontWeight: '800', fontSize: 16 },
     pickerBtnTextActive: { color: '#FFFFFF' },
-    pickerColumn: { gap: 8 },
-    rBtn: { padding: 12, borderWidth: 1, borderColor: '#DEE2E6', borderRadius: 10, backgroundColor: '#FFF' },
+    pickerColumn: { gap: 12 },
+    rBtn: {
+        padding: 18,
+        borderWidth: 1.5,
+        borderColor: '#E9ECEF',
+        borderRadius: 14,
+        backgroundColor: '#FFF'
+    },
     rBtnActive: { backgroundColor: '#E7F5FF', borderColor: '#003399' },
-    rText: { color: '#495057', fontSize: 14 },
-    rTextActive: { color: '#003399', fontWeight: 'bold' },
-    footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 30, gap: 12 },
-    backBtn: { flexDirection: 'row', alignItems: 'center', padding: 16, borderRadius: 12, backgroundColor: '#FFF', borderWidth: 1, borderColor: '#DEE2E6' },
-    backBtnText: { marginLeft: 8, color: '#003399', fontWeight: 'bold' },
-    nextBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 12, backgroundColor: '#003399' },
-    nextBtnText: { marginRight: 8, color: '#FFFFFF', fontWeight: 'bold' },
-    submitBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: 16, borderRadius: 12, backgroundColor: '#2F9E44' },
-    submitBtnText: { marginRight: 8, color: '#FFFFFF', fontWeight: 'bold' },
+    rText: { color: '#495057', fontSize: 15, fontWeight: '600' },
+    rTextActive: { color: '#003399', fontWeight: '800' },
+    footer: { flexDirection: 'row', justifyContent: 'space-between', marginTop: 40, gap: 16 },
+    backBtn: {
+        flex: 1,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 18,
+        borderRadius: 16,
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1.5,
+        borderColor: '#E9ECEF',
+    },
+    backBtnText: { marginLeft: 10, color: '#495057', fontWeight: '800', fontSize: 16 },
+    nextBtn: {
+        flex: 2,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 18,
+        borderRadius: 16,
+        backgroundColor: '#003399',
+        ...Platform.select({
+            web: {
+                boxShadow: '0px 4px 10px rgba(0, 51, 153, 0.3)'
+            },
+            default: {
+                elevation: 4,
+                shadowColor: '#003399',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
+            }
+        })
+    },
+    nextBtnText: { marginRight: 10, color: '#FFFFFF', fontWeight: '800', fontSize: 17 },
+    submitBtn: {
+        flex: 2,
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 18,
+        borderRadius: 16,
+        backgroundColor: '#2F9E44',
+        ...Platform.select({
+            web: {
+                boxShadow: '0px 4px 10px rgba(47, 158, 68, 0.3)'
+            },
+            default: {
+                elevation: 4,
+                shadowColor: '#2F9E44',
+                shadowOffset: { width: 0, height: 4 },
+                shadowOpacity: 0.3,
+                shadowRadius: 10,
+            }
+        })
+    },
+    submitBtnText: { marginRight: 10, color: '#FFFFFF', fontWeight: '800', fontSize: 17 },
 });

@@ -33,9 +33,11 @@ export default function VerifyOtpScreen({ route, navigation }) {
                     'Succès',
                     'Votre compte a été activé et vous êtes maintenant connecté !'
                 );
+            } else {
+                Alert.alert('Erreur', result.message || 'Le code saisi est incorrect');
             }
         } catch (error) {
-            const message = error.response?.data?.message || 'Code invalide ou expiré';
+            const message = error.response?.data?.message || 'Une erreur est survenue lors de la vérification';
             Alert.alert('Erreur', message);
         } finally {
             setLoading(false);
@@ -141,10 +143,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         padding: 24,
         borderRadius: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
         elevation: 3,
     },
     label: {

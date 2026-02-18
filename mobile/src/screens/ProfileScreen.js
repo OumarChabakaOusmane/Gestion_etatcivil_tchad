@@ -8,10 +8,6 @@ export default function ProfileScreen({ navigation }) {
 
     return (
         <View style={styles.container}>
-            <View style={styles.header}>
-                <Text style={styles.headerTitle}>Mon Profil</Text>
-            </View>
-
             <ScrollView contentContainerStyle={styles.content}>
                 <View style={styles.profileHeader}>
                     <View style={styles.avatar}>
@@ -115,10 +111,7 @@ const styles = StyleSheet.create({
         marginBottom: 16,
         borderWidth: 4,
         borderColor: '#FFFFFF',
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 10,
+        boxShadow: '0px 4px 10px rgba(0, 0, 0, 0.1)',
         elevation: 4,
     },
     avatarText: {
@@ -147,10 +140,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
         padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 8,
+        boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.05)',
         elevation: 2,
     },
     infoRow: {

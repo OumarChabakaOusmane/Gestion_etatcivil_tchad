@@ -1,14 +1,18 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { createDrawerNavigator } from '@react-navigation/drawer';
 import { View, ActivityIndicator } from 'react-native';
-import { Home, FilePlus, ClipboardList, LifeBuoy, User } from 'lucide-react-native';
+import { Home, FilePlus, ClipboardList, LifeBuoy, User, Menu } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
+
+// Components
+import CustomDrawer from '../components/CustomDrawer';
 
 // Screens
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
+import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
 import VerifyOtpScreen from '../screens/VerifyOtpScreen';
 import HomeScreen from '../screens/HomeScreen';
 import CreateDemandeScreen from '../screens/CreateDemandeScreen';
@@ -18,7 +22,7 @@ import MesDemandesScreen from '../screens/MesDemandesScreen';
 import SupportScreen from '../screens/SupportScreen';
 
 const Stack = createStackNavigator();
-const Tab = createBottomTabNavigator();
+const Drawer = createDrawerNavigator();
 
 // Protected Screen Wrapper Component
 const ProtectedScreen = ({ component: Component, navigation }) => {
@@ -31,55 +35,82 @@ const ProtectedScreen = ({ component: Component, navigation }) => {
     return <Component navigation={navigation} />;
 };
 
-function MainTabNavigator() {
-    const { isLoggedIn } = useAuth();
-
+function MainDrawerNavigator() {
     return (
-        <Tab.Navigator
-            screenOptions={({ route }) => ({
-                tabBarIcon: ({ color, size }) => {
-                    let iconName;
-                    if (route.name === 'Accueil') return <Home size={24} color={color} />;
-                    if (route.name === 'Demande') return <FilePlus size={24} color={color} />;
-                    if (route.name === 'Mes dem...') return <ClipboardList size={24} color={color} />;
-                    if (route.name === 'Contact') return <LifeBuoy size={24} color={color} />;
-                    if (route.name === 'Compte') return <User size={24} color={color} />;
-                },
-                tabBarActiveTintColor: '#003399',
-                tabBarInactiveTintColor: '#94a3b8',
-                headerShown: false,
-                tabBarStyle: {
-                    height: 70,
-                    paddingBottom: 12,
-                    paddingTop: 8,
+        <Drawer.Navigator
+            drawerContent={(props) => <CustomDrawer {...props} />}
+            screenOptions={{
+                drawerStyle: {
+                    width: '80%',
                     backgroundColor: '#FFFFFF',
-                    borderTopWidth: 1,
-                    borderTopColor: '#e2e8f0',
                 },
-                tabBarLabelStyle: {
-                    fontSize: 12,
+                headerStyle: {
+                    backgroundColor: '#f97316', // Orange
+                },
+                headerTintColor: '#FFFFFF',
+                headerTitleStyle: {
+                    fontWeight: 'bold',
+                },
+                drawerActiveTintColor: '#003399',
+                drawerInactiveTintColor: '#64748b',
+                drawerLabelStyle: {
+                    fontSize: 16,
                     fontWeight: '600',
-                }
-            })}
+                },
+            }}
         >
-            <Tab.Screen name="Accueil" component={HomeScreen} />
+            <Drawer.Screen
+                name="Accueil"
+                component={HomeScreen}
+                options={{
+                    title: 'Tableau de bord',
+                    drawerLabel: 'Accueil'
+                }}
+            />
 
-            <Tab.Screen name="Demande" component={ServicesScreen} />
+            <Drawer.Screen
+                name="Services"
+                component={ServicesScreen}
+                options={{
+                    title: 'Nouvelle Demande',
+                    drawerLabel: 'Services'
+                }}
+            />
 
-            <Tab.Screen name="Mes dem..." options={{ tabBarLabel: 'Mes dem...' }}>
+            <Drawer.Screen
+                name="Mes Demandes"
+                options={{
+                    title: 'Mes Demandes',
+                    drawerLabel: 'Mes Demandes'
+                }}
+            >
                 {(props) => <ProtectedScreen {...props} component={MesDemandesScreen} />}
-            </Tab.Screen>
+            </Drawer.Screen>
 
-            <Tab.Screen name="Contact" component={SupportScreen} />
+            <Drawer.Screen
+                name="Support"
+                component={SupportScreen}
+                options={{
+                    title: 'Aide & Support',
+                    drawerLabel: 'Contact'
+                }}
+            />
 
-            <Tab.Screen name="Compte">
+            <Drawer.Screen
+                name="Profil"
+                options={{
+                    title: 'Mon Profil',
+                    drawerLabel: 'Compte'
+                }}
+            >
                 {(props) => <ProtectedScreen {...props} component={ProfileScreen} />}
-            </Tab.Screen>
-        </Tab.Navigator>
+            </Drawer.Screen>
+        </Drawer.Navigator>
     );
 }
 
 export default function AppNavigator() {
+    console.log('🧭 AppNavigator: Rendering');
     const { loading } = useAuth();
 
     if (loading) {
@@ -93,11 +124,12 @@ export default function AppNavigator() {
     return (
         <NavigationContainer>
             <Stack.Navigator screenOptions={{ headerShown: false }}>
-                <Stack.Screen name="MainTabs" component={MainTabNavigator} />
+                <Stack.Screen name="MainDrawer" component={MainDrawerNavigator} />
                 <Stack.Screen name="CreateDemande" component={CreateDemandeScreen} />
                 {/* Auth Stack (direct access if needed) */}
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Register" component={RegisterScreen} />
+                <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
                 <Stack.Screen name="VerifyOtp" component={VerifyOtpScreen} />
             </Stack.Navigator>
         </NavigationContainer>

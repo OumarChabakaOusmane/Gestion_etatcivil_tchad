@@ -5,15 +5,18 @@ import { authService } from '../api/authService';
 const AuthContext = createContext();
 
 export const AuthProvider = ({ children }) => {
+    console.log('🔐 AuthProvider: Initializing');
     const [user, setUser] = useState(null);
     const [loading, setLoading] = useState(true);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     useEffect(() => {
+        console.log('🔐 AuthProvider: useEffect mounted');
         checkLoginStatus();
     }, []);
 
     const checkLoginStatus = async () => {
+        console.log('🔐 AuthProvider: checkLoginStatus started');
         try {
             const token = await AsyncStorage.getItem('userToken');
             const userData = await AsyncStorage.getItem('userData');

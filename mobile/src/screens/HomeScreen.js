@@ -28,6 +28,8 @@ import {
     ExternalLink
 } from 'lucide-react-native';
 
+import { useFocusEffect } from '@react-navigation/native';
+
 export default function HomeScreen({ navigation }) {
     const { user, isLoggedIn, logout } = useAuth();
     const [demandes, setDemandes] = useState([]);
@@ -52,9 +54,13 @@ export default function HomeScreen({ navigation }) {
         }
     };
 
-    useEffect(() => {
-        fetchDemandes();
-    }, [isLoggedIn]);
+    useFocusEffect(
+        useCallback(() => {
+            if (isLoggedIn) {
+                fetchDemandes();
+            }
+        }, [isLoggedIn])
+    );
 
     const onRefresh = useCallback(() => {
         setRefreshing(true);
@@ -79,10 +85,6 @@ export default function HomeScreen({ navigation }) {
 
     const renderPublicView = () => (
         <ScrollView style={styles.publicContainer} showsVerticalScrollIndicator={false}>
-            <View style={styles.publicHeader}>
-                <Text style={styles.publicTitleText}>ETAT CIVIL TCHAD</Text>
-            </View>
-
             <View style={styles.contentContainer}>
                 <Image
                     source={require('../../assets/logotechad.jpg')}
@@ -117,14 +119,14 @@ export default function HomeScreen({ navigation }) {
 
                 <TouchableOpacity
                     style={styles.mainLoginBtn}
-                    onPress={() => navigation.navigate('Compte')}
+                    onPress={() => navigation.navigate('Profil')}
                 >
                     <Text style={styles.mainLoginBtnText}>Accéder à mon espace</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.secondaryBtn}
-                    onPress={() => navigation.navigate('Demande')}
+                    onPress={() => navigation.navigate('Services')}
                 >
                     <Text style={styles.secondaryBtnText}>Explorer les services</Text>
                 </TouchableOpacity>
@@ -139,14 +141,9 @@ export default function HomeScreen({ navigation }) {
                 <RefreshControl refreshing={refreshing} onRefresh={onRefresh} color="#003399" />
             }
         >
-            <View style={styles.privateHeader}>
-                <View>
-                    <Text style={styles.welcomeLabel}>Bonjour,</Text>
-                    <Text style={styles.userNameText}>{(user?.nom || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} {(user?.prenom || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Text>
-                </View>
-                <TouchableOpacity onPress={logout} style={styles.logoutIconBtn}>
-                    <LogOut size={22} color="#E03131" />
-                </TouchableOpacity>
+            <View style={styles.privateHeaderSimple}>
+                <Text style={styles.welcomeLabel}>Bonjour,</Text>
+                <Text style={styles.userNameText}>{(user?.nom || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} {(user?.prenom || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Text>
             </View>
 
             <View style={styles.statsGrid}>
@@ -167,7 +164,7 @@ export default function HomeScreen({ navigation }) {
             <View style={styles.quickActions}>
                 <TouchableOpacity
                     style={styles.quickActionCard}
-                    onPress={() => navigation.navigate('Demande')}
+                    onPress={() => navigation.navigate('Services')}
                 >
                     <View style={styles.iconCircle}>
                         <PlusCircle size={28} color="#003399" />
@@ -177,7 +174,7 @@ export default function HomeScreen({ navigation }) {
 
                 <TouchableOpacity
                     style={styles.quickActionCard}
-                    onPress={() => navigation.navigate('Mes dem...')}
+                    onPress={() => navigation.navigate('Mes Demandes')}
                 >
                     <View style={styles.iconCircle}>
                         <FileText size={28} color="#003399" />
@@ -187,7 +184,7 @@ export default function HomeScreen({ navigation }) {
 
                 <TouchableOpacity
                     style={styles.quickActionCard}
-                    onPress={() => navigation.navigate('Compte')}
+                    onPress={() => navigation.navigate('Profil')}
                 >
                     <View style={styles.iconCircle}>
                         <User size={28} color="#003399" />
@@ -198,7 +195,7 @@ export default function HomeScreen({ navigation }) {
 
             <View style={styles.sectionHeader}>
                 <Text style={styles.sectionTitleText}>Demandes Récentes</Text>
-                <TouchableOpacity onPress={() => navigation.navigate('Mes dem...')}>
+                <TouchableOpacity onPress={() => navigation.navigate('Mes Demandes')}>
                     <Text style={styles.seeAllText}>Tout voir</Text>
                 </TouchableOpacity>
             </View>
@@ -211,21 +208,52 @@ export default function HomeScreen({ navigation }) {
                 </View>
             ) : (
                 <View style={styles.recentList}>
-                    {demandes.slice(0, 3).map(item => (
-                        <View key={item.id} style={styles.miniDemandeCard}>
-                            <View style={styles.miniHeader}>
-                                <View style={styles.miniTypeRow}>
-                                    <FileText size={16} color="#001a41" />
-                                    <Text style={styles.miniTypeText}>{item.type.toUpperCase()}</Text>
+                    {demandes.slice(0, 3).map(item => {
+                        const formatDate = (dateValue) => {
+                            if (!dateValue) return 'Le --/--/----';
+                            try {
+                                if (dateValue.seconds) {
+                                    return 'Le ' + new Date(dateValue.seconds * 1000).toLocaleDateString();
+                                }
+                                return 'Le ' + new Date(dateValue).toLocaleDateString();
+                            } catch (e) {
+                                return 'Le --/--/----';
+                            }
+                        };
+
+                        const getMiniInfo = (item) => {
+                            const { type, donnees } = item;
+                            const formatName = (n, p) => {
+                                if (!n && !p) return 'Non spécifié';
+                                return `${(n || '').toUpperCase()} ${(p || '')}`;
+                            };
+
+                            if (type === 'naissance') {
+                                return `Enfant: ${formatName(donnees.nomEnfant, donnees.prenomEnfant)}`;
+                            } else if (type === 'mariage') {
+                                return `Époux: ${formatName(donnees.nomEpoux, donnees.prenomEpoux)}`;
+                            } else if (type === 'deces') {
+                                return `Défunt: ${formatName(donnees.nomDefunt, donnees.prenomDefunt)}`;
+                            }
+                            return '';
+                        };
+
+                        return (
+                            <View key={item.id} style={styles.miniDemandeCard}>
+                                <View style={styles.miniHeader}>
+                                    <View style={styles.miniTypeRow}>
+                                        <FileText size={16} color="#001a41" />
+                                        <Text style={styles.miniTypeText}>{item.type.toUpperCase()}</Text>
+                                    </View>
+                                    <View style={[styles.miniStatusBadge, getStatusStyle(item.statut)]}>
+                                        <Text style={styles.miniStatusText}>{item.statut}</Text>
+                                    </View>
                                 </View>
-                                <View style={[styles.miniStatusBadge, getStatusStyle(item.statut)]}>
-                                    <Text style={styles.miniStatusText}>{item.statut}</Text>
-                                </View>
+                                <Text style={styles.miniInfoText}>{getMiniInfo(item)}</Text>
+                                <Text style={styles.miniDateText}>{formatDate(item.createdAt || item.dateDemande)}</Text>
                             </View>
-                            <Text style={styles.miniInfoText}>Enfant: {(item.donnees.nomEnfant || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} {(item.donnees.prenomEnfant || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Text>
-                            <Text style={styles.miniDateText}>Le {new Date(item.createdAt).toLocaleDateString()}</Text>
-                        </View>
-                    ))}
+                        );
+                    })}
                 </View>
             )}
             <View style={{ height: 40 }} />
@@ -295,10 +323,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
         padding: 20,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 10,
+        boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
         elevation: 3,
         marginBottom: 24,
     },
@@ -358,10 +383,7 @@ const styles = StyleSheet.create({
         flex: 1,
         paddingHorizontal: 20,
     },
-    privateHeader: {
-        flexDirection: 'row',
-        justifyContent: 'space-between',
-        alignItems: 'center',
+    privateHeaderSimple: {
         marginTop: 20,
         marginBottom: 24,
     },
@@ -391,10 +413,7 @@ const styles = StyleSheet.create({
         alignItems: 'center',
         justifyContent: 'center',
         elevation: 4,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
     },
     statVal: {
         fontSize: 32,
@@ -434,10 +453,7 @@ const styles = StyleSheet.create({
         padding: 16,
         alignItems: 'center',
         elevation: 2,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 5,
+        boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.05)',
     },
     iconCircle: {
         width: 50,

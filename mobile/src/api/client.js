@@ -9,7 +9,7 @@ console.log('🌐 Connexion à l\'API:', API_URL);
 
 const api = axios.create({
     baseURL: API_URL,
-    timeout: 30000, // Augmenté à 30s pour laisser le temps à Render de s'éveiller
+    timeout: 60000, // Augmenté à 60s pour laisser le temps à l'envoi d'email
     headers: {
         'Content-Type': 'application/json',
     },

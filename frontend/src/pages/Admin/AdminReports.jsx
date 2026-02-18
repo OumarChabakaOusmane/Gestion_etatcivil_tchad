@@ -155,7 +155,7 @@ export default function AdminReports() {
                         <h5 className="fw-bold text-dark mb-4">Volume d'Activité</h5>
                         <div style={{ height: '350px', width: '100%', minWidth: 0, minHeight: '350px' }}>
                             <SafeRechartsContainer>
-                                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
                                     <AreaChart data={stats.trendData}>
                                         <defs>
                                             <linearGradient id="colorTrend" x1="0" y1="0" x2="0" y2="1">
@@ -179,7 +179,7 @@ export default function AdminReports() {
                         <h5 className="fw-bold text-dark mb-4 text-center">Répartition des Actes</h5>
                         <div style={{ width: '100%', height: '350px', minWidth: 0, minHeight: '350px' }}>
                             <SafeRechartsContainer>
-                                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
                                     <PieChart>
                                         <Pie data={stats.typePieData} cx="50%" cy="50%" innerRadius={70} outerRadius={100} paddingAngle={8} dataKey="value" stroke="none">
                                             {stats.typePieData.map((entry, index) => (
@@ -199,7 +199,7 @@ export default function AdminReports() {
                         <h5 className="fw-bold text-dark mb-4">Comparaison par Catégorie</h5>
                         <div style={{ height: '300px', width: '100%', minWidth: 0, minHeight: '300px' }}>
                             <SafeRechartsContainer>
-                                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0}>
+                                <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
                                     <BarChart data={stats.distribution}>
                                         <XAxis dataKey="name" axisLine={false} tickLine={false} tick={{ fill: '#888', fontSize: 12 }} />
                                         <YAxis axisLine={false} tickLine={false} tick={{ fill: '#888', fontSize: 12 }} />

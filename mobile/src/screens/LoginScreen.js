@@ -126,7 +126,10 @@ export default function LoginScreen({ navigation }) {
                         )}
                     </TouchableOpacity>
 
-                    <TouchableOpacity style={styles.forgotPass}>
+                    <TouchableOpacity
+                        style={styles.forgotPass}
+                        onPress={() => navigation.navigate('ForgotPassword')}
+                    >
                         <Text style={styles.forgotText}>Mot de passe oublié ?</Text>
                     </TouchableOpacity>
                 </View>
@@ -180,10 +183,14 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         padding: 20,
         borderRadius: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.1,
-        shadowRadius: 8,
+        ...Platform.select({
+            web: {
+                boxShadow: '0px 2px 8px rgba(0,0,0,0.1)',
+            },
+            default: {
+                boxShadow: '0px 2px 8px rgba(0, 0, 0, 0.1)',
+            },
+        }),
         elevation: 3,
     },
     label: {

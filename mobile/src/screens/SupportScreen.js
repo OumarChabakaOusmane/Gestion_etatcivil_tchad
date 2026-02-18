@@ -73,7 +73,7 @@ export default function SupportScreen() {
                         style={styles.input}
                         value={name}
                         onChangeText={setName}
-                        placeholder="Moussa Hassan"
+                        placeholder="Veuillez entrer votre nom complet"
                     />
 
                     <Text style={styles.label}>Message</Text>
@@ -94,11 +94,11 @@ export default function SupportScreen() {
                 <View style={styles.infoGrid}>
                     <View style={styles.infoItem}>
                         <Phone size={20} color="#001a41" />
-                        <Text style={styles.infoText}>+235 00 00 00 00</Text>
+                        <Text style={styles.infoText}>+235 62 96 55 33</Text>
                     </View>
                     <View style={styles.infoItem}>
                         <Mail size={20} color="#001a41" />
-                        <Text style={styles.infoText}>support@sigec.td</Text>
+                        <Text style={styles.infoText}>etatciviltd@gmail.com</Text>
                     </View>
                 </View>
             </View>
@@ -147,10 +147,7 @@ const styles = StyleSheet.create({
         padding: 16,
         borderRadius: 12,
         marginBottom: 8,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 1 },
-        shadowOpacity: 0.05,
-        shadowRadius: 5,
+        boxShadow: '0px 1px 5px rgba(0, 0, 0, 0.05)',
         elevation: 1,
     },
     faqHeader: {
@@ -174,10 +171,7 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         padding: 20,
         borderRadius: 16,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 4 },
-        shadowOpacity: 0.05,
-        shadowRadius: 15,
+        boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.05)',
         elevation: 3,
     },
     label: {
@@ -220,10 +214,7 @@ const styles = StyleSheet.create({
         borderRadius: 12,
         alignItems: 'center',
         flex: 0.48,
-        shadowColor: '#000',
-        shadowOffset: { width: 0, height: 2 },
-        shadowOpacity: 0.05,
-        shadowRadius: 5,
+        boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.05)',
         elevation: 2,
     },
     infoText: {

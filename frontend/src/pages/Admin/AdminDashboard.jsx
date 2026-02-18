@@ -215,7 +215,7 @@ export default function AdminDashboard() {
                         <div style={{ height: '350px', width: '100%', minWidth: 0 }}>
                             {!loading ? (
                                 <SafeRechartsContainer>
-                                    <ResponsiveContainer width="100%" height="100%">
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
                                         <AreaChart data={trendData}>
                                             <defs>
                                                 <linearGradient id="colorValue" x1="0" y1="0" x2="0" y2="1">
@@ -250,7 +250,7 @@ export default function AdminDashboard() {
                         <div style={{ height: '300px', width: '100%', position: 'relative' }}>
                             {!loading ? (
                                 <SafeRechartsContainer>
-                                    <ResponsiveContainer width="100%" height="100%">
+                                    <ResponsiveContainer width="100%" height="100%" minWidth={0} minHeight={0} debounce={50}>
                                         <PieChart>
                                             <Pie
                                                 data={stats.countsByType.some(c => c.value > 0) ? stats.countsByType : [{ name: 'Aucun', value: 1, color: '#f0f0f0' }]}

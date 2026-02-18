@@ -52,15 +52,20 @@ const register = async (req, res) => {
     }
     console.log('='.repeat(60));
 
-    // ENVOI OTP PAR EMAIL
+    // ENVOI OTP PAR EMAIL (AWAITED pour la robustesse pendant la démo)
+    console.log(`📧 [OTP] Tentative d'envoi de l'OTP à ${email}...`);
+
     let emailSent = false;
+    let emailError = null;
+
     try {
       await emailService.sendOTPEmail(email, `${prenom} ${nom}`, otpCode);
       emailSent = true;
       console.log(`✅ [OTP] Email OTP envoyé avec succès à ${email}`);
     } catch (err) {
+      emailError = err.message;
       console.error('❌ [OTP] ÉCHEC envoi Email OTP:', err.message);
-      console.error('❌ [OTP] Stack:', err.stack);
+      // On ne bloque pas l'inscription si l'email échoue, mais on informera l'utilisateur
     }
 
     if (telephone) {
@@ -68,21 +73,31 @@ const register = async (req, res) => {
         .catch(err => console.error('Échec envoi SMS OTP (Async):', err.message));
     }
 
-    // Réponse de succès (on demande la vérification)
+    // Réponse de succès
     return res.status(201).json({
       success: true,
       message: emailSent
         ? 'Compte créé avec succès ! Vérifiez votre email (et le dossier spam) pour le code OTP.'
-        : 'Compte créé. ATTENTION: L\'email OTP n\'a pas pu être envoyé. Utilisez le code affiché ci-dessous pour valider votre compte.',
+        : `Compte créé, mais l'envoi de l'email a échoué (${emailError}). Veuillez utiliser le code affiché ci-dessous.`,
       requireVerification: true,
       email: user.email,
       emailSent: emailSent,
-      // SOLUTION DE SECOURS : On renvoie toujours l'OTP pour l'afficher à l'écran si l'email ne passe pas
+      // SOLUTION DE SECOURS : On renvoie toujours l'OTP pour la démo
       otpCode: otpCode
     });
 
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement :', error);
+
+    // Gérer l'erreur spécifique de duplication
+    if (error.message === 'Un utilisateur avec cet email existe déjà') {
+      return res.status(400).json({
+        success: false,
+        message: 'Un compte avec cet email existe déjà.',
+        error: error.message
+      });
+    }
+
     try {
       // LOG ERROR TO FILE (Async)
       const fs = require('fs');
@@ -141,7 +156,7 @@ const verifyOtp = async (req, res) => {
     }
 
     if (user.otpCode !== otp) {
-      return res.status(400).json({ success: false, message: 'Code OTP invalide' });
+      return res.status(400).json({ success: false, message: 'Veuillez entrer le bon OTP' });
     }
 
     if (user.otpExpires < Date.now()) {
@@ -374,12 +389,14 @@ const forgotPassword = async (req, res) => {
     // Dans un cas réel, utiliser process.env.FRONTEND_URL ou similaire
     const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
 
-    // ENVOI EMAIL DE RÉINITIALISATION
-    try {
-      await emailService.sendPasswordResetEmail(email, `${user.prenom} ${user.nom}`, resetUrl);
-    } catch (mailErr) {
-      console.error('Échec envoi email réinitialisation:', mailErr);
-    }
+    // ENVOI EMAIL DE RÉINITIALISATION (Asynchrone - Fire-and-forget pour éviter le timeout)
+    // On n'attend pas la réponse du serveur SMTP pour répondre au client
+    emailService.sendPasswordResetEmail(email, `${user.prenom} ${user.nom}`, resetUrl)
+      .then(() => console.log(`✅ Email de réinitialisation envoyé avec succès à ${email}`))
+      .catch(mailErr => {
+        console.error('❌ Échec envoi email réinitialisation:', mailErr.message);
+        console.error('❌ Stack:', mailErr.stack);
+      });
 
     res.status(200).json({
       success: true,
