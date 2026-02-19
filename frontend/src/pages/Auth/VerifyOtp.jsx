@@ -145,7 +145,7 @@ export default function VerifyOtp() {
 
                             <div className="mt-2">
                                 <a
-                                    href={`https://wa.me/${formData?.telephone?.replace('+', '')}?text=${encodeURIComponent("SIGEC TCHAD : Votre code de vérification est " + otp + ". Il expire dans 10 minutes.")}`}
+                                    href={`https://wa.me/${telephone?.replace('+', '')}?text=${encodeURIComponent("SIGEC TCHAD : Votre code de vérification est " + otp + ". Il expire dans 10 minutes.")}`}
                                     target="_blank"
                                     rel="noopener noreferrer"
                                     className="btn btn-outline-success btn-sm rounded-pill"

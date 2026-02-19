@@ -34,10 +34,20 @@ api.interceptors.request.use(
 api.interceptors.response.use(
     (response) => response,
     (error) => {
+        // Logging détaillé pour diagnostiquer les crashes
+        console.error('🌐 [API] Erreur détectée:', {
+            url: error.config?.url,
+            method: error.config?.method,
+            status: error.response?.status,
+            message: error.message,
+            data: error.response?.data
+        });
+
         // Ne pas rediriger si c'est une erreur de connexion ou de vérification OTP
         // car on veut afficher l'erreur sur la page
         const isAuthRoute = error.config?.url?.includes('/auth/login') ||
-            error.config?.url?.includes('/auth/verify-otp');
+            error.config?.url?.includes('/auth/verify-otp') ||
+            error.config?.url?.includes('/auth/register');
 
         // Si le token est expiré ou invalide (et que ce n'est pas une tentative de login)
         if (error.response && error.response.status === 401 && !isAuthRoute) {
@@ -45,6 +55,14 @@ api.interceptors.response.use(
             localStorage.removeItem('user');
             window.location.href = '/login'; // Rediriger explicitement vers login
         }
+
+        // Transformer les erreurs réseau en messages plus clairs
+        if (error.code === 'ECONNREFUSED' || error.code === 'NETWORK_ERROR') {
+            error.message = 'Impossible de se connecter au serveur. Veuillez vérifier votre connexion.';
+        } else if (error.code === 'ETIMEDOUT') {
+            error.message = 'Le serveur met trop de temps à répondre. Veuillez réessayer.';
+        }
+
         return Promise.reject(error);
     }
 );

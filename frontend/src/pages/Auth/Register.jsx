@@ -64,22 +64,38 @@ export default function Register() {
     setLoading(true);
 
     try {
-      const { confirmPassword, ...userData } = formData;
+      console.log('📝 [REGISTER] Début inscription avec:', {
+        nom: formData.nom,
+        prenom: formData.prenom,
+        email: formData.email,
+        telephone: formData.telephone,
+        hasPhoto: !!photo
+      });
+
+      const { confirmPassword, ...userData } = {
+        ...formData,
+        role: 'user' // Rôle par défaut explicite
+      };
 
       // Upload photo if exists
       if (photo) {
         try {
+          console.log('📤 [REGISTER] Upload photo en cours...');
           const photoUrl = await uploadService.uploadImage(photo, 'profile_photos');
           userData.photo = photoUrl;
+          console.log('✅ [REGISTER] Photo uploadée:', photoUrl);
         } catch (uploadError) {
-          console.error("Erreur upload photo:", uploadError);
-          // On continue quand même sans photo ou on bloque ? 
-          // Pour l'instant on continue sans photo si échec
+          console.error("❌ [REGISTER] Erreur upload photo:", uploadError);
+          // On continue quand même sans photo
         }
       }
 
+      console.log('🚀 [REGISTER] Envoi requête inscription...');
       // Redirection vers OTP après inscription réussie
       const response = await authService.register(userData);
+      
+      console.log('✅ [REGISTER] Inscription réussie:', response);
+      setError(""); // Effacer les erreurs précédentes
 
       navigate("/verify-otp", {
         state: {
@@ -89,8 +105,34 @@ export default function Register() {
         }
       });
     } catch (err) {
-      console.error("Détails de l'erreur d'inscription:", err);
-      const errorMessage = typeof err === 'string' ? err : (err.message || err.error || "Erreur lors de l'inscription");
+      console.error("❌ [REGISTER] Erreur complète:", err);
+      console.error("❌ [REGISTER] Détails:", {
+        message: err.message,
+        error: err.error,
+        status: err.response?.status,
+        data: err.response?.data
+      });
+      
+      // Gestion améliorée des erreurs
+      let errorMessage = "Erreur lors de l'inscription";
+      
+      if (err.response?.data?.message) {
+        errorMessage = err.response.data.message;
+      } else if (err.message) {
+        errorMessage = err.message;
+      } else if (typeof err === 'string') {
+        errorMessage = err;
+      }
+      
+      // Messages d'erreur conviviaux
+      if (errorMessage.includes('email') && errorMessage.includes('existe')) {
+        errorMessage = "Un compte avec cet email existe déjà. Veuillez vous connecter.";
+      } else if (errorMessage.includes('network') || errorMessage.includes('ECONNREFUSED')) {
+        errorMessage = "Erreur de connexion. Veuillez vérifier votre internet et réessayer.";
+      } else if (errorMessage.includes('timeout')) {
+        errorMessage = "Le serveur met trop de temps à répondre. Veuillez réessayer.";
+      }
+      
       setError(errorMessage);
     } finally {
       setLoading(false);

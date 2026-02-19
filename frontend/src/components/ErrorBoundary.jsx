@@ -11,11 +11,19 @@ class ErrorBoundary extends React.Component {
     }
 
     componentDidCatch(error, errorInfo) {
+        console.error("❌ [ERROR BOUNDARY] Crash capturé:", {
+            error: error.toString(),
+            stack: error.stack,
+            componentStack: errorInfo.componentStack,
+            timestamp: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            url: window.location.href
+        });
+        
         this.setState({
             error: error,
             errorInfo: errorInfo
         });
-        console.error("Crashed in ErrorBoundary:", error, errorInfo);
     }
 
     render() {
