@@ -12,10 +12,11 @@ class EmailService {
         console.log('='.repeat(50));
         console.log('📧 [EMAIL SERVICE] Initialisation...');
         console.log(`📧 [EMAIL SERVICE] NODE_ENV: ${process.env.NODE_ENV}`);
-        console.log(`📧 [EMAIL SERVICE] EMAIL_USER: ${process.env.EMAIL_USER ? '✅ Configuré' : '❌ Manquant'}`);
-        console.log(`📧 [EMAIL SERVICE] EMAIL_PASS: ${process.env.EMAIL_PASS ? '✅ Configuré' : '❌ Manquant'}`);
+        console.log(`📧 [EMAIL SERVICE] EMAIL_USER: "${process.env.EMAIL_USER}" (${process.env.EMAIL_USER ? '✅ Configuré' : '❌ Manquant'})`);
+        console.log(`📧 [EMAIL SERVICE] EMAIL_PASS: "${process.env.EMAIL_PASS ? '[MASQUÉ]' : ''}" (${process.env.EMAIL_PASS ? '✅ Configuré' : '❌ Manquant'})`);
         console.log(`📧 [EMAIL SERVICE] EMAIL_HOST: ${process.env.EMAIL_HOST || 'Non défini'}`);
         console.log(`📧 [EMAIL SERVICE] EMAIL_PORT: ${process.env.EMAIL_PORT || 'Non défini'}`);
+        console.log(`📧 [EMAIL SERVICE] useRealEmail: ${useRealEmail} (type: ${typeof useRealEmail})`);
         console.log(`📧 [EMAIL SERVICE] Mode: ${useRealEmail ? 'RÉEL' : 'ETHEREAL TEST'}`);
         console.log('='.repeat(50));
 
