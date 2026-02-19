@@ -95,9 +95,9 @@ export default function VerifyOtp() {
                             </div>
                         </div>
 
-                        <h2 className="fw-bold mb-2"><span>Vérification de sécurité</span></h2>
+                        <h2 className="fw-bold mb-2">Vérification de sécurité</h2>
                         <p className="text-muted mb-2">
-                            <span>Un code à 6 chiffres a été envoyé à </span><strong><span>{email}</span></strong>
+                            Un code à 6 chiffres a été envoyé à <strong>{email}</strong>
                         </p>
                         <div className="alert alert-warning border-0 shadow-sm mb-4 d-flex align-items-start gap-2" style={{ fontSize: '0.9rem' }}>
                             <i className="bi bi-exclamation-triangle-fill mt-1"></i>
@@ -106,8 +106,8 @@ export default function VerifyOtp() {
                             </div>
                         </div>
 
-                        {error && <div key="otp-error-alert" translate="no" className="alert alert-danger py-2 mb-3 small"><span>{error}</span></div>}
-                        {message && <div key="otp-success-message" translate="no" className="alert alert-success py-2 mb-3 small"><span>{message}</span></div>}
+                        {error && <div className="alert alert-danger py-2 mb-3 small">{error}</div>}
+                        {message && <div className="alert alert-success py-2 mb-3 small">{message}</div>}
 
                         <form onSubmit={handleVerify}>
                             <div className="mb-4">

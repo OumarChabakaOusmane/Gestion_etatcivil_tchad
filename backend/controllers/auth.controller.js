@@ -117,11 +117,16 @@ const register = async (req, res) => {
 const verifyOtp = async (req, res) => {
   const { email, otp } = req.body;
 
+  console.log(`🔐 [VERIFY OTP] Email: ${email}, OTP: "${otp}"`);
+
   try {
     const user = await User.findByEmail(email);
     if (!user) {
+      console.log(`❌ [VERIFY OTP] Utilisateur non trouvé: ${email}`);
       return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
     }
+
+    console.log(`✅ [VERIFY OTP] Utilisateur trouvé - OTP attendu: "${user.otpCode}", OTP reçu: "${otp}"`);
 
     // Si le compte est déjà vérifié, connecter directement l'utilisateur
     if (user.isVerified) {
@@ -149,13 +154,20 @@ const verifyOtp = async (req, res) => {
       });
     }
 
+    // Comparaison des OTP
     if (user.otpCode !== otp) {
+      console.log(`❌ [VERIFY OTP] CODE INCORRECT! Attendu: "${user.otpCode}", Reçu: "${otp}"`);
       return res.status(400).json({ success: false, message: 'Veuillez entrer le bon OTP' });
     }
 
+    console.log(`✅ [VERIFY OTP] Code OTP correspond! Vérification expiration...`);
+
     if (user.otpExpires < Date.now()) {
+      console.log(`❌ [VERIFY OTP] Code expiré!`);
       return res.status(400).json({ success: false, message: 'Code OTP expiré' });
     }
+
+    console.log(`✅ [VERIFY OTP] Code valide et non expiré!`);
 
     // Valider le compte et effacer l'OTP
     await User.update(user.id, {
