@@ -86,10 +86,18 @@ export default function AdminArticles() {
         }
     };
 
-    // Conversion d'image en Base64 pour simplifier (idéalement Upload Service)
+    // Conversion d'image en Base64 avec validation de taille
     const handleImageChange = (e) => {
         const file = e.target.files[0];
         if (file) {
+            // Firestore limite les documents à 1MB. Base64 ajoute ~33%.
+            // On limite à 800KB pour être en sécurité.
+            if (file.size > 800 * 1024) {
+                toast.error('Image trop volumineuse. Veuillez choisir une image de moins de 800 Ko.');
+                e.target.value = ''; // Reset input
+                return;
+            }
+
             const reader = new FileReader();
             reader.onloadend = () => {
                 setFormData({ ...formData, image: reader.result });

@@ -6,9 +6,8 @@ const nodemailer = require('nodemailer');
 class EmailService {
     constructor() {
         // Configuration du transporteur email
-        // Utilise les variables d'environnement ou Ethereal par défaut
-        // FORCE ETHEREAL sur production pour diag si EMAIL_FORCE_TEST est présent
-        const useRealEmail = process.env.EMAIL_USER && process.env.EMAIL_PASS && !process.env.EMAIL_FORCE_TEST;
+        // FORCE EMAIL RÉEL même en développement si les variables sont présentes
+        const useRealEmail = process.env.EMAIL_USER && process.env.EMAIL_PASS;
 
         if (useRealEmail) {
             // Configuration prioritair Gmail pour la robustesse
@@ -215,6 +214,12 @@ class EmailService {
      * Envoi du code OTP
      */
     async sendOTPEmail(userEmail, userName, otpCode) {
+        console.log('='.repeat(60));
+        console.log(`🔐 [OTP] Envoi à: ${userEmail}`);
+        console.log(`🔐 [OTP] Code: ${otpCode}`);
+        console.log(`🔐 [OTP] Service: ${process.env.EMAIL_USER || 'Ethereal (TEST)'}`);
+        console.log('='.repeat(60));
+
         const subject = `🔐 Votre code de vérification - État Civil Tchad`;
         const content = `
             <h2 style="color: #001a41;">Vérification de votre compte</h2>
@@ -224,9 +229,18 @@ class EmailService {
                 ${otpCode}
             </div>
             <p>Ce code expire dans 10 minutes.</p>
+            <p><strong>Important:</strong> Si vous ne recevez pas cet email dans 2 minutes, vérifiez votre dossier spam.</p>
         `;
         const text = `Bonjour ${userName}, votre code de vérification SIGEC-TCHAD est : ${otpCode}. Ce code expire dans 10 minutes.`;
-        return this.sendEmail(userEmail, subject, this.wrapTemplate(content), text);
+        
+        try {
+            const result = await this.sendEmail(userEmail, subject, this.wrapTemplate(content), text);
+            console.log(`✅ [OTP] Email envoyé avec succès à ${userEmail}`);
+            return result;
+        } catch (error) {
+            console.error(`❌ [OTP] ÉCHEC envoi à ${userEmail}:`, error.message);
+            throw error;
+        }
     }
 
     /**

@@ -38,7 +38,8 @@ const createArticle = async (req, res) => {
         console.error('Erreur createArticle:', error);
         res.status(500).json({
             success: false,
-            message: 'Erreur lors de la création de l\'article'
+            message: 'Erreur lors de la création de l\'article',
+            error: error.message // On renvoie l'erreur pour aider au diagnostic
         });
     }
 };

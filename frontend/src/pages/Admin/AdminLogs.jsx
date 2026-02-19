@@ -44,6 +44,48 @@ export default function AdminLogs() {
         return <span className={`badge bg-${color} bg-opacity-75`}>{action}</span>;
     };
 
+    const renderLogDetails = (log) => {
+        const { action, details } = log;
+        let data = {};
+
+        try {
+            data = typeof details === 'string' ? JSON.parse(details) : (details || {});
+        } catch (e) {
+            return <span className="text-muted fst-italic">{String(details)}</span>;
+        }
+
+        switch (action) {
+            case 'LOGIN_SUCCESS':
+                return <span>Connexion réussie au portail</span>;
+            case 'LOGIN_ERROR':
+                return <span className="text-danger">Échec de connexion : {data.reason || 'Erreur inconnue'}</span>;
+            case 'ARTICLE_CREATED':
+                return <span>Création de l'article : <strong>{data.title || 'Sans titre'}</strong></span>;
+            case 'ARTICLE_UPDATED':
+                return <span>Mise à jour de l'article : <strong>{data.title || data.articleId}</strong></span>;
+            case 'ARTICLE_DELETED':
+                return <span className="text-danger">Suppression de l'article ID: {data.articleId}</span>;
+            case 'DEMANDE_ACCEPTED':
+                return <span>Approbation de la demande <strong>#{data.demandeId?.slice(-8).toUpperCase()}</strong></span>;
+            case 'DEMANDE_REJECTED':
+                return (
+                    <span>
+                        Rejet de la demande <strong>#{data.demandeId?.slice(-8).toUpperCase()}</strong>
+                        <br />
+                        <small className="text-danger">Motif: {data.motif || 'Non précisé'}</small>
+                    </span>
+                );
+            case 'USER_CREATED':
+                return <span>Création de l'utilisateur : <strong>{data.email}</strong></span>;
+            case 'ROLE_UPDATED':
+                return <span>Rôle de <strong>{data.email}</strong> modifié vers <strong>{data.newRole}</strong></span>;
+            case 'OTP_SENT':
+                return <span>Code OTP envoyé à {data.email || 'l\'utilisateur'}</span>;
+            default:
+                return <span>{typeof details === 'object' ? JSON.stringify(details) : String(details)}</span>;
+        }
+    };
+
     return (
         <div className="p-4 p-lg-5 animate__animated animate__fadeIn">
             <div className="d-flex justify-content-between align-items-center mb-5">
@@ -98,10 +140,8 @@ export default function AdminLogs() {
                                         <span className="badge bg-light text-dark border">{log.userRole}</span>
                                     </td>
                                     <td className="py-3">{getActionBadge(log.action)}</td>
-                                    <td className="py-3 small text-muted" style={{ maxWidth: '300px' }}>
-                                        <div className="text-truncate" title={log.details}>
-                                            {typeof log.details === 'object' ? JSON.stringify(log.details) : log.details}
-                                        </div>
+                                    <td className="py-3 small text-muted" style={{ minWidth: '250px' }}>
+                                        {renderLogDetails(log)}
                                     </td>
                                     <td className="pe-4 py-3 text-end small font-monospace text-muted">{log.ip}</td>
                                 </tr>
