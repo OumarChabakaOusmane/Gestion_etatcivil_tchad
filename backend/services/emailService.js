@@ -8,6 +8,16 @@ class EmailService {
         // Configuration du transporteur email
         // FORCE EMAIL RÉEL même en développement si les variables sont présentes
         const useRealEmail = process.env.EMAIL_USER && process.env.EMAIL_PASS;
+        
+        console.log('='.repeat(50));
+        console.log('📧 [EMAIL SERVICE] Initialisation...');
+        console.log(`📧 [EMAIL SERVICE] NODE_ENV: ${process.env.NODE_ENV}`);
+        console.log(`📧 [EMAIL SERVICE] EMAIL_USER: ${process.env.EMAIL_USER ? '✅ Configuré' : '❌ Manquant'}`);
+        console.log(`📧 [EMAIL SERVICE] EMAIL_PASS: ${process.env.EMAIL_PASS ? '✅ Configuré' : '❌ Manquant'}`);
+        console.log(`📧 [EMAIL SERVICE] EMAIL_HOST: ${process.env.EMAIL_HOST || 'Non défini'}`);
+        console.log(`📧 [EMAIL SERVICE] EMAIL_PORT: ${process.env.EMAIL_PORT || 'Non défini'}`);
+        console.log(`📧 [EMAIL SERVICE] Mode: ${useRealEmail ? 'RÉEL' : 'ETHEREAL TEST'}`);
+        console.log('='.repeat(50));
 
         if (useRealEmail) {
             // Configuration prioritair Gmail pour la robustesse
