@@ -54,6 +54,7 @@ const register = async (req, res) => {
 
     // ENVOI OTP PAR EMAIL (ASYNCHRONE pour la performance)
     console.log(`📧 [REGISTER] Envoi OTP en cours à: ${email}`);
+    let emailSent = false;
     emailService.sendOTPEmail(email, `${nom} ${prenom}`, otpCode)
       .then(info => {
         console.log(`✅ [OTP] Email OTP envoyé avec succès à ${email}`);
@@ -67,8 +68,7 @@ const register = async (req, res) => {
           response: err.response
         });
       });
-
-    const emailSent = true; // On assume l'envoi pour l'UI
+    emailSent = true; // Envoi lancé de manière asynchrone
 
     if (telephone) {
       smsService.sendOtpSms(telephone, otpCode)
@@ -395,9 +395,9 @@ const forgotPassword = async (req, res) => {
       resetPasswordExpire
     });
 
-    // Créer l'URL de réinitialisation (pour l'instant, lien frontend local)
-    // Dans un cas réel, utiliser process.env.FRONTEND_URL ou similaire
-    const resetUrl = `http://localhost:5173/reset-password/${resetToken}`;
+    // Créer l'URL de réinitialisation via la variable d'environnement FRONTEND_URL
+    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
     // ENVOI EMAIL DE RÉINITIALISATION (Asynchrone - Fire-and-forget pour éviter le timeout)
     // On n'attend pas la réponse du serveur SMTP pour répondre au client
