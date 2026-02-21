@@ -20,9 +20,30 @@ exports.submitContact = async (req, res) => {
         const newContact = await Contact.create({ nom, email, sujet, message });
         console.log("✅ [CONTACT] Contact créé avec succès:", newContact.id);
 
+        // Envoyer une alerte par email à l'administrateur
+        const adminEmail = process.env.EMAIL_FROM; // On envoie à l'admin configuré
+        if (adminEmail) {
+            const alertSubject = `📩 Nouveau message de contact : ${sujet}`;
+            const alertHtml = `
+                <h2>Nouveau message reçu de ${nom}</h2>
+                <p><strong>De :</strong> ${nom} (${email})</p>
+                <p><strong>Sujet :</strong> ${sujet}</p>
+                <div style="background: #f4f4f4; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                    ${message.replace(/\n/g, '<br>')}
+                </div>
+                <hr>
+                <p style="font-size: 12px; color: #666;">Ce message a été enregistré dans le dashboard admin.</p>
+            `;
+
+            // On n'attend pas forcément la fin de l'envoi pour répondre au client
+            emailService.sendEmail(adminEmail, alertSubject, alertHtml, `Nouveau message de ${nom}: ${message}`)
+                .then(() => console.log("✅ [CONTACT] Alerte admin envoyée"))
+                .catch(err => console.error("❌ [CONTACT] Échec alerte admin:", err.message));
+        }
+
         res.status(201).json({
             success: true,
-            message: "Message envoyé avec succès",
+            message: "Message envoyé avec succès. L'administration a été notifiée.",
             data: newContact
         });
     } catch (error) {
