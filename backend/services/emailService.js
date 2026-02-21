@@ -85,10 +85,15 @@ class EmailService {
             return { messageId };
         } catch (error) {
             console.error(`❌ [EMAIL] Erreur Brevo lors de l'envoi à ${to}: ${error.message}`);
-            // Log des détails si disponibles (Spécifique Brevo API)
+            // Log des détails si disponibles
             if (error.body) {
-                console.error('❌ [EMAIL] Détails erreur API:', JSON.stringify(error.body));
+                console.error('❌ [EMAIL] Détails erreur API (body):', JSON.stringify(error.body));
             }
+            if (error.response) {
+                console.error('❌ [EMAIL] Statut réponse API:', error.response.status);
+                console.error('❌ [EMAIL] Données réponse API:', JSON.stringify(error.response.data));
+            }
+            console.error('❌ [EMAIL] Pile d\'erreur:', error.stack);
             throw error;
         }
     }
