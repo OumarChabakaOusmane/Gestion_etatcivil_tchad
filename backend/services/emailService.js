@@ -128,15 +128,19 @@ class EmailService {
         };
 
         const mailOptions = {
-            from: `"État Civil Tchad" <${process.env.EMAIL_USER}>`,
-            to,
-            replyTo: process.env.EMAIL_USER,
-            subject,
-            html,
+            from: {
+                name: "SIGEC-TCHAD - République du Tchad",
+                address: process.env.EMAIL_USER
+            },
+            replyTo: "support@etatciviltd.com",
+            organization: "République du Tchad - État Civil",
+            subject: subject,
+            html: this.wrapTemplate(html),
             text: text || "Veuillez ouvrir cet email avec un client supportant le HTML.",
             headers: {
-                'X-Application': 'SIGEC-Tchad',
-                'X-Priority': '1 (Highest)',
+                'X-Priority': '1',
+                'X-Mailer': 'SIGEC-TCHAD',
+                'X-MSMail-Priority': 'High',
                 'Importance': 'high'
             }
         };
