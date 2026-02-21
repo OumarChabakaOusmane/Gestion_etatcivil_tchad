@@ -53,14 +53,19 @@ const register = async (req, res) => {
     console.log('='.repeat(60));
 
     // ENVOI OTP PAR EMAIL (ASYNCHRONE pour la performance)
-    console.log(`📧 [OTP] Envoi en arrière-plan à ${email}...`);
-    emailService.sendOTPEmail(email, `${prenom} ${nom}`, otpCode)
-      .then(() => {
-        console.log(`✅ [OTP] CODE DE VÉRIFICATION: ${otpCode}`);
+    console.log(`📧 [REGISTER] Envoi OTP en cours à: ${email}`);
+    emailService.sendOTPEmail(email, `${nom} ${prenom}`, otpCode)
+      .then(info => {
         console.log(`✅ [OTP] Email OTP envoyé avec succès à ${email}`);
+        console.log(`📧 [OTP] Message ID: ${info.messageId}`);
       })
       .catch(err => {
         console.error('❌ [OTP] ÉCHEC envoi Email OTP:', err.message);
+        console.error('❌ [OTP] Détails erreur:', {
+          message: err.message,
+          code: err.code,
+          response: err.response
+        });
       });
 
     const emailSent = true; // On assume l'envoi pour l'UI
