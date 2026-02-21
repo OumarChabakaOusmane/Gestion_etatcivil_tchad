@@ -1,15 +1,16 @@
-const Brevo = require('@getbrevo/brevo');
+const { BrevoClient } = require('@getbrevo/brevo');
 
 /**
  * Service pour l'envoi d'emails via Brevo API (HTTPS - compatible Render)
  * Envoie à n'importe quel email sans domaine vérifié.
+ * Supporte la version 4 du SDK @getbrevo/brevo.
  */
 class EmailService {
     constructor() {
         const apiKey = process.env.BREVO_API_KEY;
 
         console.log('='.repeat(50));
-        console.log('📧 [EMAIL SERVICE] Initialisation via Brevo API...');
+        console.log('📧 [EMAIL SERVICE] Initialisation via Brevo API (v4)...');
         console.log(`📧 [EMAIL SERVICE] NODE_ENV: ${process.env.NODE_ENV}`);
         console.log(`📧 [EMAIL SERVICE] BREVO_API_KEY: ${apiKey ? '✅ Configuré' : '❌ MANQUANT!'}`);
         console.log(`📧 [EMAIL SERVICE] FROM: ${process.env.EMAIL_FROM || 'noreply@sigec-tchad.fr'}`);
@@ -17,13 +18,18 @@ class EmailService {
 
         if (!apiKey) {
             console.error('❌ BREVO_API_KEY manquante! Les emails ne seront pas envoyés.');
+            this.client = null;
+        } else {
+            try {
+                // Initialisation correcte pour le SDK v4
+                this.client = new BrevoClient({ apiKey: apiKey });
+                console.log('✅ [BREVO] Client v4 initialisé avec succès.');
+            } catch (error) {
+                console.error('❌ [BREVO] Erreur d\'initialisation du client:', error.message);
+                this.client = null;
+            }
         }
 
-        const defaultClient = Brevo.ApiClient.instance;
-        const apiKeyAuth = defaultClient.authentications['api-key'];
-        apiKeyAuth.apiKey = apiKey || '';
-
-        this.apiInstance = new Brevo.TransactionalEmailsApi();
         this.fromEmail = process.env.EMAIL_FROM || 'noreply@sigec-tchad.fr';
         this.fromName = 'SIGEC-TCHAD - République du Tchad';
     }
@@ -51,24 +57,38 @@ class EmailService {
     }
 
     /**
-     * Méthode générique d'envoi d'email via Brevo API
+     * Méthode générique d'envoi d'email via Brevo API v4
      */
     async sendEmail(to, subject, html, text = '') {
-        console.log(`📧 [EMAIL] Envoi à: ${to} - Sujet: ${subject}`);
+        console.log(`📧 [EMAIL] Tentative d'envoi à: ${to} - Sujet: ${subject}`);
+
+        if (!this.client) {
+            console.error('❌ [EMAIL] Client Brevo non configuré (BREVO_API_KEY manquante).');
+            return null;
+        }
 
         try {
-            const sendSmtpEmail = new Brevo.SendSmtpEmail();
-            sendSmtpEmail.sender = { name: this.fromName, email: this.fromEmail };
-            sendSmtpEmail.to = [{ email: to }];
-            sendSmtpEmail.subject = subject;
-            sendSmtpEmail.htmlContent = this.wrapTemplate(html);
-            sendSmtpEmail.textContent = text || 'Veuillez ouvrir cet email avec un client supportant le HTML.';
+            // Structure de requête pour transactionalEmails.sendTransacEmail (v4)
+            const sendSmtpEmail = {
+                sender: { name: this.fromName, email: this.fromEmail },
+                to: [{ email: to }],
+                subject: subject,
+                htmlContent: this.wrapTemplate(html),
+                textContent: text || 'Veuillez ouvrir cet email avec un client supportant le HTML.'
+            };
 
-            const data = await this.apiInstance.sendTransacEmail(sendSmtpEmail);
-            console.log(`✅ [EMAIL] Succès: ${to} - MessageId: ${data?.messageId || data?.body?.messageId}`);
-            return { messageId: data?.messageId || data?.body?.messageId };
+            const data = await this.client.transactionalEmails.sendTransacEmail(sendSmtpEmail);
+
+            // Dans la v4, la réponse peut varier selon la config du SDK (certains retournent body directement)
+            const messageId = data?.messageId || data?.body?.messageId;
+            console.log(`✅ [EMAIL] Succès: ${to} - MessageId: ${messageId || 'OK'}`);
+            return { messageId };
         } catch (error) {
             console.error(`❌ [EMAIL] Erreur Brevo lors de l'envoi à ${to}: ${error.message}`);
+            // Log des détails si disponibles (Spécifique Brevo API)
+            if (error.body) {
+                console.error('❌ [EMAIL] Détails erreur API:', JSON.stringify(error.body));
+            }
             throw error;
         }
     }
@@ -80,7 +100,7 @@ class EmailService {
         console.log('='.repeat(60));
         console.log(`🔐 [OTP] Envoi à: ${userEmail}`);
         console.log(`🔐 [OTP] Code: ${otpCode}`);
-        console.log(`🔐 [OTP] Via: Brevo API`);
+        console.log(`🔐 [OTP] Via: Brevo API v4`);
         console.log('='.repeat(60));
 
         const subject = `🔐 SIGEC-TCHAD - Code de vérification`;
@@ -120,7 +140,7 @@ class EmailService {
 
         try {
             const result = await this.sendEmail(userEmail, subject, content, text);
-            console.log(`✅ [OTP] Email envoyé avec succès à ${userEmail}`);
+            console.log(`✅ [OTP] Email OTP envoyé avec succès à ${userEmail}`);
             return result;
         } catch (error) {
             console.error(`❌ [OTP] ÉCHEC envoi à ${userEmail}:`, error.message);
@@ -218,7 +238,7 @@ class EmailService {
      * Vérification de la connexion (compatibilité)
      */
     async verifyConnection() {
-        console.log('✅ [BREVO] Pas de vérification SMTP requise — utilisation de l\'API HTTPS.');
+        console.log('✅ [BREVO] Utilisation de l\'API HTTPS (SDK v4).');
         return true;
     }
 }
