@@ -52,38 +52,41 @@ const register = async (req, res) => {
     }
     console.log('='.repeat(60));
 
-    // ENVOI OTP PAR EMAIL (ASYNCHRONE pour la performance)
-    console.log(`📧 [REGISTER] Envoi OTP en cours à: ${email}`);
-    let emailSent = false;
-    emailService.sendOTPEmail(email, `${nom} ${prenom}`, otpCode)
-      .then(info => {
-        console.log(`✅ [OTP] Email OTP envoyé avec succès à ${email}`);
-        console.log(`📧 [OTP] Message ID: ${info.messageId}`);
-      })
-      .catch(err => {
-        console.error('❌ [OTP] ÉCHEC envoi Email OTP:', err.message);
-        console.error('❌ [OTP] Détails erreur:', {
-          message: err.message,
-          code: err.code,
-          response: err.response
-        });
+    // ENVOI OTP PAR EMAIL
+    console.log(`📧 [REGISTER] Tentative d'envoi OTP à: ${email}`);
+
+    try {
+      // On attend l'envoi de l'email AVANT de confirmer le succès au client
+      const info = await emailService.sendOTPEmail(email, `${nom} ${prenom}`, otpCode);
+
+      console.log(`✅ [OTP] Email OTP envoyé avec succès à ${email}`);
+      console.log(`📧 [OTP] Message ID: ${info?.messageId}`);
+
+      if (telephone) {
+        smsService.sendOtpSms(telephone, otpCode)
+          .catch(err => console.error('Échec envoi SMS OTP (Async):', err.message));
+      }
+
+      return res.status(201).json({
+        success: true,
+        message: 'Compte créé avec succès ! Veuillez vérifier votre email (et vos spams) pour le code de validation.',
+        requireVerification: true,
+        email: user.email,
+        emailSent: true
       });
-    emailSent = true; // Envoi lancé de manière asynchrone
 
-    if (telephone) {
-      smsService.sendOtpSms(telephone, otpCode)
-        .catch(err => console.error('Échec envoi SMS OTP (Async):', err.message));
+    } catch (mailErr) {
+      console.error('❌ [REGISTER] ÉCHEC CRITIQUE : Impossible d\'envoyer l\'email OTP.');
+      console.error(`❌ [REGISTER] Raison: ${mailErr.message}`);
+
+      return res.status(500).json({
+        success: false,
+        message: 'Le compte a été créé mais le service d\'envoi d\'emails est indisponible (Erreur API). Veuillez contacter l\'administrateur or essayer de renvoyer le code plus tard.',
+        error: mailErr.message,
+        requireVerification: true,
+        email: email
+      });
     }
-
-    // Réponse de succès
-    return res.status(201).json({
-      success: true,
-      message: 'Compte créé avec succès ! Veuillez vérifier votre email (et vos spams) pour le code de validation.',
-      requireVerification: true,
-      email: user.email,
-      emailSent: emailSent
-      // SOLUTION DE SECOURS SUPPRIMÉE POUR LA SÉCURITÉ (Sur demande encadreur)
-    });
 
   } catch (error) {
     console.error('Erreur lors de l\'enregistrement :', error);
