@@ -26,6 +26,21 @@ export const authService = {
         return response.data;
     },
 
+    forgotPassword: async (email) => {
+        const response = await api.post('/auth/forgot-password', { email, channel: 'mobile' });
+        return response.data;
+    },
+
+    resetPassword: async (email, resetToken, password) => {
+        const response = await api.post(`/auth/reset-password/${resetToken}`, { email, password });
+        return response.data;
+    },
+
+    loginWithGoogle: async (idToken) => {
+        const response = await api.post('/auth/google', { idToken });
+        return response.data;
+    },
+
     updatePushToken: async (token) => {
         const response = await api.put('/users/push-token', { token });
         return response.data;

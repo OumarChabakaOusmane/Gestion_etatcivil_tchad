@@ -634,28 +634,6 @@ const verifyDemandePublique = async (req, res) => {
             return res.status(404).json({ success: false, message: 'Document non trouvé' });
         }
 
-        // On ne renvoie que les infos nécessaires pour la vérification publique
-        // pour des raisons de confidentialité
-        const publicInfo = {
-            id: demande.id,
-            type: demande.type,
-            statut: demande.statut,
-            dateDemande: demande.dateDemande,
-            donnees: {
-                nomEnfant: demande.donnees?.nomEnfant,
-                prenomEnfant: demande.donnees?.prenomEnfant,
-                nomEpoux: demande.donnees?.nomEpoux,
-                prenomEpoux: demande.donnees?.prenomEpoux,
-                nomEpouse: demande.donnees?.nomEpouse,
-                prenomEpouse: demande.donnees?.prenomEpouse,
-                nomDefunt: demande.donnees?.nomDefunt,
-                prenomDefunt: demande.donnees?.prenomDefunt,
-                dateNaissanceEnfant: demande.donnees?.dateNaissanceEnfant,
-                dateMariage: demande.donnees?.dateMariage,
-                dateDeces: demande.donnees?.dateDeces
-            }
-        };
-
         if (demande.statut !== 'acceptee') {
             return res.status(403).json({
                 success: false,
@@ -663,6 +641,64 @@ const verifyDemandePublique = async (req, res) => {
                 statut: demande.statut
             });
         }
+
+        // On essaye de récupérer l'acte officiel lié
+        let rawData = demande.donnees || {};
+        const type = demande.type;
+
+        // On construit un objet de données normalisé pour le frontend
+        const normalizedData = {};
+
+        if (type === 'naissance') {
+            normalizedData.nomEnfant = rawData.nomEnfant || rawData.enfant?.nom;
+            normalizedData.prenomEnfant = rawData.prenomEnfant || rawData.enfant?.prenom;
+            normalizedData.dateNaissanceEnfant = rawData.dateNaissanceEnfant || rawData.dateNaissance;
+            normalizedData.heureNaissanceEnfant = rawData.heureNaissanceEnfant || rawData.heureNaissance;
+            normalizedData.lieuNaissanceEnfant = rawData.lieuNaissanceEnfant || rawData.lieuNaissance;
+
+            normalizedData.nomPere = rawData.nomPere || rawData.pere?.nom;
+            normalizedData.prenomPere = rawData.prenomPere || rawData.pere?.prenom;
+            normalizedData.nniPere = rawData.nniPere || rawData.pere?.nni;
+
+            normalizedData.nomMere = rawData.nomMere || rawData.mere?.nom;
+            normalizedData.prenomMere = rawData.prenomMere || rawData.mere?.prenom;
+            normalizedData.nniMere = rawData.nniMere || rawData.mere?.nni;
+
+        } else if (type === 'mariage') {
+            normalizedData.nomEpoux = rawData.nomEpoux || rawData.epoux?.nom;
+            normalizedData.prenomEpoux = rawData.prenomEpoux || rawData.epoux?.prenom;
+            normalizedData.nomEpouse = rawData.nomEpouse || rawData.epouse?.nom;
+            normalizedData.prenomEpouse = rawData.prenomEpouse || rawData.epouse?.prenom;
+
+            normalizedData.dateMariage = rawData.dateMariage || rawData.mariage?.date;
+            normalizedData.lieuMariage = rawData.lieuMariage || rawData.mariage?.lieu;
+            normalizedData.dotMontant = rawData.dotMontant || rawData.mariage?.dot?.montant;
+
+            normalizedData.nomTemoin1Epoux = rawData.nomTemoin1Epoux || rawData.epoux?.temoin1?.nom;
+            normalizedData.nomTemoin2Epoux = rawData.nomTemoin2Epoux || rawData.epoux?.temoin2?.nom;
+            normalizedData.nomTemoin1Epouse = rawData.nomTemoin1Epouse || rawData.epouse?.temoin1?.nom;
+            normalizedData.nomTemoin2Epouse = rawData.nomTemoin2Epouse || rawData.epouse?.temoin2?.nom;
+
+        } else if (type === 'deces') {
+            normalizedData.nomDefunt = rawData.nomDefunt || rawData.defunt?.nom;
+            normalizedData.prenomDefunt = rawData.prenomDefunt || rawData.defunt?.prenom;
+            normalizedData.nniDefunt = rawData.nniDefunt || rawData.defunt?.nni;
+            normalizedData.dateDeces = rawData.dateDeces || rawData.defunt?.dateDeces;
+            normalizedData.lieuDeces = rawData.lieuDeces || rawData.defunt?.lieuDeces;
+
+            normalizedData.nomPereDefunt = rawData.nomPereDefunt || rawData.defunt?.nomPere;
+            normalizedData.nomMereDefunt = rawData.nomMereDefunt || rawData.defunt?.nomMere;
+            normalizedData.professionDefunt = rawData.professionDefunt || rawData.defunt?.profession;
+            normalizedData.causeDeces = rawData.causeDeces || rawData.defunt?.causeDeces;
+        }
+
+        const publicInfo = {
+            id: demande.id,
+            type: demande.type,
+            statut: demande.statut,
+            dateDemande: demande.dateDemande,
+            donnees: normalizedData
+        };
 
         res.json({ success: true, data: publicInfo });
     } catch (error) {

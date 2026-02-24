@@ -1,3 +1,4 @@
+require('dotenv').config();
 const { validationResult } = require('express-validator');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
@@ -7,7 +8,8 @@ const emailService = require('../services/emailService');
 const smsService = require('../services/smsService');
 
 const logAction = require('../utils/auditLogger');
-require('dotenv').config();
+const { OAuth2Client } = require('google-auth-library');
+const googleClient = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 /**
  * @route   POST /api/auth/register
@@ -382,7 +384,18 @@ const forgotPassword = async (req, res) => {
     }
 
     // Générer un token de réinitialisation
-    const resetToken = crypto.randomBytes(20).toString('hex');
+    const channel = req.body.channel || 'web';
+    let resetToken;
+    let rawPIN = null;
+
+    if (channel === 'mobile') {
+      // Pour mobile, on génère un PIN à 6 chiffres
+      rawPIN = Math.floor(100000 + Math.random() * 900000).toString();
+      resetToken = rawPIN;
+    } else {
+      // Pour le web, on garde le token complexe
+      resetToken = crypto.randomBytes(20).toString('hex');
+    }
 
     // Hasher le token et définir l'expiration (1 heure)
     const resetPasswordToken = crypto
@@ -398,22 +411,30 @@ const forgotPassword = async (req, res) => {
       resetPasswordExpire
     });
 
-    // Créer l'URL de réinitialisation via la variable d'environnement FRONTEND_URL
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+    if (channel === 'mobile') {
+      // ENVOI CODE PIN POUR MOBILE
+      emailService.sendPasswordResetPIN(email, `${user.prenom} ${user.nom}`, rawPIN)
+        .then(() => console.log(`✅ Code PIN de réinitialisation envoyé à ${email}`))
+        .catch(mailErr => console.error('❌ Échec envoi PIN réinitialisation:', mailErr.message));
+    } else {
+      // Créer l'URL de réinitialisation via la variable d'environnement FRONTEND_URL
+      const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+      const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
-    // ENVOI EMAIL DE RÉINITIALISATION (Asynchrone - Fire-and-forget pour éviter le timeout)
-    // On n'attend pas la réponse du serveur SMTP pour répondre au client
-    emailService.sendPasswordResetEmail(email, `${user.prenom} ${user.nom}`, resetUrl)
-      .then(() => console.log(`✅ Email de réinitialisation envoyé avec succès à ${email}`))
-      .catch(mailErr => {
-        console.error('❌ Échec envoi email réinitialisation:', mailErr.message);
-        console.error('❌ Stack:', mailErr.stack);
-      });
+      // ENVOI EMAIL DE RÉINITIALISATION (Asynchrone)
+      emailService.sendPasswordResetEmail(email, `${user.prenom} ${user.nom}`, resetUrl)
+        .then(() => console.log(`✅ Email de réinitialisation envoyé avec succès à ${email}`))
+        .catch(mailErr => {
+          console.error('❌ Échec envoi email réinitialisation:', mailErr.message);
+        });
+    }
 
     res.status(200).json({
       success: true,
-      message: 'Un email de réinitialisation a été envoyé à votre adresse.'
+      message: channel === 'mobile'
+        ? 'Un code PIN de réinitialisation a été envoyé à votre adresse email.'
+        : 'Un email de réinitialisation a été envoyé à votre adresse.',
+      channel
     });
 
   } catch (error) {
@@ -471,6 +492,95 @@ const resetPassword = async (req, res) => {
   }
 };
 
+/**
+ * @route   POST /api/auth/google
+ * @desc    Authentification via Google (TikTok-style)
+ * @access  Public
+ */
+const googleLogin = async (req, res) => {
+  const { idToken } = req.body;
+
+  if (!idToken) {
+    return res.status(400).json({ success: false, message: "Token Google manquant" });
+  }
+
+  try {
+    // 1. Vérifier le token avec Google
+    const ticket = await googleClient.verifyIdToken({
+      idToken: idToken,
+      audience: process.env.GOOGLE_CLIENT_ID,
+    });
+
+    const payload = ticket.getPayload();
+    const { email, name, given_name, family_name, picture } = payload;
+
+    // 2. Chercher l'utilisateur par email
+    let user = await User.findByEmail(email);
+
+    if (!user) {
+      // 3. Créer un nouvel utilisateur si inexistant
+      // On génère un mot de passe aléatoire car il ne sera pas utilisé
+      const randomPassword = crypto.randomBytes(16).toString('hex');
+
+      user = await User.create({
+        nom: family_name || name,
+        prenom: given_name || '',
+        email: email,
+        password: randomPassword,
+        role: 'user',
+        photo: picture || '',
+        isVerified: true, // Google vérifie déjà l'email
+      });
+
+      console.log(`🆕 [GOOGLE] Nouvel utilisateur créé via Google: ${email}`);
+    }
+
+    // 4. Générer le token JWT SIGEC
+    const jwtPayload = {
+      user: {
+        id: user.id,
+        email: user.email,
+        nom: user.nom,
+        prenom: user.prenom,
+        role: user.role || 'user'
+      }
+    };
+
+    const token = jwt.sign(
+      jwtPayload,
+      process.env.JWT_SECRET,
+      { expiresIn: '24h' }
+    );
+
+    // [AUDIT LOG]
+    req.user = user;
+    logAction(req, 'GOOGLE_LOGIN_SUCCESS', 'Connexion via Google');
+
+    return res.json({
+      success: true,
+      data: {
+        token,
+        user: {
+          id: user.id,
+          nom: user.nom,
+          prenom: user.prenom,
+          email: user.email,
+          photo: user.photo || '',
+          role: user.role || 'user'
+        }
+      }
+    });
+
+  } catch (error) {
+    console.error('❌ Erreur Google Login:', error);
+    return res.status(401).json({
+      success: false,
+      message: 'Échec de l\'authentification Google',
+      error: error.message
+    });
+  }
+};
+
 
 
 module.exports = {
@@ -479,5 +589,6 @@ module.exports = {
   forgotPassword,
   verifyOtp,
   resendOtp,
-  resetPassword
+  resetPassword,
+  googleLogin
 };

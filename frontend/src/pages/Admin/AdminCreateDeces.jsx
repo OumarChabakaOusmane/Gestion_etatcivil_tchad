@@ -241,6 +241,14 @@ export default function AdminCreateDeces() {
 
     return (
         <div className="fade-in p-4">
+            {/* Top Fixed Progress Bar */}
+            <div className="fixed-top-progress" style={{
+                position: 'fixed', top: 0, left: 0, right: 0, height: '4px', background: '#f8f9fa', zIndex: 9999
+            }}>
+                <div style={{
+                    width: `${(step / steps.length) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #001a41 0%, #00338d 100%)', transition: 'width 0.6s cubic-bezier(0.1, 0.7, 0.1, 1)'
+                }}></div>
+            </div>
             <div className="dashboard-header-simple py-2 mb-4">
                 <div className="d-flex align-items-center">
                     <button onClick={() => navigate('/admin/dashboard')} className="btn btn-link text-decoration-none text-muted p-0 me-3 hover-translate transition-all">
@@ -255,17 +263,39 @@ export default function AdminCreateDeces() {
 
             <div className="row justify-content-center">
                 <div className="col-lg-10">
-                    <div className="card p-4 p-md-5 border-0 shadow-lg rounded-4 overflow-hidden position-relative">
-                        <div className="stepper-container">
+                    {/* Premium Stepper */}
+                    <div className="card border-0 shadow-sm rounded-4 mb-5 p-4 bg-white">
+                        <div className="stepper-horizontal d-flex justify-content-between position-relative">
+                            <div className="stepper-progress-bar" style={{
+                                position: 'absolute', top: '22px', left: '10%', right: '10%', height: '2px', background: '#e9ecef', zIndex: 0
+                            }}>
+                                <div className="progress-fill" style={{
+                                    width: `${((step - 1) / (steps.length - 1)) * 100}%`, height: '100%', background: '#001a41', transition: 'width 0.4s ease'
+                                }}></div>
+                            </div>
                             {steps.map((s) => (
-                                <div key={s.id} className={`stepper-item ${step === s.id ? 'active' : ''} ${step > s.id ? 'completed' : ''}`}>
-                                    <div className="stepper-dot shadow-sm">
+                                <div key={s.id} className={`stepper-point d-flex flex-column align-items-center position-relative`} style={{ zIndex: 1, width: '33.33%' }}>
+                                    <div className={`stepper-circle d-flex align-items-center justify-content-center rounded-circle shadow-sm mb-3 transition-all ${step >= s.id ? 'active' : ''}`}
+                                        style={{
+                                            width: '45px',
+                                            height: '45px',
+                                            background: step > s.id ? '#059669' : (step === s.id ? '#001a41' : '#fff'),
+                                            color: (step >= s.id) ? '#fff' : '#adb5bd',
+                                            border: step >= s.id ? 'none' : '2px solid #dee2e6',
+                                            fontSize: '1.2rem',
+                                            fontWeight: '700'
+                                        }}>
                                         {step > s.id ? <i className="bi bi-check-lg"></i> : s.id}
                                     </div>
-                                    <span className="stepper-label d-none d-md-block">{s.label}</span>
+                                    <span className={`small fw-bold text-uppercase d-none d-md-block ${step >= s.id ? 'text-primary-dark' : 'text-muted'}`} style={{ fontSize: '0.7rem', letterSpacing: '0.8px' }}>
+                                        {s.label}
+                                    </span>
                                 </div>
                             ))}
                         </div>
+                    </div>
+
+                    <div className="card p-4 p-md-5 border-0 shadow-lg rounded-4 overflow-hidden position-relative">
 
                         {error && (
                             <div className="alert alert-danger rounded-4 border-0 shadow-sm mb-4">
@@ -305,4 +335,34 @@ export default function AdminCreateDeces() {
             </div>
         </div>
     );
+}
+
+const styles = `
+    .stepper-circle.active {
+        transform: scale(1.1);
+        box-shadow: 0 0 0 5px rgba(0, 26, 65, 0.1) !important;
+    }
+    .text-primary-dark {
+        color: #001a41;
+    }
+    .form-control:focus, .form-select:focus {
+        background-color: #fff !important;
+        box-shadow: 0 0 0 4px rgba(0, 26, 65, 0.05) !important;
+        border: 1px solid rgba(0, 26, 65, 0.1) !important;
+    }
+    .btn-primary-custom {
+        background: #001a41;
+        color: white;
+    }
+    .btn-primary-custom:hover {
+        background: #00338d;
+        color: white;
+    }
+`;
+
+// Inject styles
+if (typeof document !== 'undefined') {
+    const styleSheet = document.createElement("style");
+    styleSheet.innerText = styles;
+    document.head.appendChild(styleSheet);
 }

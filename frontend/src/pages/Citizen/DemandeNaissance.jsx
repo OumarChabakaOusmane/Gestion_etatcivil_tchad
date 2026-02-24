@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import demandeService from "../../services/demandeService";
+import uploadService from "../../services/uploadService";
 
 export default function DemandeNaissance() {
     const [step, setStep] = useState(1);
@@ -31,7 +32,9 @@ export default function DemandeNaissance() {
         nationaliteMere: "TCHADIENNE",
         professionMere: "",
         domicileMere: "",
-        nniMere: ""
+        nniMere: "",
+        nniPereImage: null,
+        nniMereImage: null
     });
 
     const [error, setError] = useState("");
@@ -118,6 +121,65 @@ export default function DemandeNaissance() {
         }
     };
 
+    const handleFileChange = async (e, key) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const base64 = await uploadService.uploadImage(file);
+            setFormData(prev => ({
+                ...prev,
+                [key]: base64, // Stocke l'image dans le champ NNI original pour le backend
+                [`${key}Image`]: base64 // Garde une trace pour l'aperçu local
+            }));
+        } catch (err) {
+            alert(err.message || "Erreur lors du chargement de l'image");
+        }
+    };
+
+    const removeImage = (key) => {
+        setFormData(prev => ({
+            ...prev,
+            [key]: "",
+            [`${key}Image`]: null
+        }));
+    };
+
+    const NNIPicker = ({ label, name, value, image }) => (
+        <div className="col-12 mb-3">
+            <label className="form-label fw-bold small text-muted text-uppercase">{label}</label>
+            {!image ? (
+                <div className="upload-zone border-2 border-dashed rounded-4 p-4 text-center bg-light position-relative">
+                    <input
+                        type="file"
+                        className="position-absolute w-100 h-100 top-0 start-0 opacity-0"
+                        style={{ cursor: 'pointer' }}
+                        onChange={(e) => handleFileChange(e, name)}
+                        accept="image/*"
+                    />
+                    <i className="bi bi-card-image fs-2 text-primary d-block mb-2"></i>
+                    <span className="fw-bold d-block small">Charger la carte NNI</span>
+                    <small className="text-muted smaller">JPG, PNG - Max 700Ko</small>
+                </div>
+            ) : (
+                <div className="position-relative bg-light rounded-4 p-2 border">
+                    <img src={image} alt="Carte NNI" className="img-fluid rounded-3" style={{ maxHeight: '150px', width: '100%', objectFit: 'contain' }} />
+                    <button
+                        type="button"
+                        className="btn btn-danger btn-sm rounded-circle position-absolute"
+                        style={{ top: '-10px', right: '-10px', width: '30px', height: '30px', padding: 0 }}
+                        onClick={() => removeImage(name)}
+                    >
+                        <i className="bi bi-x"></i>
+                    </button>
+                    <div className="text-center mt-2 small text-success fw-bold">
+                        <i className="bi bi-check-circle-fill me-1"></i> Carte jointe
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
     const renderStepContent = () => {
         switch (step) {
             case 1:
@@ -191,10 +253,7 @@ export default function DemandeNaissance() {
                                 <label className="form-label fw-bold">Domicile du père</label>
                                 <input type="text" name="domicilePere" className="form-control form-control-lg bg-light border-0" value={formData.domicilePere} onChange={handleChange} required />
                             </div>
-                            <div className="col-12">
-                                <label className="form-label fw-bold">Référence NNI du père (Optionnel)</label>
-                                <input type="text" name="nniPere" className="form-control form-control-lg bg-light border-0" value={formData.nniPere} onChange={handleChange} placeholder="Numéro National d'Identité" />
-                            </div>
+                            <NNIPicker label="Carte NNI du père" name="nniPere" image={formData.nniPereImage} />
                         </div>
                     </div>
                 );
@@ -234,10 +293,7 @@ export default function DemandeNaissance() {
                                 <label className="form-label fw-bold">Domicile de la mère</label>
                                 <input type="text" name="domicileMere" className="form-control form-control-lg bg-light border-0" value={formData.domicileMere} onChange={handleChange} required />
                             </div>
-                            <div className="col-12">
-                                <label className="form-label fw-bold">Référence NNI de la mère (Optionnel)</label>
-                                <input type="text" name="nniMere" className="form-control form-control-lg bg-light border-0" value={formData.nniMere} onChange={handleChange} placeholder="Numéro National d'Identité" />
-                            </div>
+                            <NNIPicker label="Carte NNI de la mère" name="nniMere" image={formData.nniMereImage} />
                         </div>
                     </div>
                 );
@@ -254,9 +310,15 @@ export default function DemandeNaissance() {
                                 <div className="col-6 fw-bold">{formData.dateNaissanceEnfant} à {formData.lieuNaissanceEnfant}</div>
                                 <hr className="my-2 opacity-10" />
                                 <div className="col-6 text-muted">Père:</div>
-                                <div className="col-6 fw-bold">{formData.prenomPere} {formData.nomPere} {formData.nniPere && `(NNI: ${formData.nniPere})`}</div>
+                                <div className="col-6 fw-bold">
+                                    {formData.prenomPere} {formData.nomPere}
+                                    {formData.nniPereImage && <span className="ms-2 badge bg-success smaller"><i className="bi bi-card-image me-1"></i>Carte jointe</span>}
+                                </div>
                                 <div className="col-6 text-muted">Mère:</div>
-                                <div className="col-6 fw-bold">{formData.prenomMere} {formData.nomMere} {formData.nniMere && `(NNI: ${formData.nniMere})`}</div>
+                                <div className="col-6 fw-bold">
+                                    {formData.prenomMere} {formData.nomMere}
+                                    {formData.nniMereImage && <span className="ms-2 badge bg-success smaller"><i className="bi bi-card-image me-1"></i>Carte jointe</span>}
+                                </div>
                             </div>
                         </div>
                         <p className="text-muted small italic">
@@ -271,6 +333,15 @@ export default function DemandeNaissance() {
 
     return (
         <div className="fade-in px-lg-4 pb-5">
+            {/* Top Fixed Progress Bar */}
+            <div className="fixed-top-progress" style={{
+                position: 'fixed', top: 0, left: 0, right: 0, height: '4px', background: '#f8f9fa', zIndex: 9999
+            }}>
+                <div style={{
+                    width: `${(step / steps.length) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #001a41 0%, #00338d 100%)', transition: 'width 0.6s cubic-bezier(0.1, 0.7, 0.1, 1)'
+                }}></div>
+            </div>
+
             {/* Header Section */}
             <div className="d-flex align-items-center mb-5 mt-3">
                 <button

@@ -13,6 +13,7 @@ import CustomDrawer from '../components/CustomDrawer';
 import LoginScreen from '../screens/LoginScreen';
 import RegisterScreen from '../screens/RegisterScreen';
 import ForgotPasswordScreen from '../screens/ForgotPasswordScreen';
+import ResetPasswordScreen from '../screens/ResetPasswordScreen';
 import VerifyOtpScreen from '../screens/VerifyOtpScreen';
 import HomeScreen from '../screens/HomeScreen';
 import CreateDemandeScreen from '../screens/CreateDemandeScreen';
@@ -130,6 +131,7 @@ export default function AppNavigator() {
                 <Stack.Screen name="Login" component={LoginScreen} />
                 <Stack.Screen name="Register" component={RegisterScreen} />
                 <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+                <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
                 <Stack.Screen name="VerifyOtp" component={VerifyOtpScreen} />
             </Stack.Navigator>
         </NavigationContainer>

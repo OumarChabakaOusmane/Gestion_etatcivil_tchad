@@ -12,8 +12,10 @@ import {
     Alert
 } from 'react-native';
 import { demandeService } from '../api/demandeService';
-import { ChevronLeft, Info, CheckCircle, ArrowRight, ArrowLeft } from 'lucide-react-native';
+import { ChevronLeft, Info, CheckCircle, ArrowRight, ArrowLeft, Camera, Image as ImageIcon, X } from 'lucide-react-native';
 import { useAuth } from '../context/AuthContext';
+import * as ImagePicker from 'expo-image-picker';
+import { Image } from 'react-native';
 
 export default function CreateDemandeScreen({ route, navigation }) {
     const { isLoggedIn } = useAuth();
@@ -212,6 +214,73 @@ export default function CreateDemandeScreen({ route, navigation }) {
         </View>
     );
 
+    const pickImage = async (key) => {
+        const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission requise', 'Désolé, nous avons besoin des permissions pour accéder à vos photos.');
+            return;
+        }
+
+        let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ImagePicker.MediaTypeOptions.Images,
+            allowsEditing: true,
+            quality: 0.5,
+            base64: true,
+        });
+
+        if (!result.canceled) {
+            const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+            updateField(key, base64Image);
+        }
+    };
+
+    const takePhoto = async (key) => {
+        const { status } = await ImagePicker.requestCameraPermissionsAsync();
+        if (status !== 'granted') {
+            Alert.alert('Permission requise', 'Désolé, nous avons besoin des permissions pour utiliser la caméra.');
+            return;
+        }
+
+        let result = await ImagePicker.launchCameraAsync({
+            allowsEditing: true,
+            quality: 0.5,
+            base64: true,
+        });
+
+        if (!result.canceled) {
+            const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
+            updateField(key, base64Image);
+        }
+    };
+
+    const renderNNIPicker = (label, key) => (
+        <View style={styles.inputGroup}>
+            <Text style={styles.label}>{label}</Text>
+            {formData[key] ? (
+                <View style={styles.imagePreviewContainer}>
+                    <Image source={{ uri: formData[key] }} style={styles.imagePreview} />
+                    <TouchableOpacity
+                        style={styles.removeImageBtn}
+                        onPress={() => updateField(key, '')}
+                    >
+                        <X size={20} color="#FFF" />
+                    </TouchableOpacity>
+                </View>
+            ) : (
+                <View style={styles.pickerActions}>
+                    <TouchableOpacity style={styles.pickerActionBtn} onPress={() => takePhoto(key)}>
+                        <Camera size={24} color="#003399" />
+                        <Text style={styles.pickerActionText}>Prendre Photo</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity style={styles.pickerActionBtn} onPress={() => pickImage(key)}>
+                        <ImageIcon size={24} color="#003399" />
+                        <Text style={styles.pickerActionText}>Galerie</Text>
+                    </TouchableOpacity>
+                </View>
+            )}
+        </View>
+    );
+
     const renderPicker = (label, key, options) => (
         <View style={styles.inputGroup}>
             <Text style={styles.label}>{label}</Text>
@@ -282,7 +351,7 @@ export default function CreateDemandeScreen({ route, navigation }) {
                         ])}
                         {renderInput('Profession', 'professionPere', 'Sa profession')}
                         {renderInput('Domicile', 'domicilePere', 'Adresse')}
-                        {renderInput('NNI (Optionnel)', 'nniPere', 'Numéro National d\'Identité')}
+                        {renderNNIPicker('Carte NNI du Père (Optionnel)', 'nniPere')}
                     </View>
                 );
             }
@@ -302,7 +371,7 @@ export default function CreateDemandeScreen({ route, navigation }) {
                         ])}
                         {renderInput('Profession', 'professionMere', 'Sa profession')}
                         {renderInput('Domicile', 'domicileMere', 'Adresse')}
-                        {renderInput('NNI (Optionnel)', 'nniMere', 'Numéro National d\'Identité')}
+                        {renderNNIPicker('Carte NNI de la Mère (Optionnel)', 'nniMere')}
                     </View>
                 );
             }
@@ -386,7 +455,7 @@ export default function CreateDemandeScreen({ route, navigation }) {
                                 </View>
                             </View>
                             <View style={{ flex: 1, marginLeft: 8 }}>
-                                {renderInput('NNI (Optionnel)', 'nniDefunt', 'NNI')}
+                                {renderNNIPicker('Carte NNI (Opt.)', 'nniDefunt')}
                             </View>
                         </View>
                         {renderInput('Profession', 'professionDefunt', 'Profession')}
@@ -434,12 +503,46 @@ export default function CreateDemandeScreen({ route, navigation }) {
     return (
         <View style={styles.container}>
             <View style={styles.header}>
-                <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backHeaderBtn}>
-                    <ChevronLeft size={28} color="#003399" />
-                </TouchableOpacity>
-                <Text style={styles.headerTitle}>Demande : {type.toUpperCase()}</Text>
-                <View style={styles.stepIndicator}>
-                    <Text style={styles.stepText}>{currentStep}/{maxSteps}</Text>
+                <View style={styles.headerTop}>
+                    <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backHeaderBtn}>
+                        <ChevronLeft size={28} color="#003399" />
+                    </TouchableOpacity>
+                    <Text style={styles.headerTitle}>Demande : {type.toUpperCase()}</Text>
+                    <View style={styles.stepIndicator}>
+                        <Text style={styles.stepText}>{currentStep}/{maxSteps}</Text>
+                    </View>
+                </View>
+
+                {/* Fixed Top Progress Bar */}
+                <View style={styles.progressBarContainer}>
+                    <View style={[styles.progressBarFill, { width: `${(currentStep / maxSteps) * 100}%` }]} />
+                </View>
+
+                {/* Premium Stepper */}
+                <View style={styles.stepperContainer}>
+                    {[...Array(maxSteps)].map((_, i) => (
+                        <React.Fragment key={i}>
+                            <View style={[
+                                styles.stepCircle,
+                                currentStep > i + 1 ? styles.stepCircleCompleted : (currentStep === i + 1 ? styles.stepCircleActive : {})
+                            ]}>
+                                {currentStep > i + 1 ? (
+                                    <CheckCircle size={16} color="#FFF" />
+                                ) : (
+                                    <Text style={[
+                                        styles.stepCircleText,
+                                        currentStep >= i + 1 ? styles.stepCircleTextActive : {}
+                                    ]}>{i + 1}</Text>
+                                )}
+                            </View>
+                            {i < maxSteps - 1 && (
+                                <View style={[
+                                    styles.stepLine,
+                                    currentStep > i + 1 ? styles.stepLineActive : {}
+                                ]} />
+                            )}
+                        </React.Fragment>
+                    ))}
                 </View>
             </View>
 
@@ -491,27 +594,68 @@ export default function CreateDemandeScreen({ route, navigation }) {
 const styles = StyleSheet.create({
     container: { flex: 1, backgroundColor: '#F8F9FA' },
     header: {
+        backgroundColor: '#FFFFFF',
+        paddingTop: Platform.OS === 'ios' ? 50 : 30,
+        borderBottomWidth: 1,
+        borderBottomColor: '#E9ECEF',
+    },
+    headerTop: {
         flexDirection: 'row',
         alignItems: 'center',
         justifyContent: 'space-between',
-        paddingTop: Platform.OS === 'ios' ? 60 : 40,
-        paddingHorizontal: 24,
-        paddingBottom: 20,
-        backgroundColor: '#FFFFFF',
-        borderBottomWidth: 1,
-        borderBottomColor: '#E9ECEF',
-        ...Platform.select({
-            web: {
-                boxShadow: '0px 2px 10px rgba(0,0,0,0.05)'
-            },
-            default: {
-                elevation: 2,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.05,
-                shadowRadius: 10,
-            }
-        })
+        paddingHorizontal: 20,
+        paddingBottom: 15,
+    },
+    progressBarContainer: {
+        height: 3,
+        backgroundColor: '#F1F3F5',
+        width: '100%',
+    },
+    progressBarFill: {
+        height: '100%',
+        backgroundColor: '#003399',
+    },
+    stepperContainer: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        justifyContent: 'center',
+        paddingVertical: 15,
+        backgroundColor: '#F8F9FA',
+    },
+    stepCircle: {
+        width: 30,
+        height: 30,
+        borderRadius: 15,
+        backgroundColor: '#FFF',
+        borderWidth: 2,
+        borderColor: '#DEE2E6',
+        justifyContent: 'center',
+        alignItems: 'center',
+    },
+    stepCircleActive: {
+        borderColor: '#003399',
+        backgroundColor: '#FFF',
+    },
+    stepCircleCompleted: {
+        borderColor: '#2F9E44',
+        backgroundColor: '#2F9E44',
+    },
+    stepCircleText: {
+        fontSize: 12,
+        fontWeight: 'bold',
+        color: '#ADB5BD',
+    },
+    stepCircleTextActive: {
+        color: '#003399',
+    },
+    stepLine: {
+        width: 40,
+        height: 2,
+        backgroundColor: '#DEE2E6',
+        marginHorizontal: 10,
+    },
+    stepLineActive: {
+        backgroundColor: '#2F9E44',
     },
     backHeaderBtn: { padding: 4, marginLeft: -8 },
     headerTitle: { fontSize: 17, fontWeight: '800', color: '#003399', letterSpacing: 0.5 },
@@ -635,4 +779,48 @@ const styles = StyleSheet.create({
         })
     },
     submitBtnText: { marginRight: 10, color: '#FFFFFF', fontWeight: '800', fontSize: 17 },
+    imagePreviewContainer: {
+        width: '100%',
+        height: 200,
+        borderRadius: 14,
+        overflow: 'hidden',
+        borderWidth: 1.5,
+        borderColor: '#003399',
+        backgroundColor: '#F1F3F5',
+        position: 'relative'
+    },
+    imagePreview: {
+        width: '100%',
+        height: '100%',
+        resizeMode: 'cover'
+    },
+    removeImageBtn: {
+        position: 'absolute',
+        top: 10,
+        right: 10,
+        backgroundColor: 'rgba(230, 57, 70, 0.8)',
+        padding: 8,
+        borderRadius: 20
+    },
+    pickerActions: {
+        flexDirection: 'row',
+        gap: 12
+    },
+    pickerActionBtn: {
+        flex: 1,
+        flexDirection: 'column',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: 16,
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1.5,
+        borderColor: '#E9ECEF',
+        borderRadius: 14,
+        gap: 8
+    },
+    pickerActionText: {
+        fontSize: 13,
+        fontWeight: '700',
+        color: '#003399'
+    }
 });

@@ -45,16 +45,18 @@ export default function SupportScreen() {
     ];
 
     return (
-        <ScrollView style={styles.container}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
             <View style={styles.header}>
                 <Text style={styles.title}>Aide & Support</Text>
-                <Text style={styles.subtitle}>Nous sommes là pour vous accompagner</Text>
+                <Text style={styles.subtitle}>Notre équipe est là pour vous accompagner dans toutes vos démarches.</Text>
             </View>
 
             <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                    <HelpCircle size={20} color="#001a41" style={{ marginRight: 8 }} />
-                    <Text style={styles.sectionTitle}>Questions Fréquentes (FAQ)</Text>
+                    <View style={styles.sectionIcon}>
+                        <HelpCircle size={20} color="#003399" />
+                    </View>
+                    <Text style={styles.sectionTitle}>Questions Fréquentes</Text>
                 </View>
                 {faqs.map((faq, index) => (
                     <FAQItem key={index} {...faq} />
@@ -63,28 +65,34 @@ export default function SupportScreen() {
 
             <View style={styles.section}>
                 <View style={styles.sectionHeader}>
-                    <MessageSquare size={20} color="#001a41" style={{ marginRight: 8 }} />
+                    <View style={styles.sectionIcon}>
+                        <MessageSquare size={20} color="#003399" />
+                    </View>
                     <Text style={styles.sectionTitle}>Contactez-nous</Text>
                 </View>
 
                 <View style={styles.contactCard}>
-                    <Text style={styles.label}>Nom complet</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={name}
-                        onChangeText={setName}
-                        placeholder="Veuillez entrer votre nom complet"
-                    />
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Nom complet</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={name}
+                            onChangeText={setName}
+                            placeholder="Entrez votre nom"
+                        />
+                    </View>
 
-                    <Text style={styles.label}>Message</Text>
-                    <TextInput
-                        style={[styles.input, styles.textArea]}
-                        value={message}
-                        onChangeText={setMessage}
-                        placeholder="Comment pouvons-nous vous aider ?"
-                        multiline
-                        numberOfLines={4}
-                    />
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Votre message</Text>
+                        <TextInput
+                            style={[styles.input, styles.textArea]}
+                            value={message}
+                            onChangeText={setMessage}
+                            placeholder="Comment pouvons-nous vous aider ?"
+                            multiline
+                            numberOfLines={4}
+                        />
+                    </View>
 
                     <TouchableOpacity style={styles.button} onPress={handleSubmit}>
                         <Text style={styles.buttonText}>Envoyer le message</Text>
@@ -93,62 +101,81 @@ export default function SupportScreen() {
 
                 <View style={styles.infoGrid}>
                     <View style={styles.infoItem}>
-                        <Phone size={20} color="#001a41" />
+                        <View style={styles.infoIcon}>
+                            <Phone size={20} color="#003399" />
+                        </View>
                         <Text style={styles.infoText}>+235 62 96 55 33</Text>
                     </View>
                     <View style={styles.infoItem}>
-                        <Mail size={20} color="#001a41" />
-                        <Text style={styles.infoText}>etatciviltd@gmail.com</Text>
+                        <View style={styles.infoIcon}>
+                            <Mail size={20} color="#003399" />
+                        </View>
+                        <Text style={styles.infoText}>support@sigec.td</Text>
                     </View>
                 </View>
             </View>
-
-            <View style={{ height: 40 }} />
         </ScrollView>
     );
 }
 
 const styles = StyleSheet.create({
-    container: {
-        flex: 1,
-        backgroundColor: '#F8F9FA',
+    scrollContent: {
+        paddingBottom: 40,
     },
     header: {
         padding: 24,
-        paddingTop: 60,
+        paddingTop: Platform.OS === 'ios' ? 70 : 50,
         backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F3F5',
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
+        fontSize: 28,
+        fontWeight: '900',
         color: '#001a41',
     },
     subtitle: {
-        fontSize: 14,
-        color: '#6c757d',
-        marginTop: 4,
+        fontSize: 15,
+        color: '#64748b',
+        fontWeight: '500',
+        marginTop: 6,
+        lineHeight: 22,
     },
     section: {
-        padding: 16,
+        paddingHorizontal: 20,
+        paddingTop: 25,
     },
     sectionHeader: {
         flexDirection: 'row',
         alignItems: 'center',
-        marginBottom: 12,
-        marginTop: 8,
+        marginBottom: 16,
+    },
+    sectionIcon: {
+        width: 32,
+        height: 32,
+        borderRadius: 8,
+        backgroundColor: '#E7F5FF',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 10,
     },
     sectionTitle: {
         fontSize: 18,
-        fontWeight: 'bold',
+        fontWeight: '700',
         color: '#001a41',
     },
     faqCard: {
         backgroundColor: '#FFFFFF',
-        padding: 16,
-        borderRadius: 12,
-        marginBottom: 8,
-        boxShadow: '0px 1px 5px rgba(0, 0, 0, 0.05)',
+        padding: 20,
+        borderRadius: 20,
+        marginBottom: 10,
         elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+        borderWidth: 1,
+        borderColor: '#f1f5f9',
     },
     faqHeader: {
         flexDirection: 'row',
@@ -156,71 +183,102 @@ const styles = StyleSheet.create({
         alignItems: 'center',
     },
     faqQuestion: {
-        fontSize: 14,
-        fontWeight: '600',
-        color: '#495057',
+        fontSize: 15,
+        fontWeight: '700',
+        color: '#334155',
         flex: 1,
+        lineHeight: 20,
     },
     faqAnswer: {
         fontSize: 14,
-        color: '#6c757d',
-        marginTop: 12,
-        lineHeight: 20,
+        color: '#64748b',
+        marginTop: 15,
+        lineHeight: 22,
     },
     contactCard: {
         backgroundColor: '#FFFFFF',
-        padding: 20,
-        borderRadius: 16,
-        boxShadow: '0px 4px 15px rgba(0, 0, 0, 0.05)',
-        elevation: 3,
+        padding: 24,
+        borderRadius: 24,
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+        borderWidth: 1,
+        borderColor: '#f1f5f9',
+    },
+    inputGroup: {
+        marginBottom: 16,
     },
     label: {
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '700',
         color: '#495057',
         marginBottom: 8,
-        marginTop: 12,
+        marginLeft: 4,
     },
     input: {
-        backgroundColor: '#F1F3F5',
-        padding: 12,
-        borderRadius: 8,
+        backgroundColor: '#F8F9FA',
+        borderWidth: 1.5,
+        borderColor: '#E9ECEF',
+        padding: 16,
+        borderRadius: 14,
         fontSize: 16,
+        color: '#1A1A1A',
     },
     textArea: {
-        height: 100,
+        height: 120,
         textAlignVertical: 'top',
     },
     button: {
         backgroundColor: '#001a41',
-        padding: 16,
-        borderRadius: 8,
+        padding: 18,
+        borderRadius: 16,
         alignItems: 'center',
-        marginTop: 20,
+        marginTop: 10,
+        elevation: 4,
+        shadowColor: '#001a41',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
     },
     buttonText: {
         color: '#FFFFFF',
-        fontSize: 16,
+        fontSize: 17,
         fontWeight: 'bold',
     },
     infoGrid: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginTop: 20,
+        marginTop: 25,
     },
     infoItem: {
         backgroundColor: '#FFFFFF',
-        padding: 12,
-        borderRadius: 12,
+        padding: 16,
+        borderRadius: 20,
         alignItems: 'center',
         flex: 0.48,
-        boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.05)',
-        elevation: 2,
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+        borderWidth: 1,
+        borderColor: '#f1f5f9',
+    },
+    infoIcon: {
+        width: 40,
+        height: 40,
+        borderRadius: 20,
+        backgroundColor: '#F8F9FA',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginBottom: 10,
     },
     infoText: {
         fontSize: 12,
         color: '#495057',
-        marginTop: 8,
-        fontWeight: '600',
+        fontWeight: '700',
+        textAlign: 'center',
     },
 });

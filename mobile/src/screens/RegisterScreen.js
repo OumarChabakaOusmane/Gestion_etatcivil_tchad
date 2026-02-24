@@ -12,9 +12,37 @@ import {
     Alert
 } from 'react-native';
 import { authService } from '../api/authService';
+import { useAuth } from '../context/AuthContext';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 import { API_URL } from '../api/client';
 
 export default function RegisterScreen({ navigation }) {
+    const { loginWithGoogle } = useAuth();
+    const [googleLoading, setGoogleLoading] = useState(false);
+
+    const handleGoogleLogin = async () => {
+        try {
+            setGoogleLoading(true);
+            await GoogleSignin.hasPlayServices();
+            const userInfo = await GoogleSignin.signIn();
+            const idToken = userInfo.data?.idToken || userInfo.idToken;
+
+            if (!idToken) throw new Error('Token Google manquant');
+
+            const result = await loginWithGoogle(idToken);
+            if (!result.success) {
+                Alert.alert('Erreur', result.message || 'Échec inscription Google');
+            }
+        } catch (error) {
+            console.error('❌ Erreur Google Register:', error);
+            if (error.code !== statusCodes.SIGN_IN_CANCELLED) {
+                Alert.alert('Erreur', 'Impossible de se connecter avec Google');
+            }
+        } finally {
+            setGoogleLoading(false);
+        }
+    };
+
     const [formData, setFormData] = useState({
         nom: '',
         prenom: '',
@@ -55,81 +83,104 @@ export default function RegisterScreen({ navigation }) {
             behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
             style={styles.container}
         >
-            <ScrollView contentContainerStyle={styles.scrollContent}>
+            <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
                 <View style={styles.header}>
-                    <Text style={styles.title}>Inscription</Text>
-                    <Text style={styles.subtitle}>Créez votre compte citoyen</Text>
+                    <Text style={styles.title}>Rejoignez SIGEC</Text>
+                    <Text style={styles.subtitle}>Créez votre compte citoyen en quelques secondes</Text>
                 </View>
 
-                <View style={styles.form}>
+                <View style={styles.formCard}>
                     <View style={styles.row}>
                         <View style={{ flex: 1, marginRight: 8 }}>
-                            <Text style={styles.label}>Nom</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={formData.nom}
-                                onChangeText={(text) => setFormData({ ...formData, nom: text })}
-                                placeholder="Entrez votre nom"
-                                autoComplete="name-family"
-                                textContentType="familyName"
-                            />
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Nom</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={formData.nom}
+                                    onChangeText={(text) => setFormData({ ...formData, nom: text })}
+                                    placeholder="Nom"
+                                />
+                            </View>
                         </View>
                         <View style={{ flex: 1, marginLeft: 8 }}>
-                            <Text style={styles.label}>Prénom</Text>
-                            <TextInput
-                                style={styles.input}
-                                value={formData.prenom}
-                                onChangeText={(text) => setFormData({ ...formData, prenom: text })}
-                                placeholder="Entrez votre prénom"
-                                autoComplete="name-given"
-                                textContentType="givenName"
-                            />
+                            <View style={styles.inputGroup}>
+                                <Text style={styles.label}>Prénom</Text>
+                                <TextInput
+                                    style={styles.input}
+                                    value={formData.prenom}
+                                    onChangeText={(text) => setFormData({ ...formData, prenom: text })}
+                                    placeholder="Prénom"
+                                />
+                            </View>
                         </View>
                     </View>
 
-                    <Text style={styles.label}>Adresse Email</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={formData.email}
-                        onChangeText={(text) => setFormData({ ...formData, email: text })}
-                        placeholder="Entrez votre email"
-                        keyboardType="email-address"
-                        autoCapitalize="none"
-                        autoComplete="email"
-                        textContentType="emailAddress"
-                    />
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Adresse Email</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={formData.email}
+                            onChangeText={(text) => setFormData({ ...formData, email: text })}
+                            placeholder="votre@email.com"
+                            keyboardType="email-address"
+                            autoCapitalize="none"
+                        />
+                    </View>
 
-                    <Text style={styles.label}>Téléphone</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={formData.telephone}
-                        onChangeText={(text) => setFormData({ ...formData, telephone: text })}
-                        placeholder="Entrez votre numéro de téléphone"
-                        keyboardType="phone-pad"
-                        autoComplete="tel"
-                        textContentType="telephoneNumber"
-                    />
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Numéro de Téléphone</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={formData.telephone}
+                            onChangeText={(text) => setFormData({ ...formData, telephone: text })}
+                            placeholder="+235 ..."
+                            keyboardType="phone-pad"
+                        />
+                    </View>
 
-                    <Text style={styles.label}>Mot de passe</Text>
-                    <TextInput
-                        style={styles.input}
-                        value={formData.password}
-                        onChangeText={(text) => setFormData({ ...formData, password: text })}
-                        placeholder="Entrez votre mot de passe"
-                        secureTextEntry
-                        autoComplete="password"
-                        textContentType="password"
-                    />
+                    <View style={styles.inputGroup}>
+                        <Text style={styles.label}>Mot de passe</Text>
+                        <TextInput
+                            style={styles.input}
+                            value={formData.password}
+                            onChangeText={(text) => setFormData({ ...formData, password: text })}
+                            placeholder="Choisir un mot de passe"
+                            secureTextEntry
+                        />
+                    </View>
 
                     <TouchableOpacity
                         style={styles.button}
                         onPress={handleRegister}
-                        disabled={loading}
+                        disabled={loading || googleLoading}
                     >
                         {loading ? (
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
-                            <Text style={styles.buttonText}>S'inscrire</Text>
+                            <Text style={styles.buttonText}>Créer mon compte</Text>
+                        )}
+                    </TouchableOpacity>
+
+                    <View style={styles.separator}>
+                        <View style={styles.line} />
+                        <Text style={styles.separatorText}>OU</Text>
+                        <View style={styles.line} />
+                    </View>
+
+                    <TouchableOpacity
+                        style={styles.googleButton}
+                        onPress={handleGoogleLogin}
+                        disabled={loading || googleLoading}
+                    >
+                        {googleLoading ? (
+                            <ActivityIndicator color="#001a41" />
+                        ) : (
+                            <View style={styles.googleContent}>
+                                <View style={styles.googleIconPlaceholder}>
+                                    <Text style={styles.googleG}>G</Text>
+                                </View>
+                                <Text style={styles.googleButtonText}>Continuer avec Google</Text>
+                            </View>
                         )}
                     </TouchableOpacity>
                 </View>
@@ -152,78 +203,138 @@ const styles = StyleSheet.create({
     },
     scrollContent: {
         padding: 24,
-        paddingTop: 60,
+        paddingTop: 80,
+        paddingBottom: 40,
     },
     header: {
         alignItems: 'center',
-        marginBottom: 32,
+        marginBottom: 35,
     },
     title: {
-        fontSize: 28,
-        fontWeight: 'bold',
+        fontSize: 32,
+        fontWeight: '900',
         color: '#001a41',
+        letterSpacing: 0.5,
     },
     subtitle: {
-        fontSize: 16,
-        color: '#6c757d',
+        fontSize: 15,
+        color: '#64748b',
         marginTop: 8,
+        textAlign: 'center',
+        lineHeight: 22,
     },
-    form: {
+    formCard: {
         backgroundColor: '#FFFFFF',
-        padding: 20,
-        borderRadius: 16,
-        ...Platform.select({
-            web: {
-                boxShadow: '0px 2px 8px rgba(0,0,0,0.1)',
-            },
-            default: {
-                elevation: 3,
-                shadowColor: '#000',
-                shadowOffset: { width: 0, height: 2 },
-                shadowOpacity: 0.1,
-                shadowRadius: 8,
-            },
-        }),
+        padding: 24,
+        borderRadius: 24,
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
+    },
+    inputGroup: {
+        marginBottom: 16,
     },
     row: {
         flexDirection: 'row',
     },
     label: {
         fontSize: 14,
-        fontWeight: '600',
+        fontWeight: '700',
         color: '#495057',
         marginBottom: 8,
-        marginTop: 16,
+        marginLeft: 4,
     },
     input: {
-        backgroundColor: '#F1F3F5',
-        padding: 12,
-        borderRadius: 8,
+        backgroundColor: '#F8F9FA',
+        borderWidth: 1.5,
+        borderColor: '#E9ECEF',
+        padding: 16,
+        borderRadius: 14,
         fontSize: 16,
+        color: '#1A1A1A',
     },
     button: {
         backgroundColor: '#001a41',
-        padding: 16,
-        borderRadius: 8,
+        padding: 18,
+        borderRadius: 16,
         alignItems: 'center',
-        marginTop: 32,
+        marginTop: 10,
+        elevation: 4,
+        shadowColor: '#001a41',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.3,
+        shadowRadius: 8,
     },
     buttonText: {
         color: '#FFFFFF',
-        fontSize: 16,
+        fontSize: 17,
         fontWeight: 'bold',
     },
     footer: {
         flexDirection: 'row',
         justifyContent: 'center',
-        marginTop: 32,
-        marginBottom: 40,
+        marginTop: 30,
+        marginBottom: 20,
     },
     footerText: {
-        color: '#495057',
+        color: '#64748b',
+        fontSize: 15,
     },
     linkText: {
         color: '#001a41',
-        fontWeight: 'bold',
+        fontWeight: '900',
+        fontSize: 15,
+    },
+    separator: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        marginVertical: 20,
+    },
+    line: {
+        flex: 1,
+        height: 1,
+        backgroundColor: '#E9ECEF',
+    },
+    separatorText: {
+        marginHorizontal: 10,
+        color: '#adb5bd',
+        fontSize: 12,
+        fontWeight: '700',
+    },
+    googleButton: {
+        backgroundColor: '#FFFFFF',
+        borderWidth: 1.5,
+        borderColor: '#E9ECEF',
+        padding: 16,
+        borderRadius: 16,
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+    googleContent: {
+        flexDirection: 'row',
+        alignItems: 'center',
+    },
+    googleIconPlaceholder: {
+        width: 24,
+        height: 24,
+        borderRadius: 12,
+        backgroundColor: '#fff',
+        justifyContent: 'center',
+        alignItems: 'center',
+        marginRight: 12,
+        borderWidth: 1,
+        borderColor: '#E9ECEF',
+    },
+    googleG: {
+        fontSize: 16,
+        fontWeight: '900',
+        color: '#4285F4',
+    },
+    googleButtonText: {
+        color: '#495057',
+        fontSize: 16,
+        fontWeight: '700',
     },
 });

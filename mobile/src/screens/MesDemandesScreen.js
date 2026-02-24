@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { StyleSheet, View, Text, FlatList, ActivityIndicator, RefreshControl, Platform, TouchableOpacity } from 'react-native';
 import { demandeService } from '../api/demandeService';
-import { Clock, CheckCircle, XCircle, Edit2 } from 'lucide-react-native';
+import { Clock, CheckCircle, XCircle, Edit2, FileText } from 'lucide-react-native';
+import { useNavigation } from '@react-navigation/native';
 
 const StatusBadge = ({ status }) => {
     let config = {
@@ -28,6 +29,7 @@ const StatusBadge = ({ status }) => {
 };
 
 export default function MesDemandesScreen() {
+    const navigation = useNavigation();
     const [demandes, setDemandes] = useState([]);
     const [loading, setLoading] = useState(true);
     const [refreshing, setRefreshing] = useState(false);
@@ -105,16 +107,23 @@ export default function MesDemandesScreen() {
 
     return (
         <View style={styles.container}>
+            <View style={styles.header}>
+                <Text style={styles.title}>Mes Demandes</Text>
+                <Text style={styles.subtitle}>Suivez l'état d'avancement de vos actes</Text>
+            </View>
+
             <FlatList
                 data={demandes}
                 renderItem={renderItem}
                 keyExtractor={item => item.id}
                 contentContainerStyle={styles.list}
+                showsVerticalScrollIndicator={false}
                 refreshControl={
-                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#001a41']} />
+                    <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={['#003399']} />
                 }
                 ListEmptyComponent={
                     <View style={styles.emptyContainer}>
+                        <FileText size={48} color="#CBD5E1" />
                         <Text style={styles.emptyText}>Aucune demande trouvée</Text>
                     </View>
                 }
@@ -130,78 +139,91 @@ const styles = StyleSheet.create({
     },
     header: {
         padding: 24,
-        paddingTop: 60,
+        paddingTop: Platform.OS === 'ios' ? 70 : 50,
         backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F3F5',
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
+        fontSize: 28,
+        fontWeight: '900',
         color: '#001a41',
     },
     subtitle: {
-        fontSize: 14,
-        color: '#6c757d',
-        marginTop: 4,
+        fontSize: 15,
+        color: '#64748b',
+        fontWeight: '500',
+        marginTop: 6,
     },
     list: {
-        padding: 16,
+        padding: 20,
     },
     demandeItem: {
         backgroundColor: '#FFFFFF',
-        padding: 16,
-        borderRadius: 12,
-        marginBottom: 12,
-        boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
-        elevation: 2,
+        padding: 20,
+        borderRadius: 24,
+        marginBottom: 16,
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+        borderWidth: 1,
+        borderColor: '#f1f5f9',
     },
     itemHeader: {
         flexDirection: 'row',
         justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 8,
+        marginBottom: 12,
     },
     itemType: {
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 17,
+        fontWeight: '800',
         color: '#001a41',
     },
     itemDate: {
-        fontSize: 13,
-        color: '#6c757d',
+        fontSize: 14,
+        color: '#64748b',
+        fontWeight: '500',
     },
     itemRef: {
-        fontSize: 11,
-        color: '#adb5bd',
-        marginTop: 4,
-        fontFamily: Platform.OS === 'ios' ? 'Courier' : 'monospace',
+        fontSize: 12,
+        color: '#94a3b8',
+        marginTop: 6,
+        fontWeight: '600',
     },
     badge: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 6,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 10,
     },
     badgeText: {
-        fontSize: 12,
-        fontWeight: '600',
+        fontSize: 11,
+        fontWeight: 'bold',
+        textTransform: 'uppercase',
     },
     centered: {
         flex: 1,
         justifyContent: 'center',
         alignItems: 'center',
+        backgroundColor: '#F8F9FA',
     },
     emptyContainer: {
         paddingTop: 100,
         alignItems: 'center',
+        gap: 16,
     },
     emptyText: {
-        color: '#6c757d',
+        color: '#94a3b8',
         fontSize: 16,
+        fontWeight: '500',
     },
     itemActions: {
-        marginTop: 12,
-        paddingTop: 12,
+        marginTop: 15,
+        paddingTop: 15,
         borderTopWidth: 1,
         borderTopColor: '#f1f3f5',
         flexDirection: 'row',
@@ -210,15 +232,15 @@ const styles = StyleSheet.create({
     editButton: {
         flexDirection: 'row',
         alignItems: 'center',
-        paddingHorizontal: 12,
-        paddingVertical: 6,
-        borderRadius: 8,
-        backgroundColor: '#f0f4ff',
+        paddingHorizontal: 16,
+        paddingVertical: 8,
+        borderRadius: 12,
+        backgroundColor: '#E7F5FF',
     },
     editButtonText: {
-        marginLeft: 6,
-        fontSize: 13,
+        marginLeft: 8,
+        fontSize: 14,
         fontWeight: 'bold',
-        color: '#004aad',
+        color: '#003399',
     },
 });

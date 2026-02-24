@@ -1,0 +1,8 @@
+--- DIAGNOSTIC BREVO DU 2026-02-22T12:21:22.561Z ---
+🔍 Clé testée: xkeysib-...lVnX
+🔍 Type de clé détecté: ✅ API (xkeysib)
+⏳ Tentative de connexion à l'API Brevo...
+✅ CONNEXION RÉUSSIE !
+❌ ÉCHEC DE LA CONNEXION
+Statut Erreur: Inconnu
+Message Erreur: Cannot read properties of undefined (reading 'email')

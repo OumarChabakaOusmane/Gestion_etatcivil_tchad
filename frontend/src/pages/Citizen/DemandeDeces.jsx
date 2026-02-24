@@ -28,7 +28,8 @@ export default function DemandeDeces() {
         nomDeclarant: "",
         prenomDeclarant: "",
         lienParente: "",
-        domicileDeclarant: ""
+        domicileDeclarant: "",
+        nniDefuntImage: null
     });
 
     const [piecesJointes, setPiecesJointes] = useState([]); // [NEW] Stockage des documents (base64)
@@ -147,6 +148,65 @@ export default function DemandeDeces() {
         }
     };
 
+    const handleNNIFileChange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        try {
+            const base64 = await uploadService.uploadImage(file);
+            setFormData(prev => ({
+                ...prev,
+                nniDefunt: base64,
+                nniDefuntImage: base64
+            }));
+        } catch (err) {
+            alert(err.message || "Erreur lors du chargement de l'image");
+        }
+    };
+
+    const removeNNIImage = () => {
+        setFormData(prev => ({
+            ...prev,
+            nniDefunt: "",
+            nniDefuntImage: null
+        }));
+    };
+
+    const NNIPicker = ({ label, image }) => (
+        <div className="col-12 mb-3">
+            <label className="form-label fw-bold small text-muted text-uppercase">{label}</label>
+            {!image ? (
+                <div className="upload-zone border-2 border-dashed rounded-4 p-4 text-center bg-light position-relative">
+                    <input
+                        type="file"
+                        className="position-absolute w-100 h-100 top-0 start-0 opacity-0"
+                        style={{ cursor: 'pointer' }}
+                        onChange={handleNNIFileChange}
+                        accept="image/*"
+                    />
+                    <i className="bi bi-card-image fs-2 text-primary d-block mb-2"></i>
+                    <span className="fw-bold d-block small">Charger la carte NNI du défunt</span>
+                    <small className="text-muted smaller">JPG, PNG - Max 700Ko</small>
+                </div>
+            ) : (
+                <div className="position-relative bg-light rounded-4 p-2 border">
+                    <img src={image} alt="Carte NNI" className="img-fluid rounded-3" style={{ maxHeight: '150px', width: '100%', objectFit: 'contain' }} />
+                    <button
+                        type="button"
+                        className="btn btn-danger btn-sm rounded-circle position-absolute"
+                        style={{ top: '-10px', right: '-10px', width: '30px', height: '30px', padding: 0 }}
+                        onClick={removeNNIImage}
+                    >
+                        <i className="bi bi-x"></i>
+                    </button>
+                    <div className="text-center mt-2 small text-success fw-bold">
+                        <i className="bi bi-check-circle-fill me-1"></i> Carte jointe
+                    </div>
+                </div>
+            )}
+        </div>
+    );
+
     const renderStepContent = () => {
         switch (step) {
             case 1:
@@ -172,10 +232,7 @@ export default function DemandeDeces() {
                                     <option value="F">Féminin / أنثى</option>
                                 </select>
                             </div>
-                            <div className="col-md-6">
-                                <label className="form-label fw-bold small text-muted text-uppercase">{t('labelNNI')}</label>
-                                <input type="text" name="nniDefunt" className="form-control form-control-lg bg-light border-0" value={formData.nniDefunt} onChange={handleChange} placeholder="NNI" />
-                            </div>
+                            <NNIPicker label={t('labelNNI')} image={formData.nniDefuntImage} />
                             <div className="col-md-6">
                                 <label className="form-label fw-bold small text-muted text-uppercase">{t('labelDateDeces')}</label>
                                 <input type="date" name="dateDeces" className="form-control form-control-lg bg-light border-0" value={formData.dateDeces} onChange={handleChange} required />
@@ -335,7 +392,7 @@ export default function DemandeDeces() {
                                         <div className="fw-bold text-dark fs-5">{formData.prenomDefunt} {formData.nomDefunt} ({formData.sexeDefunt})</div>
                                         <div className="text-muted small mt-1">
                                             Décédé le {formData.dateDeces} à {formData.lieuDeces}<br />
-                                            {formData.professionDefunt && `${t('labelProfession')}: ${formData.professionDefunt}`} {formData.nniDefunt && `| NNI: ${formData.nniDefunt}`}<br />
+                                            {formData.professionDefunt && `${t('labelProfession')}: ${formData.professionDefunt}`} {formData.nniDefuntImage && <span className="ms-1 badge bg-success smaller"><i className="bi bi-card-image me-1"></i>Carte NNI jointe</span>}<br />
                                             {t('labelPereDefunt')} {formData.pereDefunt} {t('labelMereDefunt')} {formData.mereDefunt}
                                         </div>
                                     </div>
@@ -364,6 +421,15 @@ export default function DemandeDeces() {
 
     return (
         <div className={`fade-in px-lg-4 pb-5 ${language === 'ar' ? 'rtl' : ''}`} translate="no">
+            {/* Top Fixed Progress Bar */}
+            <div className="fixed-top-progress" style={{
+                position: 'fixed', top: 0, [language === 'ar' ? 'right' : 'left']: 0, [language === 'ar' ? 'left' : 'right']: 0, height: '4px', background: '#f8f9fa', zIndex: 9999
+            }}>
+                <div style={{
+                    width: `${(step / steps.length) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #001a41 0%, #00338d 100%)', transition: 'width 0.6s cubic-bezier(0.1, 0.7, 0.1, 1)'
+                }}></div>
+            </div>
+
             {/* Header Section */}
             <div className="d-flex align-items-center mb-5 mt-3">
                 <button

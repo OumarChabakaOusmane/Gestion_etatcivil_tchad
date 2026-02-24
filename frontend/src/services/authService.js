@@ -28,6 +28,28 @@ const authService = {
     },
 
     /**
+     * Connexion via Google (TikTok-style)
+     * @param {string} idToken - Token d'identité Google
+     * @returns {Promise} Données de l'utilisateur et token
+     */
+    async loginWithGoogle(idToken) {
+        try {
+            const response = await api.post('/auth/google', { idToken });
+
+            if (response.data.success) {
+                // Stocker le token et les informations utilisateur
+                localStorage.setItem('token', response.data.data.token);
+                localStorage.setItem('user', JSON.stringify(response.data.data.user));
+                return response.data;
+            }
+
+            throw new Error(response.data.message || 'Échec de la connexion Google');
+        } catch (error) {
+            throw error.response?.data || error;
+        }
+    },
+
+    /**
      * Inscription d'un nouvel utilisateur
      * @param {Object} userData - Données de l'utilisateur
      * @returns {Promise} Données de l'utilisateur créé

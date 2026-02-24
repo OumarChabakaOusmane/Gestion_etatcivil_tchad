@@ -142,18 +142,30 @@ export default function HomeScreen({ navigation }) {
             }
         >
             <View style={styles.privateHeaderSimple}>
-                <Text style={styles.welcomeLabel}>Bonjour,</Text>
-                <Text style={styles.userNameText}>{(user?.nom || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} {(user?.prenom || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Text>
+                <View>
+                    <Text style={styles.welcomeLabel}>Bienvenue,</Text>
+                    <Text style={styles.userNameText}>{(user?.nom || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')} {(user?.prenom || "").toLowerCase().split(' ').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}</Text>
+                    <Text style={styles.userRoleText}>Espace Citoyen Vérifié</Text>
+                </View>
+                <TouchableOpacity style={styles.bellBtn}>
+                    <Bell size={24} color="#003399" />
+                </TouchableOpacity>
             </View>
 
-            <View style={styles.statsGrid}>
-                <View style={[styles.statItem, { backgroundColor: '#001a41' }]}>
-                    <Text style={styles.statVal}>{demandes.length}</Text>
-                    <Text style={styles.statLab}>Demandes</Text>
+            <View style={styles.statsCardContainer}>
+                <View style={[styles.statsCard, { backgroundColor: '#001a41' }]}>
+                    <View style={styles.statsCardHeader}>
+                        <ClipboardList size={20} color="rgba(255,255,255,0.6)" />
+                        <Text style={styles.statsCardLabel}>Total Demandes</Text>
+                    </View>
+                    <Text style={styles.statsCardValue}>{demandes.length}</Text>
                 </View>
-                <View style={[styles.statItem, { backgroundColor: '#2F9E44' }]}>
-                    <Text style={styles.statVal}>{demandes.filter(d => d.statut === 'acceptee').length}</Text>
-                    <Text style={styles.statLab}>Validées</Text>
+                <View style={[styles.statsCard, { backgroundColor: '#059669' }]}>
+                    <View style={styles.statsCardHeader}>
+                        <CheckCircle size={20} color="rgba(255,255,255,0.6)" />
+                        <Text style={styles.statsCardLabel}>Actes Validés</Text>
+                    </View>
+                    <Text style={styles.statsCardValue}>{demandes.filter(d => d.statut === 'acceptee').length}</Text>
                 </View>
             </View>
 
@@ -166,18 +178,18 @@ export default function HomeScreen({ navigation }) {
                     style={styles.quickActionCard}
                     onPress={() => navigation.navigate('Services')}
                 >
-                    <View style={styles.iconCircle}>
-                        <PlusCircle size={28} color="#003399" />
+                    <View style={[styles.iconCircle, { backgroundColor: '#E7F5FF' }]}>
+                        <PlusCircle size={26} color="#003399" />
                     </View>
-                    <Text style={styles.quickActionLab}>Nouvelle Demande</Text>
+                    <Text style={styles.quickActionLab}>Demander</Text>
                 </TouchableOpacity>
 
                 <TouchableOpacity
                     style={styles.quickActionCard}
                     onPress={() => navigation.navigate('Mes Demandes')}
                 >
-                    <View style={styles.iconCircle}>
-                        <FileText size={28} color="#003399" />
+                    <View style={[styles.iconCircle, { backgroundColor: '#F3F0FF' }]}>
+                        <FileText size={26} color="#4C3BC9" />
                     </View>
                     <Text style={styles.quickActionLab}>Mes Actes</Text>
                 </TouchableOpacity>
@@ -186,10 +198,10 @@ export default function HomeScreen({ navigation }) {
                     style={styles.quickActionCard}
                     onPress={() => navigation.navigate('Profil')}
                 >
-                    <View style={styles.iconCircle}>
-                        <User size={28} color="#003399" />
+                    <View style={[styles.iconCircle, { backgroundColor: '#FFF5F5' }]}>
+                        <User size={26} color="#E03131" />
                     </View>
-                    <Text style={styles.quickActionLab}>Mon Profil</Text>
+                    <Text style={styles.quickActionLab}>Profil</Text>
                 </TouchableOpacity>
             </View>
 
@@ -239,19 +251,24 @@ export default function HomeScreen({ navigation }) {
                         };
 
                         return (
-                            <View key={item.id} style={styles.miniDemandeCard}>
+                            <TouchableOpacity key={item.id} style={styles.miniDemandeCard} onPress={() => navigation.navigate('Mes Demandes')}>
                                 <View style={styles.miniHeader}>
-                                    <View style={styles.miniTypeRow}>
-                                        <FileText size={16} color="#001a41" />
+                                    <View style={styles.miniTypeContainer}>
+                                        <View style={[styles.typeIndicator, { backgroundColor: item.type === 'naissance' ? '#E7F5FF' : (item.type === 'mariage' ? '#F3F0FF' : '#FFF5F5') }]}>
+                                            <FileText size={14} color={item.type === 'naissance' ? '#003399' : (item.type === 'mariage' ? '#4C3BC9' : '#E03131')} />
+                                        </View>
                                         <Text style={styles.miniTypeText}>{item.type.toUpperCase()}</Text>
                                     </View>
                                     <View style={[styles.miniStatusBadge, getStatusStyle(item.statut)]}>
-                                        <Text style={styles.miniStatusText}>{item.statut}</Text>
+                                        <Text style={[styles.miniStatusText, { color: item.statut === 'acceptee' ? '#059669' : (item.statut === 'rejete' ? '#DC2626' : '#D97706') }]}>{item.statut}</Text>
                                     </View>
                                 </View>
                                 <Text style={styles.miniInfoText}>{getMiniInfo(item)}</Text>
-                                <Text style={styles.miniDateText}>{formatDate(item.createdAt || item.dateDemande)}</Text>
-                            </View>
+                                <View style={styles.miniFooter}>
+                                    <Clock size={12} color="#94a3b8" />
+                                    <Text style={styles.miniDateText}>{formatDate(item.createdAt || item.dateDemande)}</Text>
+                                </View>
+                            </TouchableOpacity>
                         );
                     })}
                 </View>
@@ -323,8 +340,11 @@ const styles = StyleSheet.create({
         backgroundColor: '#FFFFFF',
         borderRadius: 16,
         padding: 20,
-        boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
         elevation: 3,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 10,
         marginBottom: 24,
     },
     welcomeIntro: {
@@ -384,47 +404,70 @@ const styles = StyleSheet.create({
         paddingHorizontal: 20,
     },
     privateHeaderSimple: {
-        marginTop: 20,
-        marginBottom: 24,
+        marginTop: 30,
+        marginBottom: 30,
+        flexDirection: 'row',
+        justifyContent: 'space-between',
+        alignItems: 'center',
     },
     welcomeLabel: {
-        fontSize: 16,
+        fontSize: 14,
         color: '#64748b',
+        fontWeight: '500',
     },
     userNameText: {
         fontSize: 24,
         fontWeight: '900',
         color: '#001a41',
+        marginVertical: 4,
     },
-    logoutIconBtn: {
-        padding: 10,
-        borderRadius: 12,
-        backgroundColor: '#fee2e2',
+    userRoleText: {
+        fontSize: 12,
+        color: '#003399',
+        fontWeight: '700',
+        textTransform: 'uppercase',
+        letterSpacing: 1,
     },
-    statsGrid: {
+    bellBtn: {
+        padding: 12,
+        backgroundColor: '#FFFFFF',
+        borderRadius: 15,
+        elevation: 2,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 2 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+    },
+    statsCardContainer: {
         flexDirection: 'row',
-        gap: 16,
-        marginBottom: 24,
+        gap: 12,
+        marginBottom: 30,
     },
-    statItem: {
+    statsCard: {
         flex: 1,
-        borderRadius: 20,
+        borderRadius: 24,
         padding: 20,
-        alignItems: 'center',
-        justifyContent: 'center',
-        elevation: 4,
-        boxShadow: '0px 4px 8px rgba(0, 0, 0, 0.1)',
+        elevation: 8,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 4 },
+        shadowOpacity: 0.15,
+        shadowRadius: 10,
     },
-    statVal: {
+    statsCardHeader: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 8,
+        marginBottom: 12,
+    },
+    statsCardLabel: {
+        fontSize: 12,
+        color: 'rgba(255,255,255,0.8)',
+        fontWeight: '600',
+    },
+    statsCardValue: {
         fontSize: 32,
         fontWeight: 'bold',
         color: '#FFFFFF',
-    },
-    statLab: {
-        fontSize: 14,
-        color: '#FFFFFF',
-        opacity: 0.9,
-        marginTop: 4,
     },
     sectionHeader: {
         flexDirection: 'row',
@@ -444,30 +487,32 @@ const styles = StyleSheet.create({
     quickActions: {
         flexDirection: 'row',
         justifyContent: 'space-between',
-        marginBottom: 30,
+        marginBottom: 35,
     },
     quickActionCard: {
-        width: '30%',
+        width: '31%',
         backgroundColor: '#FFFFFF',
-        borderRadius: 20,
+        borderRadius: 24,
         padding: 16,
         alignItems: 'center',
-        elevation: 2,
-        boxShadow: '0px 2px 5px rgba(0, 0, 0, 0.05)',
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
     },
     iconCircle: {
-        width: 50,
-        height: 50,
-        borderRadius: 25,
-        backgroundColor: '#f1f5f9',
+        width: 56,
+        height: 56,
+        borderRadius: 28,
         justifyContent: 'center',
         alignItems: 'center',
-        marginBottom: 10,
+        marginBottom: 12,
     },
     quickActionLab: {
-        fontSize: 11,
+        fontSize: 12,
         fontWeight: '700',
-        color: '#001a41',
+        color: '#495057',
         textAlign: 'center',
     },
     recentList: {
@@ -475,49 +520,62 @@ const styles = StyleSheet.create({
     },
     miniDemandeCard: {
         backgroundColor: '#FFFFFF',
-        borderRadius: 16,
-        padding: 16,
+        borderRadius: 20,
+        padding: 20,
         borderWidth: 1,
         borderColor: '#f1f5f9',
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
     },
-    miniHeader: {
+    miniTypeContainer: {
         flexDirection: 'row',
-        justifyContent: 'space-between',
         alignItems: 'center',
-        marginBottom: 10,
+        gap: 10,
     },
-    miniTypeRow: {
-        flexDirection: 'row',
+    typeIndicator: {
+        width: 30,
+        height: 30,
+        borderRadius: 8,
+        justifyContent: 'center',
         alignItems: 'center',
-        gap: 8,
     },
     miniTypeText: {
-        fontSize: 13,
-        fontWeight: 'bold',
+        fontSize: 14,
+        fontWeight: '800',
         color: '#001a41',
     },
     miniStatusBadge: {
-        paddingHorizontal: 8,
-        paddingVertical: 4,
-        borderRadius: 12,
+        paddingHorizontal: 12,
+        paddingVertical: 6,
+        borderRadius: 10,
     },
     miniStatusText: {
-        fontSize: 10,
-        fontWeight: '800',
+        fontSize: 11,
+        fontWeight: 'bold',
         textTransform: 'uppercase',
     },
     miniInfoText: {
-        fontSize: 14,
+        fontSize: 15,
+        fontWeight: '600',
         color: '#334155',
-        marginBottom: 4,
+        marginVertical: 12,
+    },
+    miniFooter: {
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 6,
     },
     miniDateText: {
-        fontSize: 12,
+        fontSize: 13,
         color: '#94a3b8',
+        fontWeight: '500',
     },
-    statusPending: { backgroundColor: '#fef3c7' },
-    statusAccepted: { backgroundColor: '#dcfce7' },
-    statusRejected: { backgroundColor: '#fee2e2' },
+    statusPending: { backgroundColor: '#FFFBEB' },
+    statusAccepted: { backgroundColor: '#F0FDF4' },
+    statusRejected: { backgroundColor: '#FEF2F2' },
     emptyRecentCard: {
         padding: 30,
         backgroundColor: '#FFFFFF',

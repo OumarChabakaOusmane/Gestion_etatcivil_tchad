@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import authService from "../../services/authService";
 import PublicNavbar from "../../components/PublicNavbar";
 import { useLanguage } from "../../context/LanguageContext";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function Login() {
   const navigate = useNavigate();
@@ -81,6 +82,29 @@ export default function Login() {
       }
 
       setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError("");
+    setLoading(true);
+    try {
+      console.log("Tentative de connexion Google Web...");
+      const idToken = credentialResponse.credential;
+      const response = await authService.loginWithGoogle(idToken);
+
+      const user = response.data?.user || response.user || response;
+
+      if (user.role === 'admin' || user.role === 'agent') {
+        window.location.href = '/admin/dashboard';
+      } else {
+        window.location.href = '/dashboard';
+      }
+    } catch (err) {
+      console.error("Erreur Google Login Web:", err);
+      setError(err.message || "Échec de la connexion avec Google");
     } finally {
       setLoading(false);
     }
@@ -227,6 +251,25 @@ export default function Login() {
                         )}
                       </button>
                     </form>
+
+                    <div className="text-center mb-4">
+                      <div className="d-flex align-items-center my-3">
+                        <hr className="flex-grow-1" />
+                        <span className="mx-2 text-muted small">{t('or') || 'OU'}</span>
+                        <hr className="flex-grow-1" />
+                      </div>
+
+                      <div className="d-flex justify-content-center">
+                        <GoogleLogin
+                          onSuccess={handleGoogleSuccess}
+                          onError={() => setError("Erreur lors de la connexion Google")}
+                          useOneTap
+                          theme="outline"
+                          shape="pill"
+                          locale={language}
+                        />
+                      </div>
+                    </div>
 
                   </div>
                   <div className="card-footer bg-light p-3 text-center border-top-0">

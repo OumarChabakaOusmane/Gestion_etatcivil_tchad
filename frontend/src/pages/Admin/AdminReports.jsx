@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import demandeService from '../../services/demandeService';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer, Cell, AreaChart, Area, CartesianGrid, PieChart, Pie, Legend } from 'recharts';
 import SafeRechartsContainer from '../../components/SafeRechartsContainer';
+import * as XLSX from 'xlsx';
 
 export default function AdminReports() {
     const [demandes, setDemandes] = useState([]);
@@ -91,6 +92,28 @@ export default function AdminReports() {
         }
     };
 
+    const handleExportExcel = () => {
+        if (demandes.length === 0) return;
+
+        // Préparation des données pour l'export
+        const exportData = demandes.map(d => ({
+            'ID Demande': d.id || d._id,
+            'Type': d.type === 'deces' ? 'Décès' : d.type.charAt(0).toUpperCase() + d.type.slice(1),
+            'Statut': d.statut === 'en_attente' ? 'En attente' : d.statut === 'acceptee' ? 'Acceptée' : 'Rejetée',
+            'Date Demande': d.dateDemande?._seconds ? new Date(d.dateDemande._seconds * 1000).toLocaleDateString() : new Date(d.dateDemande).toLocaleDateString(),
+            'Nom Citoyen': d.userId?.nom || 'N/A',
+            'Prénom Citoyen': d.userId?.prenom || 'N/A',
+            'Email': d.userId?.email || 'N/A'
+        }));
+
+        const worksheet = XLSX.utils.json_to_sheet(exportData);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, "Rapport Demandes");
+
+        // Génération du fichier
+        XLSX.writeFile(workbook, `Rapport_Etat_Civil_${new Date().toISOString().split('T')[0]}.xlsx`);
+    };
+
     if (loading) return (
         <div className="d-flex justify-content-center align-items-center" style={{ height: '70vh' }}>
             <div className="spinner-border text-primary" role="status"></div>
@@ -113,6 +136,9 @@ export default function AdminReports() {
                             </button>
                         ))}
                     </div>
+                    <button className="btn btn-outline-success rounded-pill px-4 shadow-sm fw-bold border-2" onClick={handleExportExcel}>
+                        <i className="bi bi-file-earmark-excel me-2"></i> Excel
+                    </button>
                     <button className="btn btn-primary-custom rounded-pill px-4 shadow-sm fw-bold" onClick={() => window.print()}>
                         <i className="bi bi-printer me-2"></i> Imprimer
                     </button>

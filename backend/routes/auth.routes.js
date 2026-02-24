@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { register, login, forgotPassword, verifyOtp, resendOtp, resetPassword } = require('../controllers/auth.controller');
+const { register, login, forgotPassword, verifyOtp, resendOtp, resetPassword, googleLogin } = require('../controllers/auth.controller');
 const { registerValidation, loginValidation } = require('../validators/auth.validator');
 
 // Route d'inscription
@@ -8,6 +8,9 @@ router.post('/register', registerValidation, register);
 
 // Route de connexion
 router.post('/login', loginValidation, login);
+
+// Route d'authentification Google
+router.post('/google', googleLogin);
 
 // Route mot de passe oublié
 router.post('/forgot-password', forgotPassword);

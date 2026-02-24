@@ -224,6 +224,42 @@ class EmailService {
     }
 
     /**
+     * Envoi du code PIN de réinitialisation pour mobile
+     */
+    async sendPasswordResetPIN(userEmail, userName, pinCode) {
+        const subject = `🔑 SIGEC-TCHAD - Code de réinitialisation`;
+        const content = `
+            <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 600px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; border: 1px solid #e9ecef;">
+                <div style="background: #00205b; padding: 30px 20px; text-align: center;">
+                    <h1 style="color: white; margin: 0; font-size: 24px;">SIGEC-TCHAD</h1>
+                    <p style="color: rgba(255, 255, 255, 0.8); margin: 5px 0 0 0;">Réinitialisation de mot de passe</p>
+                </div>
+                <div style="padding: 40px 30px; text-align: center;">
+                    <h2 style="color: #00205b; margin: 0 0 20px 0;">Code de sécurité</h2>
+                    <p style="color: #495057; font-size: 16px;">Bonjour <strong>${userName}</strong>,</p>
+                    <p style="color: #495057; font-size: 16px;">Utilisez le code ci-dessous dans votre application mobile pour réinitialiser votre mot de passe :</p>
+                    
+                    <div style="background: #f8f9fa; border: 2px dashed #00205b; border-radius: 12px; padding: 20px; margin: 30px auto; max-width: 250px;">
+                        <div style="font-size: 32px; font-weight: 700; letter-spacing: 5px; color: #00205b;">
+                            ${pinCode}
+                        </div>
+                    </div>
+                    
+                    <p style="color: #6c757d; font-size: 14px;">Ce code est valide pendant 60 minutes.</p>
+                    <div style="margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                        <p style="font-size: 12px; color: #adb5bd; margin: 0;">
+                            Si vous n'avez pas demandé ce changement, vous pouvez ignorer cet email en toute sécurité. 
+                            Votre mot de passe actuel ne sera pas modifié tant que vous n'aurez pas utilisé ce code.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        `;
+        const text = `SIGEC-TCHAD - Votre code de réinitialisation de mot de passe est : ${pinCode}. Valide pour 60 minutes.`;
+        return this.sendEmail(userEmail, subject, content, text);
+    }
+
+    /**
      * Alerte pour les agents/admins : Nouvelle demande reçue
      */
     async sendNewDemandeAlert(agentEmail, agentName, typeActe, citoyenName) {

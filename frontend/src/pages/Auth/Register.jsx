@@ -4,6 +4,7 @@ import authService from "../../services/authService";
 import PublicNavbar from "../../components/PublicNavbar";
 import { useLanguage } from "../../context/LanguageContext";
 import uploadService from "../../services/uploadService";
+import { GoogleLogin } from "@react-oauth/google";
 
 export default function Register() {
   const { t, language } = useLanguage();
@@ -93,7 +94,7 @@ export default function Register() {
       console.log('🚀 [REGISTER] Envoi requête inscription...');
       // Redirection vers OTP après inscription réussie
       const response = await authService.register(userData);
-      
+
       console.log('✅ [REGISTER] Inscription réussie:', response);
       setError(""); // Effacer les erreurs précédentes
 
@@ -112,10 +113,10 @@ export default function Register() {
         status: err.response?.status,
         data: err.response?.data
       });
-      
+
       // Gestion améliorée des erreurs
       let errorMessage = "Erreur lors de l'inscription";
-      
+
       if (err.response?.data?.message) {
         errorMessage = err.response.data.message;
       } else if (err.message) {
@@ -123,7 +124,7 @@ export default function Register() {
       } else if (typeof err === 'string') {
         errorMessage = err;
       }
-      
+
       // Messages d'erreur conviviaux
       if (errorMessage.includes('email') && errorMessage.includes('existe')) {
         errorMessage = "Un compte avec cet email existe déjà. Veuillez vous connecter.";
@@ -132,8 +133,23 @@ export default function Register() {
       } else if (errorMessage.includes('timeout')) {
         errorMessage = "Le serveur met trop de temps à répondre. Veuillez réessayer.";
       }
-      
+
       setError(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSuccess = async (credentialResponse) => {
+    setError("");
+    setLoading(true);
+    try {
+      const idToken = credentialResponse.credential;
+      await authService.loginWithGoogle(idToken);
+      window.location.href = '/dashboard';
+    } catch (err) {
+      console.error("Erreur Google Register Web:", err);
+      setError(err.message || "Échec de l'inscription avec Google");
     } finally {
       setLoading(false);
     }
@@ -348,6 +364,25 @@ export default function Register() {
                         En créant un compte, vous acceptez nos CGU et notre politique de confidentialité.
                       </p>
                     </form>
+
+                    <div className="text-center mt-3">
+                      <div className="d-flex align-items-center my-3">
+                        <hr className="flex-grow-1" />
+                        <span className="mx-2 text-muted small">{t('or') || 'OU'}</span>
+                        <hr className="flex-grow-1" />
+                      </div>
+
+                      <div className="d-flex justify-content-center">
+                        <GoogleLogin
+                          onSuccess={handleGoogleSuccess}
+                          onError={() => setError("Erreur lors de la connexion Google")}
+                          useOneTap
+                          theme="outline"
+                          shape="pill"
+                          locale={language}
+                        />
+                      </div>
+                    </div>
 
                   </div>
                   <div className="card-footer bg-light p-3 text-center border-top-0">

@@ -332,6 +332,15 @@ export default function DemandeMariage() {
 
     return (
         <div className="fade-in px-lg-4 pb-5">
+            {/* Top Fixed Progress Bar */}
+            <div className="fixed-top-progress" style={{
+                position: 'fixed', top: 0, left: 0, right: 0, height: '4px', background: '#f8f9fa', zIndex: 9999
+            }}>
+                <div style={{
+                    width: `${(step / steps.length) * 100}%`, height: '100%', background: 'linear-gradient(90deg, #001a41 0%, #00338d 100%)', transition: 'width 0.6s cubic-bezier(0.1, 0.7, 0.1, 1)'
+                }}></div>
+            </div>
+
             {/* Header Section */}
             <div className="d-flex align-items-center mb-5 mt-3">
                 <button

@@ -226,14 +226,32 @@ export default function VerifyCertificate() {
     );
 }
 
-const VerifyRow = ({ labelFr, labelAr, value, isMain = false }) => (
-    <div className={`d-flex justify-content-between align-items-center ${isMain ? 'mb-2' : 'mb-1'}`}>
-        <div className="text-start" style={{ width: '40%' }}>
-            <div className={`text-muted ${isMain ? 'small fw-bold' : ''}`} style={{ fontSize: isMain ? '0.75rem' : '0.65rem' }}>{labelFr}</div>
-            <div className="text-secondary opacity-50 font-arabic" style={{ fontSize: '0.75rem' }}>{labelAr}</div>
+const VerifyRow = ({ labelFr, labelAr, value, isMain = false }) => {
+    const isImage = typeof value === 'string' && value.startsWith('data:image/');
+
+    return (
+        <div className={`d-flex justify-content-between align-items-center ${isMain ? 'mb-2' : 'mb-1'}`}>
+            <div className="text-start" style={{ width: '40%' }}>
+                <div className={`text-muted ${isMain ? 'small fw-bold' : ''}`} style={{ fontSize: isMain ? '0.75rem' : '0.65rem' }}>{labelFr}</div>
+                <div className="text-secondary opacity-50 font-arabic" style={{ fontSize: '0.75rem' }}>{labelAr}</div>
+            </div>
+            <div className={`text-end flex-grow-1 ${isMain ? 'h5 fw-bold text-primary mb-0' : 'fw-bold text-dark mb-0'}`} style={{ fontSize: isMain ? '1.1rem' : '0.9rem' }}>
+                {isImage ? (
+                    <img
+                        src={value}
+                        alt={labelFr}
+                        style={{
+                            maxWidth: '120px',
+                            maxHeight: '80px',
+                            borderRadius: '8px',
+                            border: '1px solid #ddd',
+                            marginTop: '5px'
+                        }}
+                    />
+                ) : (
+                    value || '-'
+                )}
+            </div>
         </div>
-        <div className={`text-end flex-grow-1 ${isMain ? 'h5 fw-bold text-primary mb-0' : 'fw-bold text-dark mb-0'}`} style={{ fontSize: isMain ? '1.1rem' : '0.9rem' }}>
-            {value || '-'}
-        </div>
-    </div>
-);
+    );
+};

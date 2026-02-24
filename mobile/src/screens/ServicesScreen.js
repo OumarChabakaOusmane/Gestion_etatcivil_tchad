@@ -47,8 +47,13 @@ export default function ServicesScreen({ navigation }) {
     ];
 
     return (
-        <ScrollView style={styles.container}>
-            <View style={styles.section}>
+        <ScrollView style={styles.container} contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
+            <View style={styles.header}>
+                <Text style={styles.title}>Services</Text>
+                <Text style={styles.subtitle}>Sélectionnez l'acte que vous souhaitez demander</Text>
+            </View>
+
+            <View style={styles.grid}>
                 {services.map((service, index) => (
                     <ServiceCard
                         key={index}
@@ -66,53 +71,66 @@ const styles = StyleSheet.create({
         flex: 1,
         backgroundColor: '#F8F9FA',
     },
+    scrollContent: {
+        paddingBottom: 40,
+    },
     header: {
         padding: 24,
-        paddingTop: 60,
+        paddingTop: Platform.OS === 'ios' ? 70 : 50,
         backgroundColor: '#FFFFFF',
+        borderBottomWidth: 1,
+        borderBottomColor: '#F1F3F5',
+        marginBottom: 20,
     },
     title: {
-        fontSize: 24,
-        fontWeight: 'bold',
+        fontSize: 28,
+        fontWeight: '900',
         color: '#001a41',
     },
     subtitle: {
-        fontSize: 14,
-        color: '#6c757d',
-        marginTop: 4,
+        fontSize: 15,
+        color: '#64748b',
+        fontWeight: '500',
+        marginTop: 6,
     },
     grid: {
-        padding: 16,
+        paddingHorizontal: 20,
     },
     card: {
         backgroundColor: '#FFFFFF',
         flexDirection: 'row',
-        padding: 16,
-        borderRadius: 12,
+        padding: 20,
+        borderRadius: 24,
         marginBottom: 16,
         alignItems: 'center',
-        boxShadow: '0px 2px 10px rgba(0, 0, 0, 0.05)',
-        elevation: 2,
+        elevation: 1,
+        shadowColor: '#000',
+        shadowOffset: { width: 0, height: 1 },
+        shadowOpacity: 0.05,
+        shadowRadius: 5,
+        borderWidth: 1,
+        borderColor: '#f1f5f9',
     },
     iconContainer: {
-        width: 48,
-        height: 48,
-        borderRadius: 12,
+        width: 56,
+        height: 56,
+        borderRadius: 16,
         justifyContent: 'center',
         alignItems: 'center',
-        marginRight: 16,
+        marginRight: 18,
     },
     cardContent: {
         flex: 1,
     },
     cardTitle: {
-        fontSize: 16,
-        fontWeight: 'bold',
+        fontSize: 17,
+        fontWeight: '800',
         color: '#001a41',
     },
     cardDescription: {
-        fontSize: 12,
-        color: '#6c757d',
-        marginTop: 2,
+        fontSize: 13,
+        color: '#64748b',
+        marginTop: 4,
+        lineHeight: 18,
     },
 });

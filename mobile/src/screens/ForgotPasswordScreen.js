@@ -12,8 +12,6 @@ import {
 } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { ArrowLeft } from 'lucide-react-native';
-import api from '../api/client';
-
 export default function ForgotPasswordScreen() {
     const navigation = useNavigation();
     const [email, setEmail] = useState('');
@@ -27,15 +25,17 @@ export default function ForgotPasswordScreen() {
 
         setLoading(true);
         try {
-            await api.post('/auth/forgot-password', { email });
+            const { authService } = require('../api/authService');
+            await authService.forgotPassword(email);
             Alert.alert(
-                'Succès',
-                'Si un compte existe avec cet email, un lien de réinitialisation vous a été envoyé.',
-                [{ text: 'OK', onPress: () => navigation.goBack() }]
+                'Code envoyé',
+                'Un code PIN de réinitialisation vous a été envoyé par email.',
+                [{ text: 'OK', onPress: () => navigation.navigate('ResetPassword', { email }) }]
             );
         } catch (error) {
             console.error('Forgot Password Error:', error);
-            Alert.alert('Erreur', 'Une erreur est survenue. Veuillez réessayer.');
+            const message = error.response?.data?.message || 'Une erreur est survenue lors de l\'envoi de la demande.';
+            Alert.alert('Erreur', message);
         } finally {
             setLoading(false);
         }
@@ -55,7 +55,7 @@ export default function ForgotPasswordScreen() {
 
             <View style={styles.content}>
                 <Text style={styles.description}>
-                    Entrez votre adresse email ci-dessous pour recevoir un lien de réinitialisation de votre mot de passe.
+                    Entrez votre adresse email ci-dessous pour recevoir un code PIN de réinitialisation.
                 </Text>
 
                 <View style={styles.form}>
@@ -78,7 +78,7 @@ export default function ForgotPasswordScreen() {
                         {loading ? (
                             <ActivityIndicator color="#FFFFFF" />
                         ) : (
-                            <Text style={styles.buttonText}>Envoyer le lien</Text>
+                            <Text style={styles.buttonText}>Envoyer le code</Text>
                         )}
                     </TouchableOpacity>
                 </View>

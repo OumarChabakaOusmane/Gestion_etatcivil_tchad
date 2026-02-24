@@ -4,7 +4,9 @@ import demandeService from '../../services/demandeService';
 import { useLanguage } from '../../context/LanguageContext';
 import html2pdf from 'html2pdf.js';
 import exportHelper from '../../utils/exportHelper';
-import { normalizeText } from '../../utils/textHelper';
+import { normalizeText, formatName } from '../../utils/textHelper';
+import Tesseract from 'tesseract.js';
+import { toast } from 'react-hot-toast';
 
 export default function AdminDemandes() {
     const location = useLocation();
@@ -184,12 +186,40 @@ export default function AdminDemandes() {
         }
     };
 
+    const [ocrLoading, setOcrLoading] = useState({});
+
+    const handleOCR = async (imagePath, key) => {
+        setOcrLoading(prev => ({ ...prev, [key]: true }));
+        try {
+            const { data: { text } } = await Tesseract.recognize(imagePath, 'fra+eng', {
+                logger: m => console.log(m)
+            });
+
+            // Regex pour trouver une séquence de 10 à 15 chiffres (format typique du NNI)
+            const nniMatch = text.match(/\b\d{10,15}\b/);
+
+            if (nniMatch) {
+                setEditData(prev => ({ ...prev, [key]: nniMatch[0] }));
+                toast.success(`Numéro détecté : ${nniMatch[0]}`);
+            } else {
+                toast.error("Impossible de détecter un numéro NNI valide. Veuillez le saisir manuellement.");
+            }
+        } catch (error) {
+            console.error("Erreur OCR:", error);
+            toast.error("Erreur lors de la lecture de l'image");
+        } finally {
+            setOcrLoading(prev => ({ ...prev, [key]: false }));
+        }
+    };
+
+
     const renderField = (label, value, key) => {
         const isDate = key.toLowerCase().includes('date');
         const isTime = key.toLowerCase().includes('heure');
         const isSexe = key.toLowerCase().includes('sexe');
         const isNationalite = key.toLowerCase().includes('nationalite');
         const isRegime = key === 'regimeMatrimonial';
+        const isImage = typeof value === 'string' && value.startsWith('data:image/');
 
         // Stabiliser la valeur pour éviter les nœuds texte orphelins
         const displayValue = value || "-";
@@ -198,7 +228,7 @@ export default function AdminDemandes() {
             <div className="col-md-6 border-bottom py-3 d-flex align-items-center" key={key}>
                 <span className="text-muted fw-bold" style={{ minWidth: '130px' }}>{label}</span>
                 <span className="mx-2">:</span>
-                <div className="flex-grow-1 d-flex">
+                <div className="flex-grow-1 d-flex flex-column">
                     {isEditing ? (
                         isSexe ? (
                             <select
@@ -228,16 +258,40 @@ export default function AdminDemandes() {
                                 <option value="polygamie">Polygamie</option>
                             </select>
                         ) : (
-                            <input
-                                type={isDate ? "date" : (isTime ? "time" : "text")}
-                                className="form-control form-control-sm border-primary shadow-none"
-                                value={editData[key] || ''}
-                                onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
-                                placeholder={isDate ? "JJ/MM/AAAA" : ""}
-                            />
+                            <>
+                                {isImage && (
+                                    <div className="d-flex align-items-center gap-2 mb-2">
+                                        <img src={value} alt={label} className="img-thumbnail" style={{ maxHeight: '100px', cursor: 'pointer' }} onClick={() => window.open(value)} />
+                                        <button
+                                            type="button"
+                                            className="btn btn-outline-primary btn-sm d-flex align-items-center gap-1"
+                                            onClick={() => handleOCR(value, key)}
+                                            disabled={ocrLoading[key]}
+                                        >
+                                            {ocrLoading[key] ? (
+                                                <span className="spinner-border spinner-border-sm"></span>
+                                            ) : (
+                                                <i className="bi bi-eye"></i>
+                                            )}
+                                            Scanner
+                                        </button>
+                                    </div>
+                                )}
+                                <input
+                                    type={isDate ? "date" : (isTime ? "time" : "text")}
+                                    className="form-control form-control-sm border-primary shadow-none"
+                                    value={isImage ? (editData[key] && !editData[key].startsWith('data:image/') ? editData[key] : '') : (editData[key] || '')}
+                                    onChange={(e) => setEditData({ ...editData, [key]: e.target.value })}
+                                    placeholder={isImage ? "Saisir le numéro lu sur la carte" : (isDate ? "JJ/MM/AAAA" : "")}
+                                />
+                            </>
                         )
                     ) : (
-                        <span className="fw-bold text-dark">{displayValue}</span>
+                        isImage ? (
+                            <img src={value} alt={label} className="img-thumbnail" style={{ maxHeight: '100px', cursor: 'pointer', maxWidth: '150px' }} onClick={() => window.open(value)} />
+                        ) : (
+                            <span className="fw-bold text-dark">{displayValue}</span>
+                        )
                     )}
                 </div>
             </div>
@@ -263,7 +317,7 @@ export default function AdminDemandes() {
                         <span style="font-weight: bold; color: #555; font-size: 10px; text-transform: uppercase; line-height: 1.2;">${labelFr}</span>
                     </div>
                     <div style="width: 50%; text-align: center; font-weight: 700; color: #000; font-size: 13px; line-height: 1.3;">
-                        ${normalizeText(value) || '-'}
+                        ${(typeof value === 'string' && value.startsWith('data:image/')) ? '[CARTE JOINTE]' : (normalizeText(value) || '-')}
                     </div>
                     <div style="width: 25%; text-align: right; padding-right: 8px;">
                         <span style="font-weight: bold; color: #555; font-size: 14px; line-height: 1.2;">${labelAr}</span>
