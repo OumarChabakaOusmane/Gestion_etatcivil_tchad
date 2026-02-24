@@ -110,8 +110,9 @@ export default function CreateDemandeScreen({ route, navigation }) {
             }
         } else if (type === 'deces') {
             if (currentStep === 1) {
-                if (!formData.nomDefunt || !formData.prenomDefunt || !formData.dateDeces || !formData.lieuDeces) {
-                    Alert.alert('Champs requis', 'Veuillez remplir les informations sur le défunt.');
+                if (!formData.nomDefunt || !formData.prenomDefunt || !formData.dateDeces || !formData.lieuDeces ||
+                    !formData.dateNaissanceDefunt || !formData.lieuNaissanceDefunt || !formData.pereDefunt || !formData.mereDefunt) {
+                    Alert.alert('Champs requis', 'Veuillez remplir toutes les informations obligatoires sur le défunt (Nom, Prénom, Date/Lieu de naissance, Parents, etc.).');
                     return false;
                 }
             } else if (currentStep === 2) {
@@ -173,8 +174,9 @@ export default function CreateDemandeScreen({ route, navigation }) {
             }
         } else if (type === 'deces') {
             if (!formData.nomDefunt || !formData.prenomDefunt || !formData.dateDeces || !formData.lieuDeces ||
+                !formData.dateNaissanceDefunt || !formData.lieuNaissanceDefunt || !formData.pereDefunt || !formData.mereDefunt ||
                 !formData.nomDeclarant || !formData.prenomDeclarant) {
-                Alert.alert('Formulaire incomplet', 'Veuillez remplir les informations obligatoires sur le défunt et le déclarant.');
+                Alert.alert('Formulaire incomplet', 'Veuillez fournir toutes les informations du défunt et du déclarant.');
                 return;
             }
         }
@@ -472,6 +474,10 @@ export default function CreateDemandeScreen({ route, navigation }) {
                             </View>
                         </View>
                         {renderInput('Cause (si connue)', 'causeDeces', 'Ex: Maladie')}
+                        {renderPicker('Nationalité', 'nationaliteDefunt', [
+                            { label: 'TCHADIENNE', value: 'TCHADIENNE' },
+                            { label: 'ÉTRANGER', value: 'ETRANGER' }
+                        ])}
                     </View>
                 );
             }

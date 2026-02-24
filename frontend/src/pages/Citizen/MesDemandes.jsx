@@ -517,7 +517,10 @@ export default function MesDemandes() {
                                                     nomMere: "Mère", prenomMere: "Prénom Mère", professionMere: "Profession Mère",
                                                     nomEpoux: "Époux", prenomEpoux: "Prénom Époux", nomEpouse: "Épouse",
                                                     prenomEpouse: "Prénom Épouse", dateMariage: "Date Mariage", lieuMariage: "Lieu Mariage",
-                                                    nomDefunt: "Défunt", prenomDefunt: "Prénom Défunt", dateDeces: "Date Décès", lieuDeces: "Lieu Décès"
+                                                    nomDefunt: "Défunt (Nom)", prenomDefunt: "Prénom Défunt", sexeDefunt: "Sexe",
+                                                    dateDeces: "Date Décès", lieuDeces: "Lieu Décès", causeDeces: "Cause du décès",
+                                                    dateNaissanceDefunt: "Date de naissance", lieuNaissanceDefunt: "Lieu de naissance",
+                                                    nationaliteDefunt: "Nationalité", pereDefunt: "Père", mereDefunt: "Mère", nniDefunt: "Carte NNI"
                                                 };
                                                 const label = labelMap[key] || key;
 

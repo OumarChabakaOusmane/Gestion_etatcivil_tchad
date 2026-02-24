@@ -523,7 +523,7 @@ export default function AdminDemandes() {
             return req.some(f => !donnees[f]);
         }
         if (type === 'deces') {
-            const req = ['nomDefunt', 'prenomDefunt', 'dateDeces', 'lieuDeces', 'nomDeclarant', 'prenomDeclarant'];
+            const req = ['nomDefunt', 'prenomDefunt', 'sexeDefunt', 'dateDeces', 'lieuDeces', 'dateNaissanceDefunt', 'lieuNaissanceDefunt', 'pereDefunt', 'mereDefunt', 'nomDeclarant', 'prenomDeclarant'];
             return req.some(f => !donnees[f]);
         }
         return false;

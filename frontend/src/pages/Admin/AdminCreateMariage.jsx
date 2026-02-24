@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import demandeService from "../../services/demandeService";
 import { normalizeText, formatName } from '../../utils/textHelper';
+import Tesseract from 'tesseract.js';
+import { toast } from 'react-hot-toast';
 
 export default function AdminCreateMariage() {
     const [step, setStep] = useState(1);
@@ -16,6 +18,7 @@ export default function AdminCreateMariage() {
         domicileEpoux: "",
         temoin1Epoux: "",
         temoin2Epoux: "",
+        nniEpoux: "",
 
         // Épouse
         nomEpouse: "",
@@ -27,6 +30,7 @@ export default function AdminCreateMariage() {
         domicileEpouse: "",
         temoin1Epouse: "",
         temoin2Epouse: "",
+        nniEpouse: "",
 
         // Mariage
         dateMariage: "",
@@ -35,6 +39,8 @@ export default function AdminCreateMariage() {
         dotMontant: "",
         dotConditions: ""
     });
+
+    const [ocrLoading, setOcrLoading] = useState({});
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -111,6 +117,39 @@ export default function AdminCreateMariage() {
         window.scrollTo(0, 0);
     };
 
+    const handleOCR = async (e, key) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setOcrLoading(prev => ({ ...prev, [key]: true }));
+        try {
+            const reader = new FileReader();
+            reader.onload = async () => {
+                try {
+                    const { data: { text } } = await Tesseract.recognize(reader.result, 'fra+eng');
+                    const nniMatch = text.match(/\b\d{10,15}\b/);
+
+                    if (nniMatch) {
+                        setFormData(prev => ({ ...prev, [key]: nniMatch[0] }));
+                        toast.success(`Numéro détecté : ${nniMatch[0]}`);
+                    } else {
+                        toast.error("Impossible de détecter un numéro NNI.");
+                    }
+                } catch (err) {
+                    console.error("OCR Error inner:", err);
+                    toast.error("Erreur lors de la lecture de l'image");
+                } finally {
+                    setOcrLoading(prev => ({ ...prev, [key]: false }));
+                }
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error("Erreur OCR:", error);
+            toast.error("Erreur lors de l'ouverture du fichier");
+            setOcrLoading(prev => ({ ...prev, [key]: false }));
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -123,8 +162,8 @@ export default function AdminCreateMariage() {
             } else {
                 setStep(1);
                 setFormData({
-                    nomEpoux: "", prenomEpoux: "", dateNaissanceEpoux: "", lieuNaissanceEpoux: "", nationaliteEpoux: "TCHADIENNE", professionEpoux: "", domicileEpoux: "", temoin1Epoux: "", temoin2Epoux: "",
-                    nomEpouse: "", prenomEpouse: "", dateNaissanceEpouse: "", lieuNaissanceEpouse: "", nationaliteEpouse: "TCHADIENNE", professionEpouse: "", domicileEpouse: "", temoin1Epouse: "", temoin2Epouse: "",
+                    nomEpoux: "", prenomEpoux: "", dateNaissanceEpoux: "", lieuNaissanceEpoux: "", nationaliteEpoux: "TCHADIENNE", professionEpoux: "", domicileEpoux: "", temoin1Epoux: "", temoin2Epoux: "", nniEpoux: "",
+                    nomEpouse: "", prenomEpouse: "", dateNaissanceEpouse: "", lieuNaissanceEpouse: "", nationaliteEpouse: "TCHADIENNE", professionEpouse: "", domicileEpouse: "", temoin1Epouse: "", temoin2Epouse: "", nniEpouse: "",
                     dateMariage: "", lieuMariage: "", regimeMatrimonial: "monogamie", dotMontant: "", dotConditions: ""
                 });
                 setLoading(false);
@@ -174,6 +213,28 @@ export default function AdminCreateMariage() {
                                 <label className="form-label fw-bold">Domicile</label>
                                 <input type="text" name="domicileEpoux" className="form-control form-control-lg bg-light border-0" value={formData.domicileEpoux} onChange={handleChange} required />
                             </div>
+                            <div className="col-12">
+                                <label className="form-label fw-bold">NNI de l'époux (Optionnel)</label>
+                                <div className="input-group">
+                                    <input
+                                        type="text"
+                                        name="nniEpoux"
+                                        className="form-control form-control-lg bg-light border-0"
+                                        value={formData.nniEpoux}
+                                        onChange={handleChange}
+                                        placeholder="Numéro National d'Identité"
+                                    />
+                                    <label className="btn btn-outline-primary d-flex align-items-center bg-white border-0 shadow-sm" style={{ cursor: 'pointer' }}>
+                                        {ocrLoading['nniEpoux'] ? (
+                                            <span className="spinner-border spinner-border-sm mx-2"></span>
+                                        ) : (
+                                            <i className="bi bi-camera-fill mx-2"></i>
+                                        )}
+                                        {ocrLoading['nniEpoux'] ? "Scan..." : "Scanner Carte"}
+                                        <input type="file" hidden accept="image/*" onChange={(e) => handleOCR(e, 'nniEpoux')} />
+                                    </label>
+                                </div>
+                            </div>
                             <div className="col-md-6">
                                 <label className="form-label fw-bold">Premier Témoin</label>
                                 <input type="text" name="temoin1Epoux" className="form-control form-control-lg bg-light border-0" value={formData.temoin1Epoux} onChange={handleChange} placeholder="Nom complet" />
@@ -220,6 +281,28 @@ export default function AdminCreateMariage() {
                             <div className="col-12">
                                 <label className="form-label fw-bold">Domicile</label>
                                 <input type="text" name="domicileEpouse" className="form-control form-control-lg bg-light border-0" value={formData.domicileEpouse} onChange={handleChange} required />
+                            </div>
+                            <div className="col-12">
+                                <label className="form-label fw-bold">NNI de l'épouse (Optionnel)</label>
+                                <div className="input-group">
+                                    <input
+                                        type="text"
+                                        name="nniEpouse"
+                                        className="form-control form-control-lg bg-light border-0"
+                                        value={formData.nniEpouse}
+                                        onChange={handleChange}
+                                        placeholder="Numéro National d'Identité"
+                                    />
+                                    <label className="btn btn-outline-primary d-flex align-items-center bg-white border-0 shadow-sm" style={{ cursor: 'pointer' }}>
+                                        {ocrLoading['nniEpouse'] ? (
+                                            <span className="spinner-border spinner-border-sm mx-2"></span>
+                                        ) : (
+                                            <i className="bi bi-camera-fill mx-2"></i>
+                                        )}
+                                        {ocrLoading['nniEpouse'] ? "Scan..." : "Scanner Carte"}
+                                        <input type="file" hidden accept="image/*" onChange={(e) => handleOCR(e, 'nniEpouse')} />
+                                    </label>
+                                </div>
                             </div>
                             <div className="col-md-6">
                                 <label className="form-label fw-bold">Premier Témoin</label>
@@ -273,14 +356,14 @@ export default function AdminCreateMariage() {
                             <h5 className="fw-bold mb-3 text-dark">Résumé de l'union (Mode GUICHET)</h5>
                             <div className="row g-2">
                                 <div className="col-6 text-muted">Époux:</div>
-                                <div className="col-6 fw-bold">{formatName(formData.nomEpoux)} {formatName(formData.prenomEpoux)}</div>
+                                <div className="col-6 fw-bold">{formatName(formData.nomEpoux)} {formatName(formData.prenomEpoux)} {formData.nniEpoux && `(NNI: ${formData.nniEpoux})`}</div>
                                 <div className="col-6 text-muted ps-3 small italic">Témoin 1:</div>
                                 <div className="col-6 small fw-bold">{formData.temoin1Epoux || "-"}</div>
                                 <div className="col-6 text-muted ps-3 small italic">Témoin 2:</div>
                                 <div className="col-6 small fw-bold">{formData.temoin2Epoux || "-"}</div>
 
                                 <div className="col-6 text-muted mt-2">Épouse:</div>
-                                <div className="col-6 fw-bold mt-2">{formatName(formData.nomEpouse)} {formatName(formData.prenomEpouse)}</div>
+                                <div className="col-6 fw-bold mt-2">{formatName(formData.nomEpouse)} {formatName(formData.prenomEpouse)} {formData.nniEpouse && `(NNI: ${formData.nniEpouse})`}</div>
                                 <div className="col-6 text-muted ps-3 small italic">Témoin 1:</div>
                                 <div className="col-6 small fw-bold">{formData.temoin1Epouse || "-"}</div>
                                 <div className="col-6 text-muted ps-3 small italic">Témoin 2:</div>

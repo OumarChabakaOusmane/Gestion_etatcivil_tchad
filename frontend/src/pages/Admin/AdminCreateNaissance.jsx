@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import demandeService from "../../services/demandeService";
 import { normalizeText, formatName } from '../../utils/textHelper';
+import Tesseract from 'tesseract.js';
+import { toast } from 'react-hot-toast';
 
 export default function AdminCreateNaissance() {
     const [step, setStep] = useState(1);
@@ -34,6 +36,8 @@ export default function AdminCreateNaissance() {
         domicileMere: "",
         nniMere: ""
     });
+
+    const [ocrLoading, setOcrLoading] = useState({});
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -110,6 +114,42 @@ export default function AdminCreateNaissance() {
     const prevStep = () => {
         setStep(prev => prev - 1);
         window.scrollTo(0, 0);
+    };
+
+    const handleOCR = async (e, key) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setOcrLoading(prev => ({ ...prev, [key]: true }));
+        try {
+            // Créer une URL temporaire pour l'image
+            const reader = new FileReader();
+            reader.onload = async () => {
+                try {
+                    const { data: { text } } = await Tesseract.recognize(reader.result, 'fra+eng');
+
+                    // Regex pour trouver une séquence de 10 à 15 chiffres (format NNI)
+                    const nniMatch = text.match(/\b\d{10,15}\b/);
+
+                    if (nniMatch) {
+                        setFormData(prev => ({ ...prev, [key]: nniMatch[0] }));
+                        toast.success(`Numéro détecté : ${nniMatch[0]}`);
+                    } else {
+                        toast.error("Impossible de détecter un numéro NNI. Veuillez le saisir manuellement.");
+                    }
+                } catch (err) {
+                    console.error("OCR Error inner:", err);
+                    toast.error("Erreur lors de la lecture de l'image");
+                } finally {
+                    setOcrLoading(prev => ({ ...prev, [key]: false }));
+                }
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error("Erreur OCR:", error);
+            toast.error("Erreur lors de l'ouverture du fichier");
+            setOcrLoading(prev => ({ ...prev, [key]: false }));
+        }
     };
 
     const handleSubmit = async (e) => {
@@ -213,7 +253,25 @@ export default function AdminCreateNaissance() {
                             </div>
                             <div className="col-md-12">
                                 <label className="form-label fw-bold">NNI du père (Optionnel)</label>
-                                <input type="text" name="nniPere" className="form-control form-control-lg bg-light border-0" value={formData.nniPere} onChange={handleChange} placeholder="Numéro National d'Identité" />
+                                <div className="input-group">
+                                    <input
+                                        type="text"
+                                        name="nniPere"
+                                        className="form-control form-control-lg bg-light border-0"
+                                        value={formData.nniPere}
+                                        onChange={handleChange}
+                                        placeholder="Numéro National d'Identité"
+                                    />
+                                    <label className="btn btn-outline-primary d-flex align-items-center bg-white border-0 shadow-sm" style={{ cursor: 'pointer' }}>
+                                        {ocrLoading['nniPere'] ? (
+                                            <span className="spinner-border spinner-border-sm mx-2"></span>
+                                        ) : (
+                                            <i className="bi bi-camera-fill mx-2"></i>
+                                        )}
+                                        {ocrLoading['nniPere'] ? "Scan..." : "Scanner Carte"}
+                                        <input type="file" hidden accept="image/*" onChange={(e) => handleOCR(e, 'nniPere')} />
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -256,7 +314,25 @@ export default function AdminCreateNaissance() {
                             </div>
                             <div className="col-md-12">
                                 <label className="form-label fw-bold">NNI de la mère (Optionnel)</label>
-                                <input type="text" name="nniMere" className="form-control form-control-lg bg-light border-0" value={formData.nniMere} onChange={handleChange} placeholder="Numéro National d'Identité" />
+                                <div className="input-group">
+                                    <input
+                                        type="text"
+                                        name="nniMere"
+                                        className="form-control form-control-lg bg-light border-0"
+                                        value={formData.nniMere}
+                                        onChange={handleChange}
+                                        placeholder="Numéro National d'Identité"
+                                    />
+                                    <label className="btn btn-outline-primary d-flex align-items-center bg-white border-0 shadow-sm" style={{ cursor: 'pointer' }}>
+                                        {ocrLoading['nniMere'] ? (
+                                            <span className="spinner-border spinner-border-sm mx-2"></span>
+                                        ) : (
+                                            <i className="bi bi-camera-fill mx-2"></i>
+                                        )}
+                                        {ocrLoading['nniMere'] ? "Scan..." : "Scanner Carte"}
+                                        <input type="file" hidden accept="image/*" onChange={(e) => handleOCR(e, 'nniMere')} />
+                                    </label>
+                                </div>
                             </div>
                         </div>
                     </div>

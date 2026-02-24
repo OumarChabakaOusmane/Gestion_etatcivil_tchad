@@ -387,23 +387,70 @@ export default function DemandeDeces() {
                             </h5>
                             <div className="row g-3">
                                 <div className="col-md-12">
-                                    <div className="p-3 bg-white rounded-3 shadow-xs border border-light mb-3 text-start">
-                                        <div className="text-muted small text-uppercase fw-bold mb-1">{t('deceasedInfo')}</div>
-                                        <div className="fw-bold text-dark fs-5">{formData.prenomDefunt} {formData.nomDefunt} ({formData.sexeDefunt})</div>
-                                        <div className="text-muted small mt-1">
-                                            Décédé le {formData.dateDeces} à {formData.lieuDeces}<br />
-                                            {formData.professionDefunt && `${t('labelProfession')}: ${formData.professionDefunt}`} {formData.nniDefuntImage && <span className="ms-1 badge bg-success smaller"><i className="bi bi-card-image me-1"></i>Carte NNI jointe</span>}<br />
-                                            {t('labelPereDefunt')} {formData.pereDefunt} {t('labelMereDefunt')} {formData.mereDefunt}
+                                    <div className="p-4 bg-white rounded-4 shadow-sm border border-light mb-4 text-start">
+                                        <div className="d-flex align-items-center gap-2 mb-3">
+                                            <div className="bg-primary bg-opacity-10 p-2 rounded-circle">
+                                                <i className="bi bi-person-x-fill text-primary"></i>
+                                            </div>
+                                            <h6 className="text-primary fw-bold text-uppercase small mb-0">{t('deceasedInfo')}</h6>
+                                        </div>
+                                        <div className="row g-3">
+                                            <div className="col-md-6">
+                                                <span className="text-muted small d-block">Identité</span>
+                                                <span className="fw-bold">{formData.prenomDefunt} {formData.nomDefunt}</span>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <span className="text-muted small d-block">Sexe & Nationalité</span>
+                                                <span className="fw-bold">{formData.sexeDefunt === 'M' ? 'Masculin' : 'Féminin'} | {formData.nationaliteDefunt}</span>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <span className="text-muted small d-block">Décès</span>
+                                                <span className="fw-bold">Le {formData.dateDeces} à {formData.lieuDeces}</span>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <span className="text-muted small d-block">Naissance</span>
+                                                <span className="fw-bold">Le {formData.dateNaissanceDefunt || '—'} à {formData.lieuNaissanceDefunt || '—'}</span>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <span className="text-muted small d-block">Filiation</span>
+                                                <span className="fw-bold">Père: {formData.pereDefunt} | Mère: {formData.mereDefunt}</span>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <span className="text-muted small d-block">Profession</span>
+                                                <span className="fw-bold">{formData.professionDefunt || '—'}</span>
+                                            </div>
+                                        </div>
+                                        {formData.nniDefuntImage && (
+                                            <div className="mt-3 pt-3 border-top d-flex align-items-center gap-2 text-success small fw-bold">
+                                                <i className="bi bi-check-circle-fill"></i>
+                                                Carte NNI jointe au dossier
+                                            </div>
+                                        )}
+                                    </div>
+
+                                    <div className="p-4 bg-white rounded-4 shadow-sm border border-light text-start">
+                                        <div className="d-flex align-items-center gap-2 mb-3">
+                                            <div className="bg-info bg-opacity-10 p-2 rounded-circle">
+                                                <i className="bi bi-person-check-fill text-info"></i>
+                                            </div>
+                                            <h6 className="text-info fw-bold text-uppercase small mb-0">{t('declarantInfo')}</h6>
+                                        </div>
+                                        <div className="row g-3">
+                                            <div className="col-md-6">
+                                                <span className="text-muted small d-block">Déclarant</span>
+                                                <span className="fw-bold">{formData.prenomDeclarant} {formData.nomDeclarant}</span>
+                                            </div>
+                                            <div className="col-md-6">
+                                                <span className="text-muted small d-block">Lien & Domicile</span>
+                                                <span className="fw-bold">{formData.lienParente} | {formData.domicileDeclarant}</span>
+                                            </div>
                                         </div>
                                     </div>
-                                    <div className="p-3 bg-white rounded-3 shadow-xs border border-light text-start">
-                                        <div className="text-muted small text-uppercase fw-bold mb-1">{t('declarantInfo')}</div>
-                                        <div className="fw-bold text-dark fs-5">{formData.prenomDeclarant} {formData.nomDeclarant}</div>
-                                        <div className="text-muted small mt-1">{t('labelLienParente')}: {formData.lienParente} | {t('labelDomicileDeclarant')}: {formData.domicileDeclarant}</div>
-                                    </div>
+
                                     {piecesJointes.length > 0 && (
-                                        <div className="mt-3 p-2 bg-success bg-opacity-10 rounded border border-success border-opacity-25 text-success small">
-                                            <i className="bi bi-paperclip me-1"></i> {piecesJointes.length} document(s) joint(s)
+                                        <div className="mt-4 p-3 bg-success bg-opacity-10 rounded-4 border border-success border-opacity-25 text-success small d-flex align-items-center gap-2 fw-bold">
+                                            <i className="bi bi-paperclip fs-5"></i>
+                                            {piecesJointes.length} document(s) justificatif(s) ajouté(s)
                                         </div>
                                     )}
                                 </div>

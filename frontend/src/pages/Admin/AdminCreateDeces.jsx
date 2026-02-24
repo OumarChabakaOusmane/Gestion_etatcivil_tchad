@@ -2,6 +2,8 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import demandeService from "../../services/demandeService";
 import { normalizeText, formatName } from '../../utils/textHelper';
+import Tesseract from 'tesseract.js';
+import { toast } from 'react-hot-toast';
 
 export default function AdminCreateDeces() {
     const [step, setStep] = useState(1);
@@ -27,6 +29,8 @@ export default function AdminCreateDeces() {
         lienParente: "",
         domicileDeclarant: ""
     });
+
+    const [ocrLoading, setOcrLoading] = useState({});
 
     const [error, setError] = useState("");
     const [loading, setLoading] = useState(false);
@@ -98,6 +102,39 @@ export default function AdminCreateDeces() {
         window.scrollTo(0, 0);
     };
 
+    const handleOCR = async (e, key) => {
+        const file = e.target.files[0];
+        if (!file) return;
+
+        setOcrLoading(prev => ({ ...prev, [key]: true }));
+        try {
+            const reader = new FileReader();
+            reader.onload = async () => {
+                try {
+                    const { data: { text } } = await Tesseract.recognize(reader.result, 'fra+eng');
+                    const nniMatch = text.match(/\b\d{10,15}\b/);
+
+                    if (nniMatch) {
+                        setFormData(prev => ({ ...prev, [key]: nniMatch[0] }));
+                        toast.success(`Numéro détecté : ${nniMatch[0]}`);
+                    } else {
+                        toast.error("Impossible de détecter un numéro NNI.");
+                    }
+                } catch (err) {
+                    console.error("OCR Error inner:", err);
+                    toast.error("Erreur lors de la lecture de l'image");
+                } finally {
+                    setOcrLoading(prev => ({ ...prev, [key]: false }));
+                }
+            };
+            reader.readAsDataURL(file);
+        } catch (error) {
+            console.error("Erreur OCR:", error);
+            toast.error("Erreur lors de l'ouverture du fichier");
+            setOcrLoading(prev => ({ ...prev, [key]: false }));
+        }
+    };
+
     const handleSubmit = async (e) => {
         e.preventDefault();
         setError("");
@@ -146,7 +183,25 @@ export default function AdminCreateDeces() {
                             </div>
                             <div className="col-md-8">
                                 <label className="form-label fw-bold">Numéro NNI (si disponible)</label>
-                                <input type="text" name="nniDefunt" className="form-control form-control-lg bg-light border-0" value={formData.nniDefunt} onChange={handleChange} placeholder="NNI du défunt" />
+                                <div className="input-group">
+                                    <input
+                                        type="text"
+                                        name="nniDefunt"
+                                        className="form-control form-control-lg bg-light border-0"
+                                        value={formData.nniDefunt}
+                                        onChange={handleChange}
+                                        placeholder="NNI du défunt"
+                                    />
+                                    <label className="btn btn-outline-primary d-flex align-items-center bg-white border-0 shadow-sm" style={{ cursor: 'pointer' }}>
+                                        {ocrLoading['nniDefunt'] ? (
+                                            <span className="spinner-border spinner-border-sm mx-2"></span>
+                                        ) : (
+                                            <i className="bi bi-camera-fill mx-2"></i>
+                                        )}
+                                        {ocrLoading['nniDefunt'] ? "Scan..." : "Scanner Carte"}
+                                        <input type="file" hidden accept="image/*" onChange={(e) => handleOCR(e, 'nniDefunt')} />
+                                    </label>
+                                </div>
                             </div>
                             <div className="col-md-6">
                                 <label className="form-label fw-bold">Date du décès</label>
