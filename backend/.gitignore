@@ -7,6 +7,7 @@
 
 # Firebase Configuration (CRITICAL - Ne pas commit)
 serviceAccountKey.json
+serviceAccountKey.json.json
 firebase-debug.log
 .firebase/
 
@@ -52,3 +53,6 @@ Thumbs.db
 
 # Optional eslint cache
 .eslintcache
+
+# Firebase Configuration (CRITICAL - Ne pas commit)
+serviceAccountKey.json

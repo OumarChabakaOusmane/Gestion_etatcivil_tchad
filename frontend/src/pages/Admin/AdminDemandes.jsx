@@ -7,6 +7,7 @@ import exportHelper from '../../utils/exportHelper';
 import { normalizeText, formatName } from '../../utils/textHelper';
 import Tesseract from 'tesseract.js';
 import { toast } from 'react-hot-toast';
+import QRCode from 'qrcode';
 
 export default function AdminDemandes() {
     const location = useLocation();
@@ -298,7 +299,7 @@ export default function AdminDemandes() {
         );
     };
 
-    const handleDownloadPDF = (demande) => {
+    const handleDownloadPDF = async (demande) => {
         const themeColor = d => d.type === 'naissance' ? '#004aad' : d.type === 'mariage' ? '#198754' : '#d21034';
         const typeLabelFr = d => d.type === 'naissance' ? 'NAISSANCE' : d.type === 'mariage' ? 'MARIAGE' : 'DÉCÈS';
         const typeLabelAr = d => d.type === 'naissance' ? 'الولادة' : d.type === 'mariage' ? 'الزواج' : 'الوفاة';
@@ -306,9 +307,16 @@ export default function AdminDemandes() {
         const element = document.createElement('div');
         element.style.width = '800px';
 
+        // Utiliser l'IP réseau pour que le QR code fonctionne sur mobile
         const publicUrl = import.meta.env.VITE_PUBLIC_URL || window.location.origin;
         const verifyUrl = `${publicUrl}/verifier-acte/${demande.id || demande._id}`;
-        const qrCodeUrl = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(verifyUrl)}`;
+        // Génération locale du QR code (pas besoin d'internet)
+        let qrCodeUrl = '';
+        try {
+            qrCodeUrl = await QRCode.toDataURL(verifyUrl, { width: 150, margin: 1 });
+        } catch (e) {
+            console.error('Erreur génération QR Code:', e);
+        }
 
         const renderContent = d => {
             const row = (labelFr, labelAr, value) => `

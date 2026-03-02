@@ -28,9 +28,13 @@ class User {
         telephone: userData.telephone || '',
         photo: userData.photo || '',
         isVerified: userData.isVerified !== undefined ? userData.isVerified : false,
+        // ✅ Flag de changement de mot de passe forcé (utilisateurs créés par admin)
+        mustChangePassword: userData.mustChangePassword === true ? true : false,
+        // ✅ Source de création (ID de l'admin ou 'self' pour inscription)
+        createdBy: userData.createdBy || 'self',
         otpCode: userData.otpCode || null,
         otpExpires: userData.otpExpires || null,
-        expoPushToken: userData.expoPushToken || null, // [NEW] Token pour les notifications
+        expoPushToken: userData.expoPushToken || null,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString()
       };

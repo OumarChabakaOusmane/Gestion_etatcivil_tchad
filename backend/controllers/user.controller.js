@@ -9,10 +9,12 @@ const logAction = require('../utils/auditLogger');
  */
 const createUser = async (req, res) => {
     try {
-        const { nom, prenom, email, password, telephone, role } = req.body;
+        const { nom, prenom, email, telephone, role } = req.body;
+        // ✅ Mot de passe par défaut si non fourni par l'admin
+        const password = req.body.password || '123456';
 
         // Validation basique
-        if (!nom || !prenom || !email || !password || !role) {
+        if (!nom || !prenom || !email || !role) {
             return res.status(400).json({
                 success: false,
                 message: 'Veuillez remplir tous les champs obligatoires'
@@ -44,7 +46,9 @@ const createUser = async (req, res) => {
             password,
             telephone,
             role,
-            isVerified: true // Les comptes créés par l'admin sont auto-vérifiés
+            isVerified: true,          // Les comptes créés par l'admin sont auto-vérifiés
+            mustChangePassword: true,  // ✅ Forcer le changement de mot de passe à la 1ère connexion
+            createdBy: req.user.id     // ✅ Tracer quel admin a créé cet utilisateur
         });
 
         // [AUDIT LOG]
@@ -157,8 +161,11 @@ const updatePassword = async (req, res) => {
         const salt = await bcrypt.genSalt(8);
         const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-        // Mettre à jour
-        await User.update(req.user.id, { password: hashedPassword });
+        // Mettre à jour le mot de passe et remettre le flag à false
+        await User.update(req.user.id, {
+            password: hashedPassword,
+            mustChangePassword: false  // ✅ L'utilisateur a changé son mot de passe
+        });
 
         res.status(200).json({
             success: true,
@@ -229,6 +236,26 @@ const deleteUser = async (req, res) => {
                 message: 'Vous ne pouvez pas supprimer votre propre compte'
             });
         }
+
+        // Récupérer l'utilisateur à supprimer
+        const targetUser = await User.findById(id);
+        if (!targetUser) {
+            return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+        }
+
+        // ✅ Vérification des permissions de suppression
+        // Règle : Un admin peut supprimer n'importe quel Citoyen ou Agent.
+        // Mais il ne peut supprimer un autre Admin QUE s'il l'a lui-même créé.
+        const isCreator = targetUser.createdBy === req.user.id;
+        const isTargetAdmin = targetUser.role === 'admin';
+
+        if (isTargetAdmin && !isCreator) {
+            return res.status(403).json({
+                success: false,
+                message: 'Vous n\'avez pas la permission de supprimer cet administrateur (seul son créateur le peut)'
+            });
+        }
+
         await User.delete(id);
 
         // [AUDIT LOG]

@@ -19,7 +19,6 @@ const AdminUtilisateurs = () => {
         prenom: '',
         email: '',
         telephone: '',
-        password: '',
         role: 'user'
     });
 
@@ -98,7 +97,7 @@ const AdminUtilisateurs = () => {
             await userService.createUser(newUser);
             showToast('Utilisateur créé avec succès');
             setShowModal(false);
-            setNewUser({ nom: '', prenom: '', email: '', telephone: '', password: '', role: 'user' });
+            setNewUser({ nom: '', prenom: '', email: '', telephone: '', role: 'user' });
             await loadUsers();
         } catch (error) {
             showToast(error.message || 'Erreur lors de la création', 'danger');
@@ -331,8 +330,12 @@ const AdminUtilisateurs = () => {
                                             </select>
                                         </div>
                                         <div className="col-12">
-                                            <input type="password" className="form-control rounded-3 py-2" placeholder="Mot de passe"
-                                                value={newUser.password} onChange={e => setNewUser({ ...newUser, password: e.target.value })} required />
+                                            <div className="alert alert-info d-flex align-items-center gap-2 rounded-3 py-2 mb-0" style={{ fontSize: '0.85rem' }}>
+                                                <i className="bi bi-key-fill"></i>
+                                                <span>
+                                                    Mot de passe par défaut : <strong>123456</strong>. L'utilisateur devra le changer à sa 1ère connexion.
+                                                </span>
+                                            </div>
                                         </div>
                                         <div className="col-12 mt-4">
                                             <button type="submit" className="btn btn-primary w-100 rounded-pill py-2 fw-bold" disabled={actionLoading}>

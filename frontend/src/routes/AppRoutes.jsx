@@ -41,6 +41,7 @@ import AdminLogs from "../pages/Admin/AdminLogs";
 import Actualites from "../pages/Public/Actualites";
 import AdminArticles from "../pages/Admin/AdminArticles";
 import VerifyCertificate from "../pages/Public/VerifyCertificate";
+import ChangePassword from "../pages/Auth/ChangePassword";
 
 export default function AppRoutes() {
   return (
@@ -57,6 +58,7 @@ export default function AppRoutes() {
         <Route path="/reset-password/:token" element={<ResetPassword />} />
         <Route path="/verify-otp" element={<VerifyOtp />} />
         <Route path="/verifier-acte/:id" element={<VerifyCertificate />} />
+        <Route path="/changer-mot-de-passe" element={<ChangePassword />} />
 
         {/* Routes citoyens protégées */}
         <Route

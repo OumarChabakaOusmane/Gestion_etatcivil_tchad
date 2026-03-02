@@ -17,6 +17,10 @@ export default function Login() {
 
   useEffect(() => {
     if (authService.isAuthenticated()) {
+      if (authService.mustChangePassword()) {
+        navigate('/changer-mot-de-passe');
+        return;
+      }
       if (authService.hasAdminAccess()) {
         navigate('/admin/dashboard');
       } else {
@@ -53,12 +57,17 @@ export default function Login() {
         throw new Error("Impossible de récupérer les informations de l'utilisateur après connexion.");
       }
 
-      // Forcer un rechargement complet pour garantir l'initialisation du state
+      // ✅ Si mot de passe par défaut → forcer le changement
+      const mustChangePassword = response.mustChangePassword || user.mustChangePassword;
+      if (mustChangePassword) {
+        window.location.href = '/changer-mot-de-passe';
+        return;
+      }
+
+      // Redirection normale selon le rôle
       if (user.role === 'admin' || user.role === 'agent') {
-        console.log("Redirection vers Admin/Agent Dashboard");
         window.location.href = '/admin/dashboard';
       } else {
-        console.log("Redirection vers Citizen Dashboard");
         window.location.href = '/dashboard';
       }
 

@@ -15,9 +15,14 @@ const authService = {
             const response = await api.post('/auth/login', { email, password });
 
             if (response.data.success) {
-                // Stocker le token et les informations utilisateur
                 localStorage.setItem('token', response.data.data.token);
                 localStorage.setItem('user', JSON.stringify(response.data.data.user));
+                // ✅ Stocker le flag de changement de mot de passe forcé
+                if (response.data.mustChangePassword) {
+                    localStorage.setItem('mustChangePassword', 'true');
+                } else {
+                    localStorage.removeItem('mustChangePassword');
+                }
                 return response.data;
             }
 
@@ -137,6 +142,18 @@ const authService = {
     hasAdminAccess() {
         const user = this.getCurrentUser();
         return user && (user.role === 'admin' || user.role === 'agent');
+    },
+
+    /**
+     * Vérifie si l'utilisateur doit changer son mot de passe
+     * @returns {boolean} True si changement requis
+     */
+    mustChangePassword() {
+        const mustChangeFlag = localStorage.getItem('mustChangePassword');
+        if (mustChangeFlag === 'true') return true;
+
+        const user = this.getCurrentUser();
+        return user && user.mustChangePassword === true;
     },
     /**
      * Met à jour le profil de l'utilisateur

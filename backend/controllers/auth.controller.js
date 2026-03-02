@@ -42,6 +42,7 @@ const register = async (req, res) => {
       role,
       telephone,
       photo,
+      createdBy: 'self', // ✅ Indique que l'utilisateur s'est inscrit lui-même
       otpCode,
       otpExpires
     });
@@ -321,7 +322,7 @@ const login = async (req, res) => {
         email: user.email,
         nom: user.nom,
         prenom: user.prenom,
-        role: user.role || 'user' // Rôle par défaut si non défini
+        role: user.role || 'user'
       }
     };
 
@@ -329,18 +330,21 @@ const login = async (req, res) => {
     const token = jwt.sign(
       payload,
       process.env.JWT_SECRET,
-      { expiresIn: '24h' } // Le token expire après 24 heures
+      { expiresIn: '24h' }
     );
 
-    // [AUDIT LOG] Enregistrer la connexion réussie
-    // On attache manuellement le user à req car on n'est pas encore passé par les middlewares
+    // [AUDIT LOG]
     req.user = user;
     logAction(req, 'LOGIN_SUCCESS', 'Connexion au système');
+
+    // ✅ Vérifier si l'utilisateur doit changer son mot de passe
+    const mustChangePassword = user.mustChangePassword === true;
 
     // Réponse de succès
     return res.json({
       success: true,
       message: 'Connexion réussie',
+      mustChangePassword,
       data: {
         token,
         user: {
@@ -350,7 +354,8 @@ const login = async (req, res) => {
           email: user.email,
           telephone: user.telephone,
           photo: user.photo || '',
-          role: user.role || 'user'
+          role: user.role || 'user',
+          mustChangePassword
         }
       }
     });
@@ -530,6 +535,7 @@ const googleLogin = async (req, res) => {
         role: 'user',
         photo: picture || '',
         isVerified: true, // Google vérifie déjà l'email
+        createdBy: 'google' // ✅ Indique que l'utilisateur vient de Google
       });
 
       console.log(`🆕 [GOOGLE] Nouvel utilisateur créé via Google: ${email}`);
