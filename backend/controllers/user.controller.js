@@ -244,16 +244,22 @@ const deleteUser = async (req, res) => {
         }
 
         // ✅ Vérification des permissions de suppression
-        // Règle : Un admin peut supprimer n'importe quel Citoyen ou Agent.
-        // Mais il ne peut supprimer un autre Admin QUE s'il l'a lui-même créé.
-        const isCreator = targetUser.createdBy === req.user.id;
+        // Règle 1 : On ne peut pas se supprimer soi-même (déjà géré haut)
+        // Règle 2 : Un admin peut supprimer les nouveaux agents/citoyens (pas admin).
+        // Règle 3 : Un admin peut supprimer un autre admin S'IL l'a lui-même créé.
+        // Règle 4 : Un admin peut supprimer les anciens admins qui n'ont pas de 'createdBy' (Cas de transition).
         const isTargetAdmin = targetUser.role === 'admin';
+        const isCreator = targetUser.createdBy === req.user.id;
+        const HasNoCreator = !targetUser.createdBy || targetUser.createdBy === 'self' || targetUser.createdBy === 'google';
 
-        if (isTargetAdmin && !isCreator) {
-            return res.status(403).json({
-                success: false,
-                message: 'Vous n\'avez pas la permission de supprimer cet administrateur (seul son créateur le peut)'
-            });
+        if (isTargetAdmin) {
+            // C'est un admin : il faut être le créateur OU que l'admin ciblé soit un ancien compte sans créateur
+            if (!isCreator && !HasNoCreator) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Vous n\'avez pas la permission de supprimer cet administrateur (seul son créateur le peut)'
+                });
+            }
         }
 
         await User.delete(id);
