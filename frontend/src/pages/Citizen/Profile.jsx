@@ -71,7 +71,8 @@ const Profile = () => {
                 setMessage({ type: 'success', text: 'Photo mise à jour !' });
             } catch (error) {
                 console.error('Upload error:', error);
-                setMessage({ type: 'danger', text: 'Erreur lors de la mise à jour de la photo.' });
+                const errorMsg = error.message || (typeof error === 'string' ? error : 'Erreur lors de la mise à jour de la photo.');
+                setMessage({ type: 'danger', text: errorMsg });
             } finally {
                 setLoading(false);
             }

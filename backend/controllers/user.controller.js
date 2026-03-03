@@ -108,23 +108,34 @@ const updateProfile = async (req, res) => {
     try {
         const { nom, prenom, telephone, photo } = req.body;
 
+        console.log(`👤 [PROFILE] Mise à jour demandée pour l'utilisateur ID: ${req.user?.id}`);
+
         const updateData = {};
         if (nom) updateData.nom = nom;
         if (prenom) updateData.prenom = prenom;
         if (telephone) updateData.telephone = telephone;
-        if (photo) updateData.photo = photo;
+        if (photo) {
+            updateData.photo = photo;
+            console.log(`📸 [PROFILE] Mise à jour de la photo (Taille Base64: ${Math.round(photo.length / 1024)} Ko)`);
+        }
+
+        if (!req.user?.id) {
+            console.error('❌ [PROFILE] ID utilisateur manquant dans la requête');
+            return res.status(401).json({ success: false, message: 'Non authentifié' });
+        }
 
         await User.update(req.user.id, updateData);
+        console.log(`✅ [PROFILE] Profil mis à jour avec succès pour ${req.user.id}`);
 
         res.status(200).json({
             success: true,
             message: 'Profil mis à jour avec succès'
         });
     } catch (error) {
-        console.error('Erreur updateProfile:', error);
+        console.error('❌ [PROFILE] Erreur updateProfile:', error);
         res.status(500).json({
             success: false,
-            message: 'Erreur lors de la mise à jour du profil'
+            message: error.message || 'Erreur lors de la mise à jour du profil'
         });
     }
 };
@@ -207,6 +218,32 @@ const updateUserRole = async (req, res) => {
                 success: false,
                 message: 'Rôle invalide'
             });
+        }
+
+        if (id === req.user.id) {
+            return res.status(400).json({
+                success: false,
+                message: 'Vous ne pouvez pas modifier votre propre rôle'
+            });
+        }
+
+        // Récupérer l'utilisateur cible pour vérifier les permissions
+        const targetUser = await User.findById(id);
+        if (!targetUser) {
+            return res.status(404).json({ success: false, message: 'Utilisateur non trouvé' });
+        }
+
+        // ✅ Sécurité : Un admin ne peut modifier le rôle d'un autre admin S'IL l'a lui-même créé.
+        if (targetUser.role === 'admin') {
+            const isCreator = targetUser.createdBy === req.user.id;
+            const HasNoCreator = !targetUser.createdBy || targetUser.createdBy === 'self' || targetUser.createdBy === 'google';
+
+            if (!isCreator && !HasNoCreator) {
+                return res.status(403).json({
+                    success: false,
+                    message: 'Permission refusée : Seul le créateur de cet administrateur peut modifier son rôle'
+                });
+            }
         }
 
         await User.update(id, { role });

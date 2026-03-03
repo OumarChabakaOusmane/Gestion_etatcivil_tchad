@@ -165,7 +165,7 @@ const AdminLayout = ({ children }) => {
             </aside>
 
             {/* Zone de Contenu */}
-            <main className="flex-grow-1 admin-main-content transition-all" style={{ marginLeft: '280px' }}>
+            <main className="flex-grow-1 admin-main-content transition-all" style={{ marginLeft: '280px', minWidth: 0, overflowX: 'hidden' }}>
                 <header className={`p-3 d-flex justify-content-between align-items-center sticky-top border-bottom transition-all ${darkMode ? 'bg-dark border-secondary' : 'bg-white border-light'}`} style={{ zIndex: 900 }}>
                     <div className="d-flex align-items-center gap-2 ps-lg-3">
                         <button

@@ -106,14 +106,14 @@ exports.replyToContact = async (req, res) => {
             <p style="font-size: 14px; color: #666;">Si vous avez d'autres questions, n'hésitez pas à nous contacter à nouveau.</p>
         `;
 
-        const emailSent = await emailService.sendEmail(contact.email, subject, emailService.wrapTemplate(htmlContent));
+        const emailSent = await emailService.sendEmail(contact.email, subject, htmlContent);
 
         if (!emailSent) {
             throw new Error("Échec de l'envoi de l'email");
         }
 
-        // Update status in DB
-        await Contact.updateStatut(contactId, 'repondu');
+        // Update status and save reply content in DB
+        await Contact.saveReply(contactId, replyContent);
 
         res.status(200).json({
             success: true,

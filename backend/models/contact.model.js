@@ -38,9 +38,13 @@ class Contact {
         }
     }
 
-    static async updateStatut(id, statut) {
+    static async saveReply(id, replyContent) {
         try {
-            await db.collection("contacts").doc(id).update({ statut });
+            await db.collection("contacts").doc(id).update({
+                statut: 'repondu',
+                reponse: replyContent,
+                reponduAt: new Date().toISOString()
+            });
             return true;
         } catch (error) {
             throw error;

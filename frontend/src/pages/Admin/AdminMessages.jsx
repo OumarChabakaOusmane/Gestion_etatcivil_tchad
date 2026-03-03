@@ -41,7 +41,16 @@ const AdminMessages = () => {
             if (res.success) {
                 setStatusMsg({ text: 'Réponse envoyée avec succès !', type: 'success' });
                 setReplyText('');
-                // Small delay before clearing message
+                // Update selected message locally to show the reply immediately
+                setSelectedMessage(prev => ({
+                    ...prev,
+                    statut: 'repondu',
+                    reponse: replyText,
+                    reponduAt: new Date().toISOString()
+                }));
+                // Reload messages to reflect updated status in the list
+                loadMessages();
+                // Clear success message after delay
                 setTimeout(() => setStatusMsg({ text: '', type: '' }), 3000);
             }
         } catch (error) {
@@ -59,7 +68,7 @@ const AdminMessages = () => {
     );
 
     return (
-        <div className="p-4 p-lg-5">
+        <div className="p-3 p-lg-4" style={{ overflowX: 'hidden' }}>
             {/* Header Hero Section */}
             <div className="card border-0 rounded-4 shadow-lg overflow-hidden mb-5"
                 style={{ background: 'linear-gradient(135deg, #202885 0%, #151a5c 100%)' }}>
@@ -79,9 +88,9 @@ const AdminMessages = () => {
                 </div>
             </div>
 
-            <div className="row g-4">
+            <div className="row g-3" style={{ minWidth: 0 }}>
                 {/* List of Messages */}
-                <div className="col-lg-5">
+                <div className="col-12 col-lg-5">
                     <div className="card border-0 shadow-sm rounded-4 overflow-hidden border border-light h-100">
                         <div className="card-header bg-white p-3 border-bottom border-light">
                             <div className="position-relative">
@@ -95,7 +104,7 @@ const AdminMessages = () => {
                                 <i className="bi bi-filter position-absolute top-50 start-0 translate-middle-y ms-4 text-muted"></i>
                             </div>
                         </div>
-                        <div className="card-body p-0 overflow-auto custom-scrollbar" style={{ maxHeight: '700px' }}>
+                        <div className="card-body p-0 overflow-y-auto custom-scrollbar" style={{ maxHeight: '65vh' }}>
                             {loading ? (
                                 <div className="text-center py-5">
                                     <div className="spinner-grow text-primary" role="status"></div>
@@ -120,6 +129,9 @@ const AdminMessages = () => {
                                             <div className="d-flex justify-content-between align-items-start mb-2">
                                                 <div className="fw-bold text-dark">{msg.nom}</div>
                                                 <small className="text-muted opacity-75" style={{ fontSize: '0.7rem' }}>
+                                                    {msg.statut === 'repondu' && (
+                                                        <span className="badge bg-success-subtle text-success border border-success border-opacity-25 px-2 py-1 rounded-pill me-2 fw-bold">RÉPONDU</span>
+                                                    )}
                                                     {new Date(msg.createdAt).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short' })}
                                                 </small>
                                             </div>
@@ -134,10 +146,10 @@ const AdminMessages = () => {
                 </div>
 
                 {/* Message Detail View */}
-                <div className="col-lg-7">
-                    <div className="card border-0 shadow-sm rounded-4 overflow-hidden border border-light h-100">
+                <div className="col-12 col-lg-7">
+                    <div className="card border-0 shadow-sm rounded-4 border border-light h-100" style={{ overflowY: 'auto', maxHeight: '75vh' }}>
                         {selectedMessage ? (
-                            <div className="card-body p-4 p-md-5">
+                            <div className="card-body p-3 p-md-4">
                                 <div className="d-flex justify-content-between align-items-start mb-4">
                                     <div>
                                         <h3 className="fw-bold text-dark mb-1">{selectedMessage.sujet}</h3>
@@ -172,11 +184,28 @@ const AdminMessages = () => {
                                     </div>
                                 </div>
 
-                                <div className="p-4 bg-white rounded-4 border border-light shadow-sm mb-5">
+                                <div className="p-4 bg-white rounded-4 border border-light shadow-sm mb-4">
                                     <p className="text-dark fs-5 lh-base mb-0" style={{ whiteSpace: 'pre-line' }}>
                                         {selectedMessage.message}
                                     </p>
                                 </div>
+
+                                {selectedMessage.statut === 'repondu' && (
+                                    <div className="admin-reply-view mb-5 p-4 bg-primary bg-opacity-10 rounded-4 border border-primary border-opacity-10">
+                                        <div className="d-flex align-items-center gap-2 mb-3 text-primary">
+                                            <i className="bi bi-person-check-fill fs-5"></i>
+                                            <h6 className="fw-bold m-0">Votre Réponse</h6>
+                                            <span className="ms-auto small opacity-75">
+                                                {selectedMessage.reponduAt ? new Date(selectedMessage.reponduAt).toLocaleString('fr-FR', {
+                                                    day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit'
+                                                }) : ''}
+                                            </span>
+                                        </div>
+                                        <p className="text-dark mb-0 lh-base" style={{ whiteSpace: 'pre-line' }}>
+                                            {selectedMessage.reponse}
+                                        </p>
+                                    </div>
+                                )}
 
                                 {/* Integrated Reply Section */}
                                 <div className="reply-section pt-4 border-top">

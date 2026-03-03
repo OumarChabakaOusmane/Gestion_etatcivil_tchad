@@ -104,31 +104,43 @@ const createDemande = async (req, res) => {
                 notifiedUserIds.add(memberId);
 
                 // 1. Notification Interne (In-App)
-                await Notification.create({
-                    userId: memberId,
-                    title: 'Nouvelle demande',
-                    message: `Une nouvelle demande de ${type} a été soumise par ${req.user.prenom} ${req.user.nom}.`,
-                    type: 'info',
-                    link: `/admin/demandes`
-                });
+                try {
+                    await Notification.create({
+                        userId: memberId,
+                        title: 'Nouvelle demande',
+                        message: `Une nouvelle demande de ${type} a été soumise par ${req.user.prenom} ${req.user.nom}.`,
+                        type: 'info',
+                        link: `/admin/demandes`
+                    });
+                } catch (appNotifErr) {
+                    console.error(`❌ [NOTIF] Échec notification in-app pour staff ${memberId}:`, appNotifErr.message);
+                }
 
                 // 2. Notification Email (Alerte)
                 if (member.email) {
-                    emailService.sendNewDemandeAlert(
-                        member.email,
-                        member.prenom || 'Agent',
-                        type,
-                        `${req.user.prenom} ${req.user.nom}`
-                    );
+                    try {
+                        await emailService.sendNewDemandeAlert(
+                            member.email,
+                            member.prenom || 'Agent',
+                            type,
+                            `${req.user.prenom} ${req.user.nom}`
+                        );
+                    } catch (appEmailErr) {
+                        console.error(`❌ [NOTIF] Échec email alerte staff ${member.email}:`, appEmailErr.message);
+                    }
                 }
             }
 
             // Notification SMS au citoyen (Confirmation de réception)
             if (req.user.telephone) {
-                smsService.sendReceptionSms(req.user.telephone, type);
+                try {
+                    await smsService.sendReceptionSms(req.user.telephone, type);
+                } catch (smsErr) {
+                    console.error(`❌ [NOTIF] Échec SMS confirmation citoyen ${req.user.telephone}:`, smsErr.message);
+                }
             }
         } catch (notifErr) {
-            console.error('Erreur notification admin/SMS:', notifErr);
+            console.error('Erreur globale notification staff/SMS:', notifErr);
         }
 
         res.status(201).json({
@@ -417,21 +429,29 @@ const updateDemandeStatut = async (req, res) => {
                 }
 
                 if (citoyen.email) {
-                    if (statut === 'acceptee') {
-                        emailService.sendNotificationValidation(
-                            citoyen.email,
-                            `${citoyen.prenom} ${citoyen.nom}`,
-                            demande.type,
-                            req.params.id
-                        );
-                    } else if (statut === 'rejetee') {
-                        emailService.sendNotificationRejet(
-                            citoyen.email,
-                            `${citoyen.prenom} ${citoyen.nom}`,
-                            demande.type,
-                            motifRejet
-                        );
+                    console.log(`📧 [NOTIF] Préparation email pour ${citoyen.email} (Statut: ${statut})`);
+                    try {
+                        if (statut === 'acceptee') {
+                            await emailService.sendNotificationValidation(
+                                citoyen.email,
+                                `${citoyen.prenom} ${citoyen.nom}`,
+                                demande.type,
+                                req.params.id
+                            );
+                        } else if (statut === 'rejetee') {
+                            await emailService.sendNotificationRejet(
+                                citoyen.email,
+                                `${citoyen.prenom} ${citoyen.nom}`,
+                                demande.type,
+                                motifRejet
+                            );
+                        }
+                        console.log(`✅ [NOTIF] Email envoyé avec succès à ${citoyen.email}`);
+                    } catch (emailErr) {
+                        console.error(`❌ [NOTIF] Erreur d'envoi email à ${citoyen.email}:`, emailErr);
                     }
+                } else {
+                    console.warn(`⚠️ [NOTIF] Aucun email trouvé pour l'utilisateur ${demande.userId}`);
                 }
 
                 // SMS SIMULATION

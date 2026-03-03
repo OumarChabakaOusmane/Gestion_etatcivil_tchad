@@ -72,11 +72,13 @@ class EmailService {
             const sendSmtpEmail = {
                 sender: { name: this.fromName, email: this.fromEmail },
                 to: [{ email: to }],
+                replyTo: { email: process.env.ADMIN_EMAIL || this.fromEmail },
                 subject: subject,
                 htmlContent: this.wrapTemplate(html),
                 textContent: text || 'Veuillez ouvrir cet email avec un client supportant le HTML.'
             };
 
+            console.log(`📧 [BREVO] Envoi via API - De: ${this.fromEmail} → À: ${to}`);
             const data = await this.client.transactionalEmails.sendTransacEmail(sendSmtpEmail);
 
             // Dans la v4, la réponse peut varier selon la config du SDK (certains retournent body directement)

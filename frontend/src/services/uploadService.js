@@ -11,6 +11,10 @@ const uploadService = {
      * @param {string} path - (Non utilisé en mode Base64)
      * @returns {Promise<string>} - La chaîne Base64 de l'image
      */
+    /**
+     * Redimensionne et compresse une image avant conversion en Base64
+     * pour garantir qu'elle loge dans Firestore (< 1MB)
+     */
     async uploadImage(file, path = 'uploads') {
         return new Promise((resolve, reject) => {
             if (!file) {
@@ -18,19 +22,50 @@ const uploadService = {
                 return;
             }
 
-            // Vérification simple de la taille (Max ~700Ko pour Firestore)
-            if (file.size > 700 * 1024) {
-                reject(new Error("Image trop volumineuse. Choisissez une image de moins de 700Ko."));
-                return;
-            }
-
-            console.log("Conversion de l'image en format texte (Base64)...");
             const reader = new FileReader();
-            reader.readAsDataURL(file); // Convertit le fichier en chaîne de caractères
+            reader.readAsDataURL(file);
 
-            reader.onload = () => {
-                console.log("Conversion réussie !");
-                resolve(reader.result); // Renvoie la chaîne "data:image/jpeg;base64,..."
+            reader.onload = (event) => {
+                const img = new Image();
+                img.src = event.target.result;
+
+                img.onload = () => {
+                    const canvas = document.createElement('canvas');
+                    let width = img.width;
+                    let height = img.height;
+
+                    // Redimensionner si trop grand (max 500px)
+                    const MAX_SIZE = 500;
+                    if (width > height) {
+                        if (width > MAX_SIZE) {
+                            height *= MAX_SIZE / width;
+                            width = MAX_SIZE;
+                        }
+                    } else {
+                        if (height > MAX_SIZE) {
+                            width *= MAX_SIZE / height;
+                            height = MAX_SIZE;
+                        }
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(img, 0, 0, width, height);
+
+                    // Conversion en Base64 avec compression JPEG (qualité 0.7)
+                    // Cela réduit considérablement la taille tout en gardant une photo nette
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+
+                    console.log(`📸 Image compressée : ${Math.round(compressedBase64.length / 1024)} Ko`);
+                    resolve(compressedBase64);
+                };
+
+                img.onerror = (err) => {
+                    console.error("Erreur chargement image pour compression", err);
+                    reject(new Error("Impossible de lire l'image."));
+                };
             };
 
             reader.onerror = (error) => {
