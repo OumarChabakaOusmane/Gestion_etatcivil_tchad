@@ -621,3 +621,39 @@
 .flag-glass-effect {
     display: none;
 }
+
+/* Alertes Premium */
+.alert-premium-danger {
+    background: #fff5f5 !important;
+    border: none !important;
+    border-left: 5px solid #ef4444 !important;
+    border-radius: 16px !important;
+    box-shadow: 0 10px 25px -5px rgba(239, 68, 68, 0.1), 0 8px 10px -6px rgba(239, 68, 68, 0.05);
+    padding: 1.5rem !important;
+    color: #991b1b !important;
+    animation: slideInDownPremium 0.5s cubic-bezier(0.16, 1, 0.3, 1);
+    position: relative;
+    overflow: hidden;
+}
+
+.alert-premium-danger::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: radial-gradient(circle at top right, rgba(239, 68, 68, 0.05) 0%, transparent 70%);
+    pointer-events: none;
+}
+
+@keyframes slideInDownPremium {
+    from {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

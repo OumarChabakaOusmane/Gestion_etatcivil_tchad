@@ -78,7 +78,7 @@ export default function AdminCreateMariage() {
                 if (!formData.nomEpoux.trim()) errors.push("Le nom de l'époux est obligatoire");
                 if (!formData.prenomEpoux.trim()) errors.push("Le prénom de l'époux est obligatoire");
                 if (!formData.dateNaissanceEpoux) errors.push("La date de naissance de l'époux est obligatoire");
-                if (isFutureDate(formData.dateNaissanceEpoux)) errors.push("La date de naissance de l'époux ne peut pas être dans le futur");
+                if (isFutureDate(formData.dateNaissanceEpoux)) errors.push("⚠️ La date de naissance de l'époux ne peut pas être dans le futur");
                 if (!formData.lieuNaissanceEpoux.trim()) errors.push("Le lieu de naissance de l'époux est obligatoire");
                 if (!formData.professionEpoux.trim()) errors.push("La profession de l'époux est obligatoire");
                 if (!formData.domicileEpoux.trim()) errors.push("Le domicile de l'époux est obligatoire");
@@ -87,14 +87,14 @@ export default function AdminCreateMariage() {
                 if (!formData.nomEpouse.trim()) errors.push("Le nom de l'épouse est obligatoire");
                 if (!formData.prenomEpouse.trim()) errors.push("Le prénom de l'épouse est obligatoire");
                 if (!formData.dateNaissanceEpouse) errors.push("La date de naissance de l'épouse est obligatoire");
-                if (isFutureDate(formData.dateNaissanceEpouse)) errors.push("La date de naissance de l'épouse ne peut pas être dans le futur");
+                if (isFutureDate(formData.dateNaissanceEpouse)) errors.push("⚠️ La date de naissance de l'épouse ne peut pas être dans le futur");
                 if (!formData.lieuNaissanceEpouse.trim()) errors.push("Le lieu de naissance de l'épouse est obligatoire");
                 if (!formData.professionEpouse.trim()) errors.push("La profession de l'épouse est obligatoire");
                 if (!formData.domicileEpouse.trim()) errors.push("Le domicile de l'épouse est obligatoire");
                 break;
             case 3:
                 if (!formData.dateMariage) errors.push("La date du mariage est obligatoire");
-                if (isFutureDate(formData.dateMariage)) errors.push("La date du mariage ne peut pas être dans le futur");
+                if (isFutureDate(formData.dateMariage)) errors.push("⚠️ La date du mariage ne peut pas être dans le futur");
                 if (!formData.lieuMariage.trim()) errors.push("Le lieu du mariage est obligatoire");
                 if (!formData.dotMontant.trim()) errors.push("Le montant de la dot est obligatoire");
                 break;
@@ -107,7 +107,8 @@ export default function AdminCreateMariage() {
         const errors = validateStep(step);
 
         if (errors.length > 0) {
-            alert("⚠️ Veuillez remplir tous les champs obligatoires :\n\n" + errors.join("\n"));
+            setError("⚠️ Veuillez corriger les erreurs suivantes :\n\n" + errors.join("\n"));
+            window.scrollTo(0, 0);
             return;
         }
 
@@ -450,8 +451,9 @@ export default function AdminCreateMariage() {
                     <div className="card p-4 p-md-5 border-0 shadow-lg rounded-4 overflow-hidden position-relative">
 
                         {error && (
-                            <div className="alert alert-danger rounded-4 border-0 shadow-sm mb-4">
-                                <i className="bi bi-exclamation-triangle me-2"></i>{error}
+                            <div className="alert alert-premium-danger mb-4 d-flex align-items-center gap-3 text-start">
+                                <i className="bi bi-exclamation-octagon-fill fs-4"></i>
+                                <div style={{ whiteSpace: 'pre-line' }}>{error}</div>
                             </div>
                         )}
 

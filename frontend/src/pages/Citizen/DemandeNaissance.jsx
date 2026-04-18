@@ -64,7 +64,7 @@ export default function DemandeNaissance() {
                 if (!formData.prenomEnfant.trim()) errors.push("Le prénom de l'enfant est obligatoire");
                 if (!formData.nomEnfant.trim()) errors.push("Le nom de l'enfant est obligatoire");
                 if (!formData.dateNaissanceEnfant) errors.push("La date de naissance de l'enfant est obligatoire");
-                if (isFutureDate(formData.dateNaissanceEnfant)) errors.push("La date de naissance de l'enfant ne peut pas être dans le futur");
+                if (isFutureDate(formData.dateNaissanceEnfant)) errors.push("⚠️ La date de naissance ne peut pas être dans le futur");
                 if (!formData.heureNaissanceEnfant) errors.push("L'heure de naissance de l'enfant est obligatoire");
                 if (!formData.lieuNaissanceEnfant.trim()) errors.push("Le lieu de naissance de l'enfant est obligatoire");
                 break;
@@ -72,7 +72,7 @@ export default function DemandeNaissance() {
                 if (!formData.prenomPere.trim()) errors.push("Le prénom du père est obligatoire");
                 if (!formData.nomPere.trim()) errors.push("Le nom du père est obligatoire");
                 if (!formData.dateNaissancePere) errors.push("La date de naissance du père est obligatoire");
-                if (isFutureDate(formData.dateNaissancePere)) errors.push("La date de naissance du père ne peut pas être dans le futur");
+                if (isFutureDate(formData.dateNaissancePere)) errors.push("⚠️ La date de naissance du père ne peut pas être dans le futur");
                 if (!formData.lieuNaissancePere.trim()) errors.push("Le lieu de naissance du père est obligatoire");
                 if (!formData.professionPere.trim()) errors.push("La profession du père est obligatoire");
                 if (!formData.domicilePere.trim()) errors.push("Le domicile du père est obligatoire");
@@ -81,7 +81,7 @@ export default function DemandeNaissance() {
                 if (!formData.prenomMere.trim()) errors.push("Le prénom de la mère est obligatoire");
                 if (!formData.nomMere.trim()) errors.push("Le nom de la mère est obligatoire");
                 if (!formData.dateNaissanceMere) errors.push("La date de naissance de la mère est obligatoire");
-                if (isFutureDate(formData.dateNaissanceMere)) errors.push("La date de naissance de la mère ne peut pas être dans le futur");
+                if (isFutureDate(formData.dateNaissanceMere)) errors.push("⚠️ La date de naissance de la mère ne peut pas être dans le futur");
                 if (!formData.lieuNaissanceMere.trim()) errors.push("Le lieu de naissance de la mère est obligatoire");
                 if (!formData.professionMere.trim()) errors.push("La profession de la mère est obligatoire");
                 if (!formData.domicileMere.trim()) errors.push("Le domicile de la mère est obligatoire");
@@ -95,7 +95,8 @@ export default function DemandeNaissance() {
         const errors = validateStep(step);
 
         if (errors.length > 0) {
-            alert("⚠️ Veuillez remplir tous les champs obligatoires :\n\n" + errors.join("\n"));
+            setError("⚠️ Veuillez corriger les erreurs suivantes :\n\n" + errors.join("\n"));
+            window.scrollTo(0, 0);
             return;
         }
 
@@ -412,9 +413,9 @@ export default function DemandeNaissance() {
                     <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
                         <div className="card-body p-4 p-md-5">
                             {error && (
-                                <div className="alert alert-danger rounded-3 border-0 shadow-sm mb-4 d-flex align-items-center gap-3">
-                                    <i className="bi bi-exclamation-octagon-fill fs-4"></i>
-                                    <span className="fw-bold">{error}</span>
+                                <div className="alert alert-premium-danger mb-4 d-flex align-items-center gap-3 text-start">
+                                    <i className="bi bi-exclamation-octagon-fill fs-4 text-start"></i>
+                                    <div style={{ whiteSpace: 'pre-line' }}>{error}</div>
                                 </div>
                             )}
 

@@ -89,10 +89,10 @@ export default function DemandeDeces() {
                 if (!formData.prenomDefunt.trim()) errors.push(t('labelPrenomDefunt'));
                 if (!formData.sexeDefunt) errors.push(t('labelSexe'));
                 if (!formData.dateDeces) errors.push(t('labelDateDeces'));
-                if (isFutureDate(formData.dateDeces)) errors.push(t('labelDateDeces') + " ne peut pas être dans le futur");
+                if (isFutureDate(formData.dateDeces)) errors.push("⚠️ " + t('labelDateDeces') + " invalide (date future)");
                 if (!formData.lieuDeces.trim()) errors.push(t('labelLieuDeces'));
                 if (!formData.dateNaissanceDefunt) errors.push(t('labelDateNaisDefunt'));
-                if (isFutureDate(formData.dateNaissanceDefunt)) errors.push(t('labelDateNaisDefunt') + " ne peut pas être dans le futur");
+                if (isFutureDate(formData.dateNaissanceDefunt)) errors.push("⚠️ " + t('labelDateNaisDefunt') + " invalide (date future)");
                 if (!formData.lieuNaissanceDefunt.trim()) errors.push(t('labelLieuNaisDefunt'));
                 if (!formData.pereDefunt.trim()) errors.push(t('labelPereDefunt'));
                 if (!formData.mereDefunt.trim()) errors.push(t('labelMereDefunt'));
@@ -537,9 +537,9 @@ export default function DemandeDeces() {
                     <div className="card border-0 shadow-sm rounded-4 overflow-hidden bg-white">
                         <div className="card-body p-4 p-md-5">
                             {error && (
-                                <div className="alert alert-danger rounded-3 border-0 shadow-sm mb-4 d-flex align-items-center gap-3">
+                                <div className="alert alert-premium-danger mb-4 d-flex align-items-center gap-3 text-start">
                                     <i className="bi bi-exclamation-octagon-fill fs-4 text-start"></i>
-                                    <span className="fw-bold">{error}</span>
+                                    <div style={{ whiteSpace: 'pre-line' }}>{error}</div>
                                 </div>
                             )}
 

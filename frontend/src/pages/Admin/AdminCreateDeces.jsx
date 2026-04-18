@@ -68,10 +68,10 @@ export default function AdminCreateDeces() {
                 if (!formData.nomDefunt.trim()) errors.push("Le nom du défunt est obligatoire");
                 if (!formData.prenomDefunt.trim()) errors.push("Le prénom du défunt est obligatoire");
                 if (!formData.dateDeces) errors.push("La date du décès est obligatoire");
-                if (isFutureDate(formData.dateDeces)) errors.push("La date du décès ne peut pas être dans le futur");
+                if (isFutureDate(formData.dateDeces)) errors.push("⚠️ Date du décès invalide (date future)");
                 if (!formData.lieuDeces.trim()) errors.push("Le lieu du décès est obligatoire");
                 if (!formData.dateNaissanceDefunt) errors.push("La date de naissance du défunt est obligatoire");
-                if (isFutureDate(formData.dateNaissanceDefunt)) errors.push("La date de naissance du défunt ne peut pas être dans le futur");
+                if (isFutureDate(formData.dateNaissanceDefunt)) errors.push("⚠️ Date de naissance du défunt invalide (date future)");
                 if (!formData.lieuNaissanceDefunt.trim()) errors.push("Le lieu de naissance du défunt est obligatoire");
                 if (!formData.pereDefunt.trim()) errors.push("Le nom du père est obligatoire");
                 if (!formData.mereDefunt.trim()) errors.push("Le nom de la mère est obligatoire");
@@ -91,7 +91,8 @@ export default function AdminCreateDeces() {
         const errors = validateStep(step);
 
         if (errors.length > 0) {
-            alert("⚠️ Veuillez remplir tous les champs obligatoires :\n\n" + errors.join("\n"));
+            setError("⚠️ Veuillez corriger les erreurs suivantes :\n\n" + errors.join("\n"));
+            window.scrollTo(0, 0);
             return;
         }
 
@@ -355,8 +356,9 @@ export default function AdminCreateDeces() {
                     <div className="card p-4 p-md-5 border-0 shadow-lg rounded-4 overflow-hidden position-relative">
 
                         {error && (
-                            <div className="alert alert-danger rounded-4 border-0 shadow-sm mb-4">
-                                <i className="bi bi-exclamation-triangle me-2"></i>{error}
+                            <div className="alert alert-premium-danger mb-4 d-flex align-items-center gap-3 text-start">
+                                <i className="bi bi-exclamation-octagon-fill fs-4"></i>
+                                <div style={{ whiteSpace: 'pre-line' }}>{error}</div>
                             </div>
                         )}
 
