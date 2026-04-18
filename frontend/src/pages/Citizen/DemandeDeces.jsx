@@ -4,6 +4,7 @@ import demandeService from "../../services/demandeService";
 import { useLanguage } from "../../context/LanguageContext";
 // [NEW] Import de l'upload service
 import uploadService from "../../services/uploadService";
+import { isFutureDate } from "../../utils/textHelper";
 
 export default function DemandeDeces() {
     const { t, language } = useLanguage();
@@ -88,8 +89,10 @@ export default function DemandeDeces() {
                 if (!formData.prenomDefunt.trim()) errors.push(t('labelPrenomDefunt'));
                 if (!formData.sexeDefunt) errors.push(t('labelSexe'));
                 if (!formData.dateDeces) errors.push(t('labelDateDeces'));
+                if (isFutureDate(formData.dateDeces)) errors.push(t('labelDateDeces') + " ne peut pas être dans le futur");
                 if (!formData.lieuDeces.trim()) errors.push(t('labelLieuDeces'));
                 if (!formData.dateNaissanceDefunt) errors.push(t('labelDateNaisDefunt'));
+                if (isFutureDate(formData.dateNaissanceDefunt)) errors.push(t('labelDateNaisDefunt') + " ne peut pas être dans le futur");
                 if (!formData.lieuNaissanceDefunt.trim()) errors.push(t('labelLieuNaisDefunt'));
                 if (!formData.pereDefunt.trim()) errors.push(t('labelPereDefunt'));
                 if (!formData.mereDefunt.trim()) errors.push(t('labelMereDefunt'));
@@ -154,13 +157,17 @@ export default function DemandeDeces() {
 
         try {
             const base64 = await uploadService.uploadImage(file);
-            setFormData(prev => ({
-                ...prev,
-                nniDefunt: base64,
-                nniDefuntImage: base64
-            }));
+            const result = await demandeService.validerNNI(base64);
+            if (result.success && result.nni) {
+                setFormData(prev => ({
+                    ...prev,
+                    nniDefunt: result.nni,
+                    nniDefuntImage: base64
+                }));
+                alert(`Succès! Numéro NNI détecté automatiquement : ${result.nni}`);
+            }
         } catch (err) {
-            alert(err.message || "Erreur lors du chargement de l'image");
+            alert(err.response?.data?.message || err.message || "Erreur: Carte NNI floue ou illisible");
         }
     };
 

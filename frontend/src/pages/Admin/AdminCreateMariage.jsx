@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import demandeService from "../../services/demandeService";
-import { normalizeText, formatName } from '../../utils/textHelper';
+import { normalizeText, formatName, isFutureDate } from '../../utils/textHelper';
 import Tesseract from 'tesseract.js';
 import { toast } from 'react-hot-toast';
 
@@ -78,6 +78,7 @@ export default function AdminCreateMariage() {
                 if (!formData.nomEpoux.trim()) errors.push("Le nom de l'époux est obligatoire");
                 if (!formData.prenomEpoux.trim()) errors.push("Le prénom de l'époux est obligatoire");
                 if (!formData.dateNaissanceEpoux) errors.push("La date de naissance de l'époux est obligatoire");
+                if (isFutureDate(formData.dateNaissanceEpoux)) errors.push("La date de naissance de l'époux ne peut pas être dans le futur");
                 if (!formData.lieuNaissanceEpoux.trim()) errors.push("Le lieu de naissance de l'époux est obligatoire");
                 if (!formData.professionEpoux.trim()) errors.push("La profession de l'époux est obligatoire");
                 if (!formData.domicileEpoux.trim()) errors.push("Le domicile de l'époux est obligatoire");
@@ -86,12 +87,14 @@ export default function AdminCreateMariage() {
                 if (!formData.nomEpouse.trim()) errors.push("Le nom de l'épouse est obligatoire");
                 if (!formData.prenomEpouse.trim()) errors.push("Le prénom de l'épouse est obligatoire");
                 if (!formData.dateNaissanceEpouse) errors.push("La date de naissance de l'épouse est obligatoire");
+                if (isFutureDate(formData.dateNaissanceEpouse)) errors.push("La date de naissance de l'épouse ne peut pas être dans le futur");
                 if (!formData.lieuNaissanceEpouse.trim()) errors.push("Le lieu de naissance de l'épouse est obligatoire");
                 if (!formData.professionEpouse.trim()) errors.push("La profession de l'épouse est obligatoire");
                 if (!formData.domicileEpouse.trim()) errors.push("Le domicile de l'épouse est obligatoire");
                 break;
             case 3:
                 if (!formData.dateMariage) errors.push("La date du mariage est obligatoire");
+                if (isFutureDate(formData.dateMariage)) errors.push("La date du mariage ne peut pas être dans le futur");
                 if (!formData.lieuMariage.trim()) errors.push("Le lieu du mariage est obligatoire");
                 if (!formData.dotMontant.trim()) errors.push("Le montant de la dot est obligatoire");
                 break;

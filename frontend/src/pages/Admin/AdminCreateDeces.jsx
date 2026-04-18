@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import demandeService from "../../services/demandeService";
-import { normalizeText, formatName } from '../../utils/textHelper';
+import { normalizeText, formatName, isFutureDate } from '../../utils/textHelper';
 import Tesseract from 'tesseract.js';
 import { toast } from 'react-hot-toast';
 
@@ -68,8 +68,10 @@ export default function AdminCreateDeces() {
                 if (!formData.nomDefunt.trim()) errors.push("Le nom du défunt est obligatoire");
                 if (!formData.prenomDefunt.trim()) errors.push("Le prénom du défunt est obligatoire");
                 if (!formData.dateDeces) errors.push("La date du décès est obligatoire");
+                if (isFutureDate(formData.dateDeces)) errors.push("La date du décès ne peut pas être dans le futur");
                 if (!formData.lieuDeces.trim()) errors.push("Le lieu du décès est obligatoire");
                 if (!formData.dateNaissanceDefunt) errors.push("La date de naissance du défunt est obligatoire");
+                if (isFutureDate(formData.dateNaissanceDefunt)) errors.push("La date de naissance du défunt ne peut pas être dans le futur");
                 if (!formData.lieuNaissanceDefunt.trim()) errors.push("Le lieu de naissance du défunt est obligatoire");
                 if (!formData.pereDefunt.trim()) errors.push("Le nom du père est obligatoire");
                 if (!formData.mereDefunt.trim()) errors.push("Le nom de la mère est obligatoire");

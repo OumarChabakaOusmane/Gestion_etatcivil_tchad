@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, View, Text, ScrollView, TouchableOpacity } from 'react-native';
+import { StyleSheet, View, Text, ScrollView, TouchableOpacity, Platform } from 'react-native';
 import { FileText, Heart, UserMinus, ShieldCheck } from 'lucide-react-native';
 
 const ServiceCard = ({ icon: Icon, title, description, color, onPress }) => (

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import demandeService from "../../services/demandeService";
 import uploadService from "../../services/uploadService";
+import { isFutureDate } from '../../utils/textHelper';
 
 export default function DemandeNaissance() {
     const [step, setStep] = useState(1);
@@ -63,6 +64,7 @@ export default function DemandeNaissance() {
                 if (!formData.prenomEnfant.trim()) errors.push("Le prénom de l'enfant est obligatoire");
                 if (!formData.nomEnfant.trim()) errors.push("Le nom de l'enfant est obligatoire");
                 if (!formData.dateNaissanceEnfant) errors.push("La date de naissance de l'enfant est obligatoire");
+                if (isFutureDate(formData.dateNaissanceEnfant)) errors.push("La date de naissance de l'enfant ne peut pas être dans le futur");
                 if (!formData.heureNaissanceEnfant) errors.push("L'heure de naissance de l'enfant est obligatoire");
                 if (!formData.lieuNaissanceEnfant.trim()) errors.push("Le lieu de naissance de l'enfant est obligatoire");
                 break;
@@ -70,6 +72,7 @@ export default function DemandeNaissance() {
                 if (!formData.prenomPere.trim()) errors.push("Le prénom du père est obligatoire");
                 if (!formData.nomPere.trim()) errors.push("Le nom du père est obligatoire");
                 if (!formData.dateNaissancePere) errors.push("La date de naissance du père est obligatoire");
+                if (isFutureDate(formData.dateNaissancePere)) errors.push("La date de naissance du père ne peut pas être dans le futur");
                 if (!formData.lieuNaissancePere.trim()) errors.push("Le lieu de naissance du père est obligatoire");
                 if (!formData.professionPere.trim()) errors.push("La profession du père est obligatoire");
                 if (!formData.domicilePere.trim()) errors.push("Le domicile du père est obligatoire");
@@ -78,6 +81,7 @@ export default function DemandeNaissance() {
                 if (!formData.prenomMere.trim()) errors.push("Le prénom de la mère est obligatoire");
                 if (!formData.nomMere.trim()) errors.push("Le nom de la mère est obligatoire");
                 if (!formData.dateNaissanceMere) errors.push("La date de naissance de la mère est obligatoire");
+                if (isFutureDate(formData.dateNaissanceMere)) errors.push("La date de naissance de la mère ne peut pas être dans le futur");
                 if (!formData.lieuNaissanceMere.trim()) errors.push("Le lieu de naissance de la mère est obligatoire");
                 if (!formData.professionMere.trim()) errors.push("La profession de la mère est obligatoire");
                 if (!formData.domicileMere.trim()) errors.push("Le domicile de la mère est obligatoire");
@@ -127,13 +131,26 @@ export default function DemandeNaissance() {
 
         try {
             const base64 = await uploadService.uploadImage(file);
-            setFormData(prev => ({
-                ...prev,
-                [key]: base64, // Stocke l'image dans le champ NNI original pour le backend
-                [`${key}Image`]: base64 // Garde une trace pour l'aperçu local
-            }));
+            
+            if (key.toLowerCase().includes('nni')) {
+                const result = await demandeService.validerNNI(base64);
+                if (result.success && result.nni) {
+                    setFormData(prev => ({
+                        ...prev,
+                        [key]: result.nni, // Stocke le NUMÉRO
+                        [`${key}Image`]: base64 // Garde une trace pour l'aperçu local
+                    }));
+                    alert(`Succès! Numéro NNI détecté automatiquement : ${result.nni}`);
+                }
+            } else {
+                setFormData(prev => ({
+                    ...prev,
+                    [key]: base64,
+                    [`${key}Image`]: base64
+                }));
+            }
         } catch (err) {
-            alert(err.message || "Erreur lors du chargement de l'image");
+            alert(err.response?.data?.message || err.message || "Erreur lors du chargement de l'image (peut-être trop floue)");
         }
     };
 

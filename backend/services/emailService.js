@@ -30,7 +30,11 @@ class EmailService {
             }
         }
 
-        this.fromEmail = process.env.EMAIL_FROM || 'noreply@sigec-tchad.fr';
+        // L'API Brevo exige un email pur (ex: contact@domaine.com), pas de format "Nom <email>"
+        const rawFrom = process.env.EMAIL_FROM || 'noreply@sigec-tchad.fr';
+        // Extraction de l'email si format "Nom <email@dom.com>"
+        const emailMatch = rawFrom.match(/<([^>]+)>/);
+        this.fromEmail = emailMatch ? emailMatch[1] : rawFrom;
         this.fromName = 'SIGEC-TCHAD - République du Tchad';
     }
 

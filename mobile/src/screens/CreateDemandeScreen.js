@@ -216,6 +216,31 @@ export default function CreateDemandeScreen({ route, navigation }) {
         </View>
     );
 
+    const processImageNni = async (key, base64Image) => {
+        const isNni = key.toLowerCase().includes('nni');
+        if (!isNni) {
+            updateField(key, base64Image);
+            return;
+        }
+
+        setLoading(true);
+        try {
+            const result = await demandeService.validerNNI(base64Image);
+            if (result.success && result.nni) {
+                const photoKey = `photo${key.charAt(0).toUpperCase() + key.slice(1)}`;
+                setFormData(prev => ({ ...prev, [photoKey]: base64Image, [key]: result.nni }));
+                Alert.alert("Succès", `Numéro de carte NNI validé et extrait: ${result.nni}`);
+            }
+        } catch (error) {
+            Alert.alert(
+                "Image Refusée",
+                error.response?.data?.message || "La carte NNI semble floue ou illisible. Veuillez reprendre la photo clairement."
+            );
+        } finally {
+            setLoading(false);
+        }
+    };
+
     const pickImage = async (key) => {
         const { status } = await ImagePicker.requestMediaLibraryPermissionsAsync();
         if (status !== 'granted') {
@@ -232,7 +257,7 @@ export default function CreateDemandeScreen({ route, navigation }) {
 
         if (!result.canceled) {
             const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-            updateField(key, base64Image);
+            await processImageNni(key, base64Image);
         }
     };
 
@@ -251,19 +276,41 @@ export default function CreateDemandeScreen({ route, navigation }) {
 
         if (!result.canceled) {
             const base64Image = `data:image/jpeg;base64,${result.assets[0].base64}`;
-            updateField(key, base64Image);
+            await processImageNni(key, base64Image);
         }
     };
 
-    const renderNNIPicker = (label, key) => (
+    const renderNNIPicker = (label, key) => {
+        const photoKey = `photo${key.charAt(0).toUpperCase() + key.slice(1)}`;
+        const hasPicture = formData[photoKey] || (formData[key] && formData[key].startsWith('data:image'));
+        const nniText = formData[key] && !formData[key].startsWith('data:image') ? formData[key] : '';
+
+        return (
         <View style={styles.inputGroup}>
             <Text style={styles.label}>{label}</Text>
-            {formData[key] ? (
+
+            {nniText ? (
+                <View style={{marginBottom: 10}}>
+                    <Text style={{fontSize: 12, color: '#2F9E44', fontWeight: 'bold', marginBottom: 5}}>✓ Extrait de l'image (PDF compatible)</Text>
+                    <TextInput 
+                        style={[styles.input, {backgroundColor: '#e7f5ff', color: '#003399', fontWeight: 'bold'}]} 
+                        value={nniText} 
+                        editable={false} 
+                    />
+                </View>
+            ) : null}
+
+            {hasPicture ? (
                 <View style={styles.imagePreviewContainer}>
-                    <Image source={{ uri: formData[key] }} style={styles.imagePreview} />
+                    <Image source={{ uri: formData[photoKey] || formData[key] }} style={styles.imagePreview} />
                     <TouchableOpacity
                         style={styles.removeImageBtn}
-                        onPress={() => updateField(key, '')}
+                        onPress={() => {
+                            updateField(key, '');
+                            if (formData[photoKey]) {
+                                updateField(photoKey, '');
+                            }
+                        }}
                     >
                         <X size={20} color="#FFF" />
                     </TouchableOpacity>
@@ -281,7 +328,8 @@ export default function CreateDemandeScreen({ route, navigation }) {
                 </View>
             )}
         </View>
-    );
+        );
+    };
 
     const renderPicker = (label, key, options) => (
         <View style={styles.inputGroup}>

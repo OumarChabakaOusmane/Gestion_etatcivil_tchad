@@ -11,6 +11,11 @@ export const demandeService = {
         return response.data;
     },
 
+    validerNNI: async (imageBase64) => {
+        const response = await api.post('/nni/ocr', { imageBase64 });
+        return response.data;
+    },
+
     getDemandeById: async (id) => {
         const response = await api.get(`/demandes/${id}`);
         return response.data;

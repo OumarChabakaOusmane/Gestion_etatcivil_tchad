@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import demandeService from "../../services/demandeService";
-import { normalizeText, formatName } from '../../utils/textHelper';
+import { normalizeText, formatName, isFutureDate } from '../../utils/textHelper';
 import Tesseract from 'tesseract.js';
 import { toast } from 'react-hot-toast';
 
@@ -75,6 +75,7 @@ export default function AdminCreateNaissance() {
                 if (!formData.prenomEnfant.trim()) errors.push("Le prénom de l'enfant est obligatoire");
                 if (!formData.nomEnfant.trim()) errors.push("Le nom de l'enfant est obligatoire");
                 if (!formData.dateNaissanceEnfant) errors.push("La date de naissance de l'enfant est obligatoire");
+                if (isFutureDate(formData.dateNaissanceEnfant)) errors.push("La date de naissance de l'enfant ne peut pas être dans le futur");
                 if (!formData.heureNaissanceEnfant) errors.push("L'heure de naissance de l'enfant est obligatoire");
                 if (!formData.lieuNaissanceEnfant.trim()) errors.push("Le lieu de naissance de l'enfant est obligatoire");
                 break;
@@ -82,6 +83,7 @@ export default function AdminCreateNaissance() {
                 if (!formData.prenomPere.trim()) errors.push("Le prénom du père est obligatoire");
                 if (!formData.nomPere.trim()) errors.push("Le nom du père est obligatoire");
                 if (!formData.dateNaissancePere) errors.push("La date de naissance du père est obligatoire");
+                if (isFutureDate(formData.dateNaissancePere)) errors.push("La date de naissance du père ne peut pas être dans le futur");
                 if (!formData.lieuNaissancePere.trim()) errors.push("Le lieu de naissance du père est obligatoire");
                 if (!formData.professionPere.trim()) errors.push("La profession du père est obligatoire");
                 if (!formData.domicilePere.trim()) errors.push("Le domicile du père est obligatoire");
@@ -90,6 +92,7 @@ export default function AdminCreateNaissance() {
                 if (!formData.prenomMere.trim()) errors.push("Le prénom de la mère est obligatoire");
                 if (!formData.nomMere.trim()) errors.push("Le nom de la mère est obligatoire");
                 if (!formData.dateNaissanceMere) errors.push("La date de naissance de la mère est obligatoire");
+                if (isFutureDate(formData.dateNaissanceMere)) errors.push("La date de naissance de la mère ne peut pas être dans le futur");
                 if (!formData.lieuNaissanceMere.trim()) errors.push("Le lieu de naissance de la mère est obligatoire");
                 if (!formData.professionMere.trim()) errors.push("La profession de la mère est obligatoire");
                 if (!formData.domicileMere.trim()) errors.push("Le domicile de la mère est obligatoire");

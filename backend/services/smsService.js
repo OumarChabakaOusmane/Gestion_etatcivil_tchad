@@ -1,37 +1,77 @@
 const { db } = require('../config/firebase');
 const { Timestamp } = require('firebase-admin/firestore');
+const twilio = require('twilio');
 
 /**
  * Service pour simuler l'envoi de SMS (très pertinent pour le contexte du Tchad)
  */
 class SmsService {
     /**
-     * Simule l'envoi d'un SMS
+     * Obtenir le client Twilio (Singleton)
+     */
+    static getClient() {
+        if (!this.client && process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN) {
+            try {
+                this.client = twilio(process.env.TWILIO_ACCOUNT_SID, process.env.TWILIO_AUTH_TOKEN);
+                this.twilioPhone = process.env.TWILIO_PHONE_NUMBER;
+                console.log('✅ [TWILIO] Client initialisé avec succès.');
+            } catch (err) {
+                console.error('❌ [TWILIO] Erreur initialisation:', err.message);
+            }
+        }
+        return this.client;
+    }
+
+    /**
+     * Simule ou envoie un SMS réel via Twilio
      * @param {string} phone - Numéro de téléphone du destinataire
      * @param {string} message - Contenu du message
      * @param {string} userId - ID de l'utilisateur (optionnel pour traçage)
      */
     static async sendSms(phone, message, userId = null, skipDb = false) {
         try {
-            // [LOG] SIMULATION DANS LE TERMINAL
-            console.log(`\n📱 [SMS SIMULATION] To: ${phone}\n💬 Message: ${message}\n`);
+            const client = this.getClient();
+            const formattedPhone = phone.startsWith('+') ? phone : `+${phone}`;
+
+            console.log(`\n📱 [SMS] To: ${formattedPhone}\n💬 Message: ${message}\n`);
+
+            let status = 'simulated';
+
+            if (client) {
+                try {
+                    console.log(`📱 [TWILIO] Envoi au réseau...`);
+                    const result = await client.messages.create({
+                        body: message,
+                        from: this.twilioPhone,
+                        to: formattedPhone
+                    });
+                    console.log(`✅ [TWILIO] SMS envoyé avec succès. SID: ${result.sid}`);
+                    status = 'sent';
+                } catch (twError) {
+                    console.error('❌ [TWILIO] Échec envoi réseau:', twError.message);
+                    status = 'failed';
+                }
+            } else {
+                console.log(`⚠️ [TWILIO] Mode simulation (Clés non configurées)`);
+            }
 
             // On n'enregistre PAS dans Firestore si c'est sensible (ex: OTP)
             if (!skipDb) {
                 const smsData = {
-                    phone,
+                    phone: formattedPhone,
                     message,
                     userId,
-                    status: 'delivered',
+                    status,
                     createdAt: Timestamp.now(),
                     read: false
                 };
-                await db.collection('simulated_sms').add(smsData);
+                // Renforcer le contexte réel si possible
+                await db.collection('historique_sms').add(smsData);
             }
 
-            return { success: true, message: 'SMS envoyé' };
+            return { success: true, message: 'Processus SMS terminé', status };
         } catch (error) {
-            console.error('Erreur lors de la simulation SMS:', error);
+            console.error('Erreur lors du traitement SMS:', error);
             return { success: false, error: error.message };
         }
     }

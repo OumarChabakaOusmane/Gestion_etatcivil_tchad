@@ -84,6 +84,15 @@ export default function LoginScreen({ navigation }) {
     const [googleLoading, setGoogleLoading] = useState(false);
 
     const handleGoogleLogin = async () => {
+        if (Platform.OS === 'web') {
+            Alert.alert(
+                'Non supporté sur le Web',
+                'La connexion par Google est actuellement en cours de configuration pour la version web. Veuillez utiliser l\'application mobile ou vous connecter avec votre email.',
+                [{ text: 'OK' }]
+            );
+            return;
+        }
+
         try {
             setGoogleLoading(true);
             await GoogleSignin.hasPlayServices();

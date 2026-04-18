@@ -21,6 +21,7 @@ const auditRoutes = require('./routes/audit.routes');
 const articleRoutes = require('./routes/article.routes');
 const adminRoutes = require('./routes/admin.routes');
 const testRoutes = require('./routes/test.routes'); // Route de diagnostic
+const nniRoutes = require('./routes/nni.routes'); // OCR NNI
 const { db } = require("./config/firebase");
 
 const app = express();
@@ -73,6 +74,7 @@ app.use('/api/search', searchRoutes);
 app.use('/api/logs', auditRoutes);
 app.use('/api/articles', articleRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/nni', nniRoutes);
 app.use('/api/test', testRoutes); // Route de diagnostic (À SUPPRIMER EN PRODUCTION)
 
 // Routes des notifications (protégées)

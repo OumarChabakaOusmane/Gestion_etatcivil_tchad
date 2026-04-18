@@ -454,12 +454,12 @@ const updateDemandeStatut = async (req, res) => {
                     console.warn(`⚠️ [NOTIF] Aucun email trouvé pour l'utilisateur ${demande.userId}`);
                 }
 
-                // SMS SIMULATION
+                // ENVOI SMS VIA TWILIO (Non-bloquant)
                 if (citoyen.telephone) {
                     if (statut === 'acceptee') {
-                        smsService.sendValidationSms(citoyen.telephone, demande.type, acteId || req.params.id);
+                        smsService.sendValidationSms(citoyen.telephone, demande.type, acteId || req.params.id).catch(e => console.error("Erreur SMS Validation:", e));
                     } else if (statut === 'rejetee') {
-                        smsService.sendRejetSms(citoyen.telephone, demande.type, motifRejet || 'Non spécifié');
+                        smsService.sendRejetSms(citoyen.telephone, demande.type, motifRejet || 'Non spécifié').catch(e => console.error("Erreur SMS Rejet:", e));
                     }
                 }
             }

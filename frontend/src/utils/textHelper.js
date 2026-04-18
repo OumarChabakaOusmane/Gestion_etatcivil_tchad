@@ -82,7 +82,22 @@ export const formatName = (name) => {
     }).join(' ');
 };
 
+/**
+ * Checks if a date string is in the future compared to today.
+ * @param {string} dateString - Format YYYY-MM-DD
+ * @returns {boolean}
+ */
+export const isFutureDate = (dateString) => {
+    if (!dateString) return false;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const inputDate = new Date(dateString);
+    return inputDate > today;
+};
+
+
 export default {
     normalizeText,
-    formatName
+    formatName,
+    isFutureDate
 };
