@@ -82,22 +82,45 @@ export const formatName = (name) => {
     }).join(' ');
 };
 
-/**
- * Checks if a date string is in the future compared to today.
- * @param {string} dateString - Format YYYY-MM-DD
- * @returns {boolean}
- */
 export const isFutureDate = (dateString) => {
     if (!dateString) return false;
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const inputDate = new Date(dateString);
+    
+    const now = new Date();
+    const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+    const [year, month, day] = dateString.split('-').map(Number);
+    const inputDate = new Date(year, month - 1, day);
+
     return inputDate > today;
+};
+
+/**
+ * Checks if a combined date and time is in the future compared to right now.
+ * @param {string} dateString - Format YYYY-MM-DD
+ * @param {string} timeString - Format HH:mm
+ * @returns {boolean}
+ */
+export const isFutureDateTime = (dateString, timeString) => {
+    if (!dateString) return false;
+    
+    const [year, month, day] = dateString.split('-').map(Number);
+    let inputDate;
+    
+    if (timeString) {
+        const [hours, minutes] = timeString.split(':').map(Number);
+        inputDate = new Date(year, month - 1, day, hours, minutes);
+    } else {
+        inputDate = new Date(year, month - 1, day);
+    }
+
+    const now = new Date();
+    return inputDate > now;
 };
 
 
 export default {
     normalizeText,
     formatName,
-    isFutureDate
+    isFutureDate,
+    isFutureDateTime
 };

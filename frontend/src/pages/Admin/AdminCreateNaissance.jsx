@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import demandeService from "../../services/demandeService";
-import { normalizeText, formatName, isFutureDate } from '../../utils/textHelper';
+import { normalizeText, formatName, isFutureDate, isFutureDateTime } from '../../utils/textHelper';
 import Tesseract from 'tesseract.js';
 import { toast } from 'react-hot-toast';
 
@@ -53,6 +53,9 @@ export default function AdminCreateNaissance() {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
+        // Clear error when user starts typing
+        if (error) setError("");
+
         // Auto-normalize specific fields (profession, lieu, nationalite)
         let processedValue = value;
         if (name.toLowerCase().includes('profession') ||
@@ -75,7 +78,9 @@ export default function AdminCreateNaissance() {
                 if (!formData.prenomEnfant.trim()) errors.push("Le prénom de l'enfant est obligatoire");
                 if (!formData.nomEnfant.trim()) errors.push("Le nom de l'enfant est obligatoire");
                 if (!formData.dateNaissanceEnfant) errors.push("La date de naissance de l'enfant est obligatoire");
-                if (isFutureDate(formData.dateNaissanceEnfant)) errors.push("⚠️ La date de naissance ne peut pas être dans le futur");
+                if (isFutureDateTime(formData.dateNaissanceEnfant, formData.heureNaissanceEnfant)) {
+                    errors.push("⚠️ La date ou l'heure de naissance ne peut pas être dans le futur");
+                }
                 if (!formData.heureNaissanceEnfant) errors.push("L'heure de naissance de l'enfant est obligatoire");
                 if (!formData.lieuNaissanceEnfant.trim()) errors.push("Le lieu de naissance de l'enfant est obligatoire");
                 break;

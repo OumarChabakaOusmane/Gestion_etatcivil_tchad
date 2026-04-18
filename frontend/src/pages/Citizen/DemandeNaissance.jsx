@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import demandeService from "../../services/demandeService";
 import uploadService from "../../services/uploadService";
-import { isFutureDate } from '../../utils/textHelper';
+import { normalizeText, formatName, isFutureDate, isFutureDateTime } from '../../utils/textHelper';
 
 export default function DemandeNaissance() {
     const [step, setStep] = useState(1);
@@ -50,6 +50,7 @@ export default function DemandeNaissance() {
     ];
 
     const handleChange = (e) => {
+        if (error) setError("");
         setFormData({
             ...formData,
             [e.target.name]: e.target.value
@@ -64,7 +65,9 @@ export default function DemandeNaissance() {
                 if (!formData.prenomEnfant.trim()) errors.push("Le prénom de l'enfant est obligatoire");
                 if (!formData.nomEnfant.trim()) errors.push("Le nom de l'enfant est obligatoire");
                 if (!formData.dateNaissanceEnfant) errors.push("La date de naissance de l'enfant est obligatoire");
-                if (isFutureDate(formData.dateNaissanceEnfant)) errors.push("⚠️ La date de naissance ne peut pas être dans le futur");
+                if (isFutureDateTime(formData.dateNaissanceEnfant, formData.heureNaissanceEnfant)) {
+                    errors.push("⚠️ La date ou l'heure de naissance ne peut pas être dans le futur");
+                }
                 if (!formData.heureNaissanceEnfant) errors.push("L'heure de naissance de l'enfant est obligatoire");
                 if (!formData.lieuNaissanceEnfant.trim()) errors.push("Le lieu de naissance de l'enfant est obligatoire");
                 break;

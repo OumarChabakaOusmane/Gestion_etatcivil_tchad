@@ -43,8 +43,14 @@ const demandeValidationRules = [
         .if(body('type').equals('naissance'))
         .isDate().withMessage("Date de naissance invalide")
         .custom(value => {
-            if (value && new Date(value) > new Date()) {
-                throw new Error("La date de naissance ne peut pas être dans le futur");
+            if (value) {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const [year, month, day] = value.split('-').map(Number);
+                const inputDate = new Date(year, month - 1, day);
+                if (inputDate > today) {
+                    throw new Error("La date de naissance ne peut pas être dans le futur");
+                }
             }
             return true;
         }),
@@ -61,8 +67,14 @@ const demandeValidationRules = [
         .if(body('type').equals('mariage'))
         .isDate().withMessage("Date de mariage invalide")
         .custom(value => {
-            if (value && new Date(value) > new Date()) {
-                throw new Error("La date du mariage ne peut pas être dans le futur");
+            if (value) {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const [year, month, day] = value.split('-').map(Number);
+                const inputDate = new Date(year, month - 1, day);
+                if (inputDate > today) {
+                    throw new Error("La date du mariage ne peut pas être dans le futur");
+                }
             }
             return true;
         }),
@@ -75,8 +87,14 @@ const demandeValidationRules = [
         .if(body('type').equals('deces'))
         .isDate().withMessage("Date de décès invalide")
         .custom(value => {
-            if (value && new Date(value) > new Date()) {
-                throw new Error("La date du décès ne peut pas être dans le futur");
+            if (value) {
+                const now = new Date();
+                const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+                const [year, month, day] = value.split('-').map(Number);
+                const inputDate = new Date(year, month - 1, day);
+                if (inputDate > today) {
+                    throw new Error("La date du décès ne peut pas être dans le futur");
+                }
             }
             return true;
         }),

@@ -45,6 +45,8 @@ export default function AdminCreateDeces() {
     const handleChange = (e) => {
         const { name, value } = e.target;
 
+        if (error) setError("");
+
         // Auto-normalize specific fields
         let processedValue = value;
         if (name.toLowerCase().includes('profession') ||
