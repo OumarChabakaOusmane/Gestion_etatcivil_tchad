@@ -23,14 +23,27 @@ const adminRoutes = require('./routes/admin.routes');
 const testRoutes = require('./routes/test.routes'); // Route de diagnostic
 const nniRoutes = require('./routes/nni.routes'); // OCR NNI
 const { db } = require("./config/firebase");
+const { generalLimiter } = require('./middlewares/rateLimiter');
 
 const app = express();
 
 // Configuration CORS
+const allowedOrigins = process.env.ALLOWED_ORIGINS ? process.env.ALLOWED_ORIGINS.split(',') : ['http://localhost:5173'];
 app.use(cors({
-  origin: true, // Accepte toutes les origines (utile pour le dev réseau)
+  origin: function (origin, callback) {
+    // Permit requests with no origin (like mobile apps or curl)
+    if (!origin) return callback(null, true);
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV === 'development') {
+      callback(null, true);
+    } else {
+      callback(new Error('Non autorisé par CORS'));
+    }
+  },
   credentials: true
 }));
+
+// Application du Rate Limiter général
+app.use(generalLimiter);
 
 // Middleware pour parser le JSON (Limite augmentée pour les photos de profil Base64)
 app.use(express.json({ limit: '50mb' }));

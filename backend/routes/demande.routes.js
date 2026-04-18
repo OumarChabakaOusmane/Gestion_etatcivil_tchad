@@ -14,6 +14,7 @@ const {
     deleteDemande,
     verifyDemandePublique
 } = require('../controllers/demande.controller');
+const { demandeValidationRules, validate } = require('../validators/demande.validator');
 
 /**
  * @route   GET /api/demandes/public/verifier/:id
@@ -27,7 +28,7 @@ router.get('/public/verifier/:id', verifyDemandePublique);
  * @desc    Crée une nouvelle demande
  * @access  Privé (Utilisateur authentifié)
  */
-router.post('/', authMiddleware, createDemande);
+router.post('/', authMiddleware, demandeValidationRules, validate, createDemande);
 
 /**
  * @route   GET /api/demandes/me
@@ -76,7 +77,7 @@ router.post('/:id/documents', authMiddleware, addDocuments);
  * @desc    Met à jour une demande (citoyen)
  * @access  Privé (Utilisateur propriétaire)
  */
-router.patch('/:id', authMiddleware, updateDemande);
+router.patch('/:id', authMiddleware, demandeValidationRules, validate, updateDemande);
 
 /**
  * @route   DELETE /api/demandes/:id
